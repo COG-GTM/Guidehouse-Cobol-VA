@@ -1,0 +1,535 @@
+       IDENTIFICATION DIVISION.                                         CHG-DOC 
+       PROGRAM-ID.      LABD20.                                         CHG-DOC 
+      *----------------------------------------------------------*
+      *  PROGRAM CONVERTED BY INFORMATION ANALYSIS INCORPORATED  *
+      *  DATE:  7/12/2012      TIME:  13:37:36                   *
+      *----------------------------------------------------------*
+       AUTHOR.          DIGICON.                                        CHG-DOC 
+       DATE-WRITTEN.    NOV 08, 1989.                                   CHG-DOC 
+       DATE-COMPILED.                                                   CHG-DOC 
+      ******************************************************************CHG-DOC 
+      *     PROGRAM FUNCTIONS                                          *CHG-DOC 
+      *     LABD20 RECEIVES A FILE WHICH CONTAINS JV COMMENT RECORDS.  *CHG-DOC 
+      *     THE COMMENTS ARE INSERTED                                  *CHG-DOC 
+      *     INTO THE JC_SUBMITTED_COMMENTS TABLE.  LABD21 WILL READ    *CHG-DOC
+      *     THE DAILY TRANSACTION FILE AND FOR EACH JV PACKAGE WILL    *CHG-DOC 
+      *     MOVE THE JV COMMENTS FROM THE SUBMITTED TABLE TO THE       *CHG-DOC 
+      *     JC_APPLIED_COMMENT TABLE.  
+      ******************************************************************CHG-DOC 
+      *                 INVENTORY OF CHANGES TO LABD20                 *CHG-DOC 
+      ******************************************************************CHG-DOC 
+      * CHANGE  CHANGE   CHANGED  PROJECT                              *CHG-DOC 
+      * NUMBER   DATE      BY       ID          NATURE OF CHANGE       *CHG-DOC 
+      *------- -------- --------- ------- ---------------------------- *CHG-DOC 
+      *        01/01/88 YOURNAME  88-???? SUMMARIZE YOUR CHANGES HERE  *
+      *                                   AND HERE (IF NECESSARY)      *
+      ******************************************************************CHG-END 
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.   
+           COPY COMCON.              
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT COMMENT-FILE ASSIGN TO EXTERNAL         COMMENT       CHG-015 
+                         ORGANIZATION IS LINE SEQUENTIAL.
+
+           SELECT CARD-FILE     ASSIGN TO EXTERNAL         CARDFILE
+                         ORGANIZATION IS LINE SEQUENTIAL.
+
+       DATA DIVISION.   
+       FILE SECTION.
+       FD  COMMENT-FILE                                                 CHG-015 
+           LABEL RECORDS ARE OMITTED                                    CHG-015 
+           DATA RECORD IS TST123-COMMENT-REC.                           CHG-015 
+       01  TST123-COMMENT-REC.                                          CHG-015 
+           05  TST123-LOAN-DT-NR              PIC X(026).               CHG-015 
+           05  TST123-LOAN-DT-NR-REDEF REDEFINES TST123-LOAN-DT-NR.     CHG-015 
+               15 TST123-COMMENT-DT           PIC 9(008).               CHG-015 
+               15 TST123-JV-NUMBER            PIC 9(006).               CHG-015 
+               15 TST123-SECTION-ID           PIC 9(002).               CHG-015 
+               15 TST123-LOAN-NUMBER          PIC 9(010).               CHG-015 
+           05  TST123-COMMENT-HIST.                                     CHG-015 
+               15 TST123-SCHEDULE-DOC-NO      PIC X(010).               CHG-015 
+               15 TST123-COMMENT-TEXT         PIC X(230).               CHG-015 
+           05  TST123-COMMENT-REQUESTOR       PIC X(020).               CHG-015 
+      *    05  TST123-COMMENT-APPROVER        PIC X(020).               CHG-015 
+           05  TST123-COMMENT-APPROVER        PIC X(014).               CHG-015 
+
+       FD  CARD-FILE.
+       01  CARD-FILE-REC.                
+           05  CARD-DATE                      PIC X(10).
+           05  FILLER                         PIC X(70).
+      ******************************************************************CHG-DOC 
+       WORKING-STORAGE SECTION. 
+       COPY DBVAR.
+       COPY DMCA. 
+
+       01  WS-DISP                            PIC  ZZ,ZZ9.              CHG-013 
+       01  JV-TRAN-REC-COUNT                  PIC  9(005) VALUE 00000.  
+       01  JV-LABD13-COUNT                    PIC  9(005) VALUE 00000.  
+       01  FREE-CNT                           PIC  9(5) BINARY VALUE 0. 
+       01  LOAN-463-CNT                       PIC  9(5)  VALUE ZEROS.   CHG-005 
+       01  WS-CT-CNT                          PIC  9(005).              CHG-009 
+       01  WS-CT-CNTX REDEFINES WS-CT-CNT     PIC  X(005).              CHG-009 
+       01  WS-CARD-COUNT.                                               CHG-009 
+           05 WS-CARD-PREFIX                  PIC X(008)                CHG-009 
+                                              VALUE '90000000'. 
+           05 WS-CARD-SUFFIX                  PIC X(005).               CHG-009 
+    
+       01  TBLKNR-SAVED.
+           05  FILLER                         PIC  X(001) VALUE 'S'.
+           05  FILLER                         PIC  9(001) VALUE 8.  
+           05  TBLKNR-SAVED-DD                PIC  9(002) VALUE 00. 
+           
+       01  WS-PARM-DATE                       PIC X(10).                CHG-632 
+       01  FILLER  REDEFINES  WS-PARM-DATE.                             CHG-012 
+           05 WS-PARM-MM                      PIC 9(02).                CHG-012 
+           05 WS-PARM-FILLER1                 PIC X.                    CHG-012 
+           05 WS-PARM-DD                      PIC 9(02).                CHG-012 
+           05 WS-PARM-FILLER2                 PIC X.                    CHG-012 
+           05 WS-PARM-CC                      PIC 9(02).                CHG-012 
+           05 WS-PARM-YY                      PIC 9(02).                CHG-012 
+           
+       01  WS-PROCESS-DATE                    PIC 9(08).                CHG-015 
+       01  FILLER REDEFINES  WS-PROCESS-DATE.                           CHG-015 
+           05  WS-PROCESS-DATE-CC             PIC 9(02).                CHG-645 
+           05  WS-PROCESS-DATE-YY             PIC 9(02).                CHG-645 
+           05  WS-PROCESS-DATE-MM             PIC 9(02).                CHG-645 
+           05  WS-PROCESS-DATE-DD             PIC 9(02).                CHG-645 
+   
+    
+       01  SAVE-JV-DATA      VALUE SPACES.                              CHG-005 
+           02  FILLER                         PIC X(69).                CHG-005 
+           02  SAVE-CARD-SEQ                  PIC 9(5).                 CHG-005 
+           02  FILLER                         PIC X(26).                CHG-005 
+    
+       01  WS-AMT-CONV SIGN IS LEADING SEPARATE  CHARACTER.             CHG-012 
+           05  WS-AMT-CONVS                   PIC S9(10)V99.            CHG-012 
+       01  WS-AMT-CONVR REDEFINES WS-AMT-CONV.                          CHG-012 
+           05  WS-AMTS                        PIC X.                    CHG-012 
+           05  WS-AMT                         PIC 9(10)V99.             CHG-012 
+       01  WS-CNT-CONV SIGN IS LEADING SEPARATE  CHARACTER.             CHG-013 
+           05  WS-CNT-CONVS                   PIC S9(5).                CHG-013 
+       01  WS-CNT-CONVR REDEFINES WS-CNT-CONV.                          CHG-013 
+           05  WS-CNTS                        PIC X.                    CHG-013 
+           05  WS-CNT                         PIC 9(5).                 CHG-013 
+
+       01  DB-ERR-LINE. 
+           02  DB-ERR-TEXT     PIC X(019) VALUE 'DB ERROR FUNCTION: '.  
+           02  ERROR-FUNCT-OUT PIC X(002) VALUE SPACES. 
+           02  FILLER          PIC X(012) VALUE ' ERROR NUM: '. 
+           02  ERROR-NUM-OUT   PIC X(005) VALUE SPACES. 
+           02  FILLER          PIC X(019) VALUE ' CALL RESPONSIBLE A'.  
+           02  FILLER          PIC X(009) VALUE 'NALYST...'.
+      *                                                                 CHG-013 
+           EXEC SQL BEGIN DECLARE SECTION END-EXEC.                     CHG-015 
+           
+       01  WS-SQLCODE               PIC -(8)9.                          CHG-631
+       01  WS-PROCESSING-SW         PIC X.                              CHG-631
+           88  SQL-PROCESSING               VALUE 'S'.                  CHG-631
+           88  DMS-PROCESSING               VALUE 'D'.                  CHG-631
+       01  WS-PARA-NAME             PIC X(30).                          CHG-631
+       01  WS-TABLE-NAME            PIC X(20).                          CHG-631
+       01  WS-COMMAND-NAME          PIC X(20).                          CHG-631
+       01  WS-NULL                            PIC S9(4) COMP.           CHG-015 
+
+           EXEC SQL INCLUDE SQLCA END-EXEC.           
+
+       01  WS-TST123-COMMENT-REC.                           
+           05  WS-TST123-LOAN-DT-NR              PIC X(026).
+           05  WS-TST123-COMMENT-HIST            PIC X(240).
+           05  WS-TST123-COMMENT-REQUESTOR       PIC X(020).
+           05  WS-TST123-COMMENT-APPROVER        PIC X(020).
+       01  WS-TST123-SCHEDULE-DOC-NO             PIC X(010).
+
+           EXEC SQL END DECLARE SECTION END-EXEC.                       CHG-015 
+      * 
+       01  WS-COUNTERS.                                                 CHG-015 
+           05  WS-CHECK-NUMBER                PIC 9(12).                CHG-015 
+           05  WS-DUPLICATE-COUNT             PIC 9(12).                CHG-015 
+           05  WS-JV-COUNTER                  PIC 9(12).                CHG-015 
+           05  WS-JV-COUNTERS                 PIC 9(12).                CHG-015 
+           05  WS-JV-COMMENTS-CNT             PIC 9(12).                CHG-015 
+           05  WS-JVNET-COMMENTS-CNT          PIC 9(12).                CHG-015 
+           05  WS-ERRORS-CNT                  PIC 9(12).                CHG-015 
+           05  WS-TST123-RECS-ERR-CNT         PIC 9(12).                CHG-015 
+           05  WS-TOTAL-REJECT-BEG-CNT        PIC 9(12).                CHG-015 
+           05  WS-TOTAL-APPLIED-BEG-CNT       PIC 9(12).                CHG-015 
+           05  WS-TOTAL-REJECT-END-CNT        PIC 9(12).                CHG-015 
+           05  WS-TOTAL-APPLIED-END-CNT       PIC 9(12).                CHG-015 
+           05  WS-TOTAL-SUBMIT-BEG-CNT        PIC 9(12).                CHG-015 
+           05  WS-TOTAL-SUBMIT-END-CNT        PIC 9(12).                CHG-015 
+                                                                        CHG-015 
+       01  WS-CONTROL-NUM                     PIC X(8).                 CHG-015 
+       01  WS-CONTROL-NUMREDEF REDEFINES WS-CONTROL-NUM.                CHG-015 
+           05 WS-TST123-JV-NUMBER             PIC 9(006).               CHG-015 
+           05 WS-TST123-SECTION-ID            PIC 9(002).               CHG-015 
+       01  WS-DOC-NUMERIC                     PIC 9(10).                CHG-015 
+       01  WS-DOC-NUMERICX REDEFINES WS-DOC-NUMERIC.                    CHG-015 
+           05 WS-DOC-LEAD-DIGITS              PIC 99.                   CHG-015 
+           05 WS-DOC-JV-NUM                   PIC 9(006).               CHG-015 
+           05 WS-DOC-SEC-ID                   PIC 99.                   CHG-015 
+       01  WS-SQL-LOAN-NBR                    PIC 9(10).                CHG-015 
+       01  WS-SQL-LOAN-NBRREDEF REDEFINES WS-SQL-LOAN-NBR.              CHG-015 
+           05 WS-SQL-LNR                      PIC 9(8).                 CHG-015 
+           05 WS-SQL-CHKDIG                   PIC 99.                   CHG-015 
+       01  WS-DISP-NUM                        PIC ZZZ,ZZZ,ZZZ,ZZZ,ZZ9-. CHG-015 
+       01  WS-EOF-COMMENTS-FLAG               PIC X.                    CHG-015 
+           88 END-OF-COMMENTS                 VALUE '*'.                CHG-015 
+       01  WS-TST123-RECORD-FLAG              PIC 9.                    CHG-015 
+           88 TST123-RECORD-IN-ERROR          VALUE 1.                  CHG-015 
+      *                                                                 CHG-DOC 
+      ******************************************************************CHG-DOC 
+           COPY DATECONV-WS.                                            CHG-011 
+           COPY RDMS-ERR-WS.                                            CHG-015 
+
+
+       PROCEDURE DIVISION.                                              CHG-009 
+      *     CALL 'CBL_DEBUGBREAK'.
+
+           MOVE 'CONNECT' TO DB-FUNCTION                              
+           INITIALIZE DB-FUNCTION-TYPE, DB-TABLE-NAME, DB-DATA        
+           CALL 'DBIO' USING DB-DMSREC-NAME                           
+                             DB-FUNCTION                  
+                             DB-FUNCTION-TYPE             
+                             DB-SET-NAME                  
+                             DB-DATA                      
+                             DB-ROWID                     
+                             DB-MISC                      
+                             DB-RETURN-CODE               
+                             DB-MESSAGE                   
+           IF NOT DB-OK
+               DISPLAY '!!! ORACLE DATABASE ERROR!!! ' SQLERRMC 
+                                                       UPON PRINTER
+               DISPLAY '*** PROGRAM ABORTED DUE TO CONNECT ERROR***'
+               MOVE 99 TO RETURN-CODE
+               STOP RUN                                               
+           END-IF.                      
+
+       MAINLINE.
+           PERFORM LABD20-HOUSE-KEEPING                                 CHG-009 
+
+           PERFORM TST123-COMMENT-PROCESS.                              CHG-015 
+
+           PERFORM PERFORM CLOSE-SQL-ENVIRONMENT. 
+
+           CLOSE COMMENT-FILE.                                          CHG-015 
+           
+           OPEN OUTPUT COMMENT-FILE.
+           CLOSE COMMENT-FILE.
+           
+           STOP RUN.
+      *                                                                 CHG-DOC 
+      ******************************************************************CHG-DOC 
+       LABD20-HOUSE-KEEPING.
+           OPEN INPUT CARD-FILE 
+           READ CARD-FILE 
+           CLOSE CARD-FILE 
+           
+           MOVE CARD-DATE        TO WS-PARM-DATE
+           MOVE WS-PARM-MM       TO WS-PROCESS-DATE-MM                  CHG-645 
+           MOVE WS-PARM-DD       TO WS-PROCESS-DATE-DD                  CHG-645 
+           MOVE WS-PARM-CC       TO WS-PROCESS-DATE-CC                  CHG-645 
+           MOVE WS-PARM-YY       TO WS-PROCESS-DATE-YY                  CHG-645 
+           DISPLAY 'PROCESS DATE = ' WS-PARM-DATE
+                      UPON PRINTER.
+                                                                        CHG-013 
+           MOVE ZEROS TO WS-CT-CNT.      
+           INITIALIZE WS-COUNTERS.                                      CHG-015 
+           
+           OPEN INPUT COMMENT-FILE.                                     CHG-015                                CHG-009 
+      *                                                                 CHG-DOC 
+      ******************************************************************CHG-DOC 
+       TST123-COMMENT-PROCESS.                                          CHG-015 
+           INITIALIZE WS-EOF-COMMENTS-FLAG.                             CHG-015 
+                                                                        CHG-015 
+           PERFORM 
+                   UNTIL END-OF-COMMENTS                                CHG-015 
+               READ COMMENT-FILE                                        CHG-015 
+                  AT END                                                CHG-015 
+                     MOVE '*' TO WS-EOF-COMMENTS-FLAG                   CHG-015 
+                  NOT AT END                                            CHG-015 
+                    ADD 1 TO WS-JV-COMMENTS-CNT                         CHG-015 
+                    PERFORM DETERMINE-COMMENT-DISPOSITION               CHG-015 
+               END-READ                                                 CHG-015 
+           END-PERFORM.                   
+           
+           PERFORM POST-PROCESS.                                        CHG-015 
+      *                                                                 CHG-DOC 
+      ******************************************************************CHG-DOC 
+       DETERMINE-COMMENT-DISPOSITION.                                   CHG-015     
+           INITIALIZE  WS-TST123-RECORD-FLAG.                           CHG-015 
+           IF TST123-COMMENT-REC EQUAL SPACES                           CHG-015 
+              MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+           END-IF.                                                      CHG-015 
+                                                                        CHG-015 
+           IF TST123-COMMENT-DT  NUMERIC                                CHG-015 
+              MOVE TST123-COMMENT-DT TO FROM-CYMD-DT                    CHG-015 
+              PERFORM CHECK-CYMD-DT                                     CHG-645 
+              IF DATE-IS-VALID                                          CHG-015 
+                 CONTINUE                                               CHG-015 
+              ELSE                                                      CHG-015 
+               MOVE 1 TO WS-TST123-RECORD-FLAG                          CHG-015 
+           ELSE                                                         CHG-015 
+              MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+           END-IF.                                                      CHG-015 
+                                                                        CHG-015 
+           IF ( TST123-JV-NUMBER NUMERIC )  AND                         CHG-015 
+              ( TST123-JV-NUMBER > 0 )                                  CHG-015 
+                CONTINUE                                                CHG-015 
+           ELSE                                                         CHG-015 
+              MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+           END-IF.                                                      CHG-015 
+                                                                        CHG-015 
+           IF ( TST123-SECTION-ID NUMERIC )                             CHG-015 
+              CONTINUE                                                  CHG-015 
+           ELSE                                                         CHG-015 
+              MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+           END-IF.                                                      CHG-015 
+                                                                        CHG-015 
+           IF TST123-LOAN-NUMBER NUMERIC                                CHG-015 
+              CONTINUE                                                  CHG-015 
+           ELSE                                                         CHG-015 
+              MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+           END-IF.                                                      CHG-015 
+      *                                                                 CHG-DOC 
+      *    TST123-SCHEDULE-DOC-NO NOT CURRENTLY EDITED                  CHG-DOC 
+      *                                                                 CHG-DOC 
+           IF  TST123-COMMENT-TEXT      EQUAL SPACES                    CHG-015 
+              MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+           END-IF.                                                      CHG-015 
+                                                                        CHG-015 
+           IF  TST123-COMMENT-REQUESTOR EQUAL SPACES                    CHG-015 
+              MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+           END-IF.                                                      CHG-015 
+                                                                        CHG-015 
+           IF  TST123-COMMENT-APPROVER  EQUAL SPACES                    CHG-015 
+              MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+           END-IF.                                                      CHG-015 
+                                                                        CHG-015 
+           IF TST123-RECORD-IN-ERROR                                    CHG-015 
+               ADD 1 TO WS-TST123-RECS-ERR-CNT                          CHG-015 
+               ADD 1 TO WS-ERRORS-CNT                                   CHG-015
+           ELSE                                                         CHG-015 
+               PERFORM DETERMINE-IF-DUPLICATE                           CHG-015 
+           END-IF.                                                      CHG-015 
+      *                                                                 CHG-DOC 
+      ******************************************************************CHG-DOC 
+       DETERMINE-IF-DUPLICATE.                                          CHG-015 
+      *** MOVE FD VARIABLES TO WS HOST VARIABLES ***
+           MOVE TST123-COMMENT-REC        TO WS-TST123-COMMENT-REC.       
+           MOVE TST123-SCHEDULE-DOC-NO    TO WS-TST123-SCHEDULE-DOC-NO.
+           MOVE 'DETERMINE-IF-DUPLICATE'  TO WS-PARA-NAME.              CHG-631
+           MOVE 'S'                       TO WS-PROCESSING-SW.          CHG-631
+           MOVE 'JC_SUBMITTED_COMMENT_TBL' TO WS-TABLE-NAME.            CHG-631
+           MOVE 'SELECT'                   TO WS-COMMAND-NAME.          CHG-631
+           EXEC SQL                                                     CHG-015
+                SELECT JC_SUBMITTED_NUMBER 
+                INTO :WS-CHECK-NUMBER                                   CHG-017 
+                FROM JC_SUBMITTED_COMMENT_TBL                           CHG-017 
+                WHERE JC_SUBMITTED = :WS-TST123-LOAN-DT-NR                
+           END-EXEC.                                                    CHG-015 
+           IF SQLCODE NOT = 0 AND 100                                   CHG-631
+              GO TO 9999-ROLL-BACK                                      CHG-631
+           END-IF.                                                      CHG-631
+           IF SQLCODE = 0                                               CHG-015 
+               DISPLAY 'DUPLICATE ENTRY ' TST123-LOAN-DT-NR             CHG-015 
+               UPON PRINTER                                             CHG-015 
+           ELSE                                                         CHG-015 
+               IF SQLCODE = 100                                         CHG-015 
+                  PERFORM  CREATE-COMMENT-RECORD.                       CHG-015
+      *                                                                 CHG-DOC 
+      ******************************************************************CHG-DOC 
+       CREATE-COMMENT-RECORD.                                           CHG-015 
+           MOVE TST123-JV-NUMBER  TO WS-TST123-JV-NUMBER.               CHG-015 
+           MOVE TST123-SECTION-ID TO WS-TST123-SECTION-ID.              CHG-015 
+           ADD 1 TO WS-JV-COUNTER.                                      CHG-015 
+
+           MOVE 'CREATE-COMMENT-RECORD'  TO WS-PARA-NAME.               CHG-631
+           MOVE 'S'              TO WS-PROCESSING-SW.                   CHG-631
+           MOVE 'JC_SUBMITTED_COMMENT_TBL' TO WS-TABLE-NAME.            CHG-631
+           MOVE 'INSERT'         TO WS-COMMAND-NAME.                    CHG-631
+
+           EXEC SQL INSERT INTO JC_SUBMITTED_COMMENT_TBL                CHG-017 
+                    (JC_SUBMITTED,                  
+                     JC_SUBMITTED_NUMBER,           
+                     JC_SUBMITTED_SCHED_DOC_NO,     
+                     JC_SUBMITTED_COMMENT_HIST,     
+                     JC_SUBMITTED_COMMENT_REQUESTOR,
+                     JC_SUBMITTED_COMMENT_APPROVER, 
+                     JC_SUBMITTED_CONTROL_NUM,
+                     JC_SUBMITTED_UPDT_PROG_ID,
+                     JC_SUBMITTED_UPDT_PROG_DT)      
+            VALUES   
+                    (:WS-TST123-LOAN-DT-NR,                             CHG-017 
+                     :WS-JV-COUNTER,                                    CHG-017 
+                     :WS-TST123-SCHEDULE-DOC-NO,                        CHG-015 
+                     :WS-TST123-COMMENT-HIST,                           CHG-015 
+                     :WS-TST123-COMMENT-REQUESTOR,                      CHG-015 
+                     :WS-TST123-COMMENT-APPROVER,                       CHG-015 
+                     :WS-CONTROL-NUM,                                   CHG-015 
+                     'LABD20',                                          CHG-015 
+                     TO_DATE(:WS-PROCESS-DATE,'YYYYMMDD'))
+           END-EXEC.                                                    CHG-015
+           IF SQLCODE NOT = 0                                           CHG-631
+              GO TO 9999-ROLL-BACK                                      CHG-631
+           END-IF.                                                      CHG-631
+      *                                                                 CHG-015 
+           INITIALIZE TST123-COMMENT-DT,                                CHG-015 
+                      TST123-JV-NUMBER,                                 CHG-015 
+                      TST123-SECTION-ID,                                CHG-015 
+                      TST123-LOAN-NUMBER,                               CHG-015 
+                      TST123-SCHEDULE-DOC-NO,                           CHG-015 
+                      TST123-COMMENT-HIST,                              CHG-015 
+                      TST123-COMMENT-REQUESTOR,                         CHG-015 
+                      TST123-COMMENT-APPROVER,                          CHG-015 
+                      WS-TST123-LOAN-DT-NR,       
+                      WS-TST123-SCHEDULE-DOC-NO,  
+                      WS-TST123-COMMENT-HIST,     
+                      WS-TST123-COMMENT-REQUESTOR,
+                      WS-TST123-COMMENT-APPROVER. 
+      *                                                                 CHG-DOC 
+      ******************************************************************CHG-DOC 
+       POST-PROCESS.                                                    CHG-015 
+           IF WS-JV-COUNTER > WS-JV-COUNTERS                            CHG-015
+               MOVE 'POST-PROCESS'  TO WS-PARA-NAME                     CHG-631
+               MOVE 'S'              TO WS-PROCESSING-SW                CHG-631
+               MOVE 'JC_COUNT_TBL' TO WS-TABLE-NAME                     CHG-631
+               MOVE 'UPDATE'         TO WS-COMMAND-NAME                 CHG-631
+               EXEC SQL UPDATE JC_COUNT_TBL                             CHG-017 
+                  SET JC_SECTION_COUNT = :WS-JV-COUNTER                 CHG-017 
+                  WHERE JC_SECTION = 'MA'                               CHG-017 
+               END-EXEC                                                 CHG-015
+               IF SQLCODE NOT = 0                                       CHG-631
+                  GO TO 9999-ROLL-BACK                                  CHG-631
+               END-IF                                                   CHG-631
+           END-IF.                                                      CHG-015 
+      *                                                                 CHG-015 
+      ******************************************************************CHG-015 
+       CLOSE-SQL-ENVIRONMENT.                                           CHG-015
+           MOVE 'CLOSE-SQL-ENVIRONMENT'  TO WS-PARA-NAME.               CHG-631
+           MOVE 'S'              TO WS-PROCESSING-SW.                   CHG-631
+           MOVE ' '              TO WS-TABLE-NAME.                      CHG-631
+           MOVE 'COMMIT'         TO WS-COMMAND-NAME.                    CHG-631
+           EXEC SQL COMMIT WORK END-EXEC.                               CHG-015
+           IF SQLCODE NOT = 0                                           CHG-631
+              GO TO 9999-ROLL-BACK                                      CHG-631
+           END-IF.                                                      CHG-631
+           MOVE 'CLOSE-SQL-ENVIRONMENT'  TO WS-PARA-NAME.               CHG-631
+           MOVE 'S'              TO WS-PROCESSING-SW.                   CHG-631
+           MOVE 'JC_SUBMITTED_COMMENT_TBL' TO WS-TABLE-NAME.            CHG-631
+           MOVE 'SELECT'         TO WS-COMMAND-NAME.                    CHG-631
+           EXEC SQL SELECT COUNT(*) INTO  :WS-TOTAL-SUBMIT-END-CNT      CHG-015 
+              FROM JC_SUBMITTED_COMMENT_TBL                             CHG-017 
+           END-EXEC.                                                    CHG-015
+           IF SQLCODE NOT = 0                                           CHG-631
+              GO TO 9999-ROLL-BACK                                      CHG-631
+           END-IF.                                                      CHG-631
+           MOVE 'CLOSE-SQL-ENVIRONMENT'  TO WS-PARA-NAME.               CHG-631
+           MOVE 'S'              TO WS-PROCESSING-SW.                   CHG-631
+           MOVE 'JC_REJECTED_COMMENT_TBL' TO WS-TABLE-NAME.             CHG-631
+           MOVE 'SELECT'         TO WS-COMMAND-NAME.                    CHG-631
+           EXEC SQL SELECT COUNT(*) INTO  :WS-TOTAL-REJECT-END-CNT      CHG-015 
+              FROM JC_REJECTED_COMMENT_TBL                              CHG-017 
+           END-EXEC.                                                    CHG-015
+           IF SQLCODE NOT = 0                                           CHG-631
+              GO TO 9999-ROLL-BACK                                      CHG-631
+           END-IF.                                                      CHG-631
+           MOVE 'CLOSE-SQL-ENVIRONMENT'  TO WS-PARA-NAME.               CHG-631
+           MOVE 'S'              TO WS-PROCESSING-SW.                   CHG-631
+           MOVE 'JC_APPLIED_COMMENT_TBL' TO WS-TABLE-NAME.              CHG-631
+           MOVE 'SELECT'         TO WS-COMMAND-NAME.                    CHG-631
+           EXEC SQL SELECT COUNT(*) INTO  :WS-TOTAL-APPLIED-END-CNT     CHG-015 
+              FROM JC_APPLIED_COMMENT_TBL                               CHG-017 
+           END-EXEC.                                                    CHG-015 
+           IF SQLCODE NOT = 0                                           CHG-631
+              GO TO 9999-ROLL-BACK                                      CHG-631
+           END-IF.                                                      CHG-631
+
+           DISPLAY ' *** COMMENT PROCESSING ***'                        CHG-015 
+           UPON PRINTER.                                                CHG-015 
+           MOVE WS-JV-COUNTERS TO WS-DISP-NUM.                          CHG-015 
+           DISPLAY 'PRIOR          ENDING COUNT: ' WS-DISP-NUM          CHG-015 
+           UPON PRINTER.                                                CHG-015 
+           MOVE WS-JV-COUNTER  TO WS-DISP-NUM.                          CHG-015 
+           DISPLAY 'THIS JOB       ENDING COUNT: ' WS-DISP-NUM          CHG-015 
+           UPON PRINTER.                                                CHG-015 
+           MOVE WS-JV-COMMENTS-CNT TO WS-DISP-NUM.                      CHG-015 
+           DISPLAY 'TST123 COMMENTS       COUNT: ' WS-DISP-NUM          CHG-015 
+           UPON PRINTER.                                                CHG-015 
+           MOVE WS-JVNET-COMMENTS-CNT TO WS-DISP-NUM.                   CHG-015 
+           DISPLAY 'JV NET COMMENTS       COUNT: ' WS-DISP-NUM          CHG-015 
+           UPON PRINTER.                                                CHG-015 
+           MOVE WS-TST123-RECS-ERR-CNT TO WS-DISP-NUM.                  CHG-015 
+           DISPLAY ' TOTAL COMMENTS ERROR COUNT: ' WS-DISP-NUM          CHG-015 
+           UPON PRINTER.                                                CHG-015 
+           DISPLAY '                             '                      CHG-015 
+           UPON PRINTER.                                                CHG-015 
+           DISPLAY ' ***  TABLE STATS       ***  '                      CHG-015 
+           UPON PRINTER.                                                CHG-015 
+           MOVE WS-TOTAL-SUBMIT-BEG-CNT  TO WS-DISP-NUM.                CHG-015 
+           DISPLAY 'PRIOR SUBMITTED TABLE COUNT: ' WS-DISP-NUM          CHG-015 
+           UPON PRINTER.                                                CHG-015 
+           MOVE WS-TOTAL-REJECT-BEG-CNT  TO WS-DISP-NUM.                CHG-015 
+           DISPLAY 'PRIOR  REJECTED TABLE COUNT: ' WS-DISP-NUM          CHG-015 
+           UPON PRINTER.                                                CHG-015 
+           MOVE WS-TOTAL-APPLIED-BEG-CNT  TO WS-DISP-NUM.               CHG-015 
+           DISPLAY 'PRIOR  APPLIED  TABLE COUNT: ' WS-DISP-NUM          CHG-015 
+           UPON PRINTER.                                                CHG-015 
+           MOVE WS-TOTAL-SUBMIT-END-CNT  TO WS-DISP-NUM.                CHG-015 
+           DISPLAY 'EOJ   SUBMITTED TABLE COUNT: ' WS-DISP-NUM          CHG-015 
+           UPON PRINTER.                                                CHG-015 
+           MOVE WS-TOTAL-REJECT-END-CNT  TO WS-DISP-NUM.                CHG-015 
+           DISPLAY 'EOJ    REJECTED TABLE COUNT: ' WS-DISP-NUM          CHG-015 
+           UPON PRINTER.                                                CHG-015 
+           MOVE WS-TOTAL-APPLIED-END-CNT  TO WS-DISP-NUM.               CHG-015 
+           DISPLAY 'EOJ    APPLIED  TABLE COUNT: ' WS-DISP-NUM          CHG-015 
+           UPON PRINTER.                                                CHG-015 
+      *                                                                 CHG-DOC 
+      ******************************************************************CHG-DOC 
+       9999-ROLL-BACK.                                                  CHG-631
+           DISPLAY 'LABD20 ABORTED' UPON PRINTER.                       CHG-631
+           DISPLAY 'ROLL BACK' UPON PRINTER.                            CHG-631
+           DISPLAY 'PARAGRAPH NAME IS ' WS-PARA-NAME                    CHG-631
+               UPON PRINTER.                                            CHG-631
+           IF SQL-PROCESSING                                            CHG-631
+               DISPLAY 'SQL ERROR ' UPON PRINTER                        CHG-631
+               DISPLAY 'TABLE NAME IS '  WS-TABLE-NAME                  CHG-631
+                   UPON PRINTER                                         CHG-631
+               DISPLAY 'COMMAND IS '     WS-COMMAND-NAME                CHG-631
+                   UPON PRINTER                                         CHG-631
+               MOVE SQLCODE TO WS-SQLCODE                               CHG-631
+               DISPLAY 'SQLCODE IS '     WS-SQLCODE                     CHG-631
+                   UPON PRINTER                                         CHG-631
+               PERFORM RDMS-ERR-RTN THRU RDMS-ERR-RTN-X                 CHG-631
+           ELSE                                                         CHG-631
+               IF DMS-PROCESSING                                        CHG-631
+                   DISPLAY 'DMS ERROR ' UPON PRINTER                    CHG-631
+                   DISPLAY 'RECORD NAME IS '   DB-DMSREC-NAME           CHG-631
+                       UPON PRINTER                                     CHG-631
+                   DISPLAY 'COMMAND IS '       DB-FUNCTION-TYPE         CHG-631
+                       UPON PRINTER                                     CHG-631
+                   DISPLAY 'ERROR NUMBER IS '  ERROR-NUM                CHG-631
+                       UPON PRINTER                                     CHG-631
+           END-IF.                                                      CHG-631
+              INITIALIZE                         DB-DMSREC-NAME
+              MOVE 'ROLLBACK'                 TO DB-FUNCTION
+              MOVE 'DEPART'                   TO DB-FUNCTION-TYPE
+              INITIALIZE                         DB-SET-NAME
+              CALL 'DBIO' USING DB-DMSREC-NAME
+                                DB-FUNCTION
+                                DB-FUNCTION-TYPE
+                                DB-SET-NAME
+                                DB-DATA
+                                DB-ROWID
+                                DB-MISC
+                                DB-RETURN-CODE
+                                DB-MESSAGE
+              PERFORM DMCA-ERRFLDS THRU DMCA-ERRFLDS-EXIT.
+           MOVE 99 TO RETURN-CODE.
+           STOP RUN.
+      ******************************************************************CHG-015 
+           COPY DATECONV-PD.                                            CHG-011 
+           COPY RDMS-ERR-RTN.                                           CHG-015 
+      ******************************************************************CHG-015 
+
+       COPY DMCAERR.

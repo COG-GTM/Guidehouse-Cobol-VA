@@ -1,0 +1,11 @@
+describe CONTROL_RECORD_TABLE;
+
+Name                  Null?    Type                                             Sample Data
+--------------------- -------- ------------                                     -------------------------------
+CONTROL_RECORD_NAME   NOT NULL CHAR(30)                                         JV-CONTROL-REC
+CONTROL_RECORD_NUMBER NOT NULL NUMBER                                           1
+CONTROL_RECORD_DATA   NOT NULL CHAR(400)                                          000105                105376  (2 spaces, 6 digits, 16 spaces, 6 digits)
+CREATE_TIMESTAMP               TIMESTAMP(6)                                     20140918 03.46.20.000000000 PM 
+LAST_UPDATE_TIMESTAMP          TIMESTAMP(6)                                     20260501 08.32.58.000000000 AM
+
+primary key uses CONTROL_RECORD_NAME, CONTROL_RECORD_NUMBER

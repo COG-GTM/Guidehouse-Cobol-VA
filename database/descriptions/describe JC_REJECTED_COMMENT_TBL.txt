@@ -1,0 +1,17 @@
+describe JC_REJECTED_COMMENT_TBL;
+
+Name                     Null?    Type                        
+------------------------ -------- --------------------------- 
+JC_REJECTED              NOT NULL CHAR(26)                    
+JC_REJECT_NUMBER         NOT NULL NUMBER                      
+JC_REJECTION_DATE        NOT NULL DATE                        
+JC_REJECTED_CONTROL_NUM           CHAR(8)                     
+JC_REJECTED_UPDT_PROG_ID          CHAR(6)                     
+JC_REJECTED_UPDT_PROG_DT          DATE                        
+CREATE_TIMESTAMP                  TIMESTAMP(6) WITH TIME ZONE 
+LAST_UPDATE_TIMESTAMP             TIMESTAMP(6) WITH TIME ZONE 
+
+primary key uses JC_REJECTED
+
+Sample data:
+20260506740504013043548210	38888	20260506 12.00.00	74050401	LABD21	20260506 12.00.00	20260506 09.46.00.654566000 PM -04:00	20260506 09.46.00.654566000 PM -04:00

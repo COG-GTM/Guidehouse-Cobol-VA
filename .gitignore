@@ -1,0 +1,15 @@
+.DS_Store
+*.log
+*.tmp
+*.bak
+*.swp
+.env
+.env.*
+.oralogin
+.orapasswd
+*.key
+*.pem
+*.p12
+__pycache__/
+.pytest_cache/
+.venv/

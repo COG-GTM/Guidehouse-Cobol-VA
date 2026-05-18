@@ -1,0 +1,21 @@
+describe JC_APPLIED_COMMENT_TBL;
+
+Name                         Null?    Type                        
+---------------------------- -------- --------------------------- 
+JC_APPLIED                   NOT NULL CHAR(26)                    
+JC_APPLIED_NUMBER            NOT NULL NUMBER                      
+JC_APPLICATION_DATE          NOT NULL DATE                        
+JC_APPLIED_SCHED_DOC_NO               CHAR(10)                    
+JC_APPLIED_COMMENT_HIST               CHAR(240)                   
+JC_APPLIED_COMMENT_REQUESTOR          CHAR(20)                    
+JC_APPLIED_COMMENT_APPROVER           CHAR(20)                    
+JC_APPLIED_CONTROL_NUM                CHAR(8)                     
+JC_APPLIED_UPDT_PROG_ID               CHAR(6)                     
+JC_APPLIED_UPDT_PROG_DT               DATE                        
+CREATE_TIMESTAMP                      TIMESTAMP(6) WITH TIME ZONE 
+LAST_UPDATE_TIMESTAMP                 TIMESTAMP(6) WITH TIME ZONE 
+
+primary key uses JC_APPLIED
+
+Sample data:
+20260506741180019981008804	39564	20260506 12.00.00	7a090206  	7a090206  CM: LASJV791:Clearing suspended transaction on PPP loan per transcript of account                                                                                                                                                     	OFSOPS              	OFSOPS              	74118001	LABD21	20260506 12.00.00	20260506 09.46.01.738396000 PM -04:00	20260506 09.46.01.738396000 PM -04:00

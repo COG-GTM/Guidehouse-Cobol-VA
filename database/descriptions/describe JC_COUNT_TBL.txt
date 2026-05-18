@@ -1,0 +1,13 @@
+describe JC_COUNT_TBL;
+
+Name                  Null?    Type                        
+--------------------- -------- --------------------------- 
+JC_SECTION            NOT NULL CHAR(2)                     
+JC_SECTION_COUNT               NUMBER                      
+CREATE_TIMESTAMP               TIMESTAMP(6) WITH TIME ZONE 
+LAST_UPDATE_TIMESTAMP          TIMESTAMP(6) WITH TIME ZONE 
+
+primary key uses JC_SUBMITTED
+
+Sample data:
+MA	40150	20150124 06.42.17.887563000 PM -05:00	20150124 06.42.17.887563000 PM -05:00
