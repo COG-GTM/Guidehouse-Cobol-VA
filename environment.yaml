@@ -1,0 +1,33 @@
+# Devin environment blueprint for the Guidehouse COBOL modernization demo.
+# This repository is analysis/documentation oriented and has no runtime dependency install.
+
+initialize: |
+  echo "Guidehouse COBOL demo repo: no system packages required for static analysis."
+
+maintenance: |
+  echo "No dependency installation required. Use source/, database/, docs/, analysis/, and business-requirements/ as primary context."
+
+knowledge:
+  - name: repository_overview
+    contents: |
+      This private repo contains Guidehouse-provided COBOL modernization demo assets for a VA JV comment workflow.
+      Primary source files:
+      - source/cobol/LABA05.cbl: fiscal-year JV control-number reset.
+      - source/procobol/LABD20.pco: fixed-width JV comment-file ingestion into Oracle tables.
+      - source/procobol/DBIO.pco: Oracle connection/transaction dispatcher.
+      - source/procobol/CONTROL-RECORD-TABLE-IO.pco: CRUD module for CONTROL_RECORD_TABLE.
+      Prep docs live in docs/, dependency analysis in analysis/, and derived requirements in business-requirements/.
+
+  - name: analysis_commands
+    contents: |
+      Useful read-only commands:
+      - find source database docs analysis business-requirements -maxdepth 3 -type f | sort
+      - grep -RIn "COPY\|CALL '\|EXEC SQL\|SELECT .*ASSIGN" source
+      - grep -RIn "EXEC SQL\|INSERT\|UPDATE\|DELETE\|COMMIT\|ROLLBACK" source/procobol
+
+  - name: demo_constraints
+    contents: |
+      Preserve customer-supplied source files unless explicitly asked to transform them.
+      DATECONV-WS and DATECONV-PD are referenced by LABD20 but missing from the supplied zip; call this out in analysis.
+      Treat generated conversion output as demo code until reviewed by a COBOL/VA SME.
+      Use parameterized SQL and managed secrets in any modernization examples.
