@@ -1,0 +1,1977 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Cognition — COBOL↔Python parity console</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter Tight','Inter',system-ui,sans-serif;
+    margin:0; padding:0; background:#fafafa; color:#111;
+  }
+  header { background:#000; color:#fff; padding:18px 28px;
+            display:flex; align-items:center; justify-content:space-between; }
+  .wordmark { font-weight:600; font-size:18px; letter-spacing:0.3px; }
+  header a { color:#fff; opacity:0.85; text-decoration:none; margin-left:8px; }
+  header a:hover { opacity:1; }
+  .container { max-width:1280px; margin:0 auto; padding:24px; }
+  h1 { font-size:24px; margin:0 0 4px; font-weight:600; }
+  .subtitle { color:#555; font-size:14px; margin-bottom:18px; }
+  .banner {
+    background:#fff7e6; border:1px solid #f0c674; color:#5a3e00;
+    padding:14px 18px; border-radius:10px; margin:18px 0 22px;
+    font-size:13px; line-height:1.55;
+  }
+  .banner strong { color:#7a4a00; }
+  .stat-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  .card { background:#fff; border:1px solid #e2e2e2; border-radius:10px;
+           padding:14px 18px; flex:1; min-width:180px; }
+  .card .label { color:#666; font-size:11px; text-transform:uppercase;
+                  letter-spacing:0.6px; }
+  .card .value { font-size:26px; font-weight:600; margin-top:2px; }
+  .pill { display:inline-block; padding:2px 10px; border-radius:999px;
+           font-size:11px; font-weight:600; letter-spacing:0.2px; }
+  .pill.pass { background:#d6f5dd; color:#14532d; }
+  .pill.fail { background:#fadbd8; color:#7c1d12; }
+  .pill.unresolved { background:#fde7c5; color:#7a4a00; }
+  .pill.conf-high { background:#dbeafe; color:#1e3a8a; }
+  .pill.conf-medium { background:#fde7c5; color:#7a4a00; }
+  .pill.conf-low { background:#fadbd8; color:#7c1d12; }
+  details { background:#fff; border:1px solid #e2e2e2; border-radius:10px;
+             padding:0; margin-bottom:10px; }
+  details[open] { box-shadow:0 4px 14px rgba(0,0,0,0.04); }
+  summary { cursor:pointer; padding:14px 18px; display:flex;
+              align-items:center; gap:10px; font-size:14px;
+              list-style:none; outline:none; }
+  summary::-webkit-details-marker { display:none; }
+  summary .br-id { font-family:'JetBrains Mono', ui-monospace,
+                     SFMono-Regular, monospace; font-weight:600;
+                     color:#111; min-width:140px; }
+  summary .label { flex:1; color:#222; }
+  summary .pills { display:flex; gap:6px; }
+  .body { padding:0 18px 16px; }
+  .meta { font-size:12px; color:#555; margin-bottom:8px; }
+  .grid3 { display:grid; grid-template-columns: 1fr 1fr; gap:14px;
+            margin-top:8px; }
+  .col { background:#fafafa; border:1px solid #ececec; border-radius:8px;
+          overflow:hidden; }
+  .col h3 { margin:0; font-size:12px; padding:8px 12px;
+             background:#f4f4f4; color:#333; font-weight:600;
+             text-transform:uppercase; letter-spacing:0.6px; }
+  pre.src { margin:0; padding:12px; font-size:11.5px;
+              font-family:'JetBrains Mono', ui-monospace, monospace;
+              background:#0d0d0d; color:#e8e8e8; overflow-x:auto;
+              line-height:1.5; }
+  .diff { display:grid; grid-template-columns: 1fr 1fr; gap:10px;
+            font-family:'JetBrains Mono', ui-monospace, monospace;
+            font-size:12px; }
+  .diff > div { background:#fafafa; border:1px solid #ececec;
+                 border-radius:6px; padding:10px; }
+  .diff h4 { margin:0 0 6px; font-size:11px; color:#666;
+              text-transform:uppercase; letter-spacing:0.5px;
+              font-family:'Inter Tight',sans-serif; }
+  .diff .kv { display:grid; grid-template-columns: max-content 1fr;
+               gap:6px 14px; }
+  .diff .kv .key { color:#555; }
+  .diff .kv .val.equal { color:#14532d; }
+  .diff .kv .val.mismatch { color:#7c1d12; font-weight:600; }
+  .notes { background:#fff7e6; border-left:3px solid #f0c674;
+             color:#5a3e00; padding:8px 12px; margin-top:10px;
+             font-size:12px; border-radius:0 6px 6px 0; }
+  footer { color:#666; font-size:12px; padding:24px; text-align:center; }
+</style>
+</head>
+<body>
+<header>
+  <span class="wordmark">▰ Cognition <span style="opacity:0.8;">/ parity console</span></span>
+  <span style="font-size:12px;">
+    <a href="/">dashboard</a> · <a href="/parity">parity console</a>
+  </span>
+</header>
+<div class="container">
+  <h1>COBOL↔Python parity per business requirement</h1>
+  <div class="subtitle">
+    28 checks · derived golden output vs. live Python execution against
+    the in-memory mock Oracle. Click any row for source + diff.
+  </div>
+
+  <div class="banner">
+    <strong>How to read this.</strong>
+    The <em>expected</em> column is a <strong>golden output derived line-by-line
+    from the COBOL/Pro*COBOL source</strong> — it is not produced by running
+    the legacy program. There is no Pro*COBOL precompiler or Oracle on this
+    box, so re-executing the COBOL itself is out of scope here.
+    The <em>actual</em> column is produced live by the modernized Python
+    against an in-memory mock Oracle. In a real engagement, flip one config
+    switch and the expected column becomes a live mainframe execution against
+    the same synthetic input, producing the byte-for-byte diff that SBA
+    question 2 / 14 describes.
+  </div>
+
+  <div class="stat-row">
+    <div class="card"><div class="label">PASS</div><div class="value" style="color:#14532d;">28</div></div>
+    <div class="card"><div class="label">FAIL</div><div class="value" style="color:#7c1d12;">0</div></div>
+    <div class="card"><div class="label">UNRESOLVED</div><div class="value" style="color:#7a4a00;">0</div></div>
+    <div class="card"><div class="label">confidence</div><div class="value" style="font-size:16px;">
+      <span class="pill conf-high">HIGH 25</span>
+      <span class="pill conf-medium">MED 1</span>
+      <span class="pill conf-low">LOW 2</span>
+    </div></div>
+  </div>
+
+  
+<details>
+  <summary>
+    <span class="br-id">BR-LABA05-001</span>
+    <span class="label">Connect/fetch failure aborts with RETURN-CODE=99</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Empty CONTROL_RECORD_TABLE → fetch returns no rows
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/cobol/LABA05.cbl:69–85</h3>
+        <pre class="src">69  MIGRTN     MOVE &#x27;CONNECT&#x27; TO DB-FUNCTION                              
+70  MIGRTN     INITIALIZE DB-FUNCTION-TYPE, DB-TABLE-NAME, DB-DATA        
+71  MIGRTN     CALL &#x27;DBIO&#x27; USING DB-DMSREC-NAME                           
+72  MIGRTN                       DB-FUNCTION                  
+73  MIGRTN                       DB-FUNCTION-TYPE             
+74  MIGRTN                       DB-SET-NAME                  
+75  MIGRTN                       DB-DATA                      
+76  MIGRTN                       DB-ROWID                     
+77  MIGRTN                       DB-MISC                      
+78  MIGRTN                       DB-RETURN-CODE               
+79  MIGRTN                       DB-MESSAGE                   
+80  MIGRTN     PERFORM DMCA-ERRFLDS THRU DMCA-ERRFLDS-EXIT
+81  MIGRTN     IF NOT DB-OK                                               
+82  MIGRTN         DISPLAY &#x27;*** PROGRAM ABORTED DUE TO CONNECT ERROR***&#x27;  
+83  MIGRTN         MOVE 99 TO RETURN-CODE
+84  MIGRTN         STOP RUN                                               
+85  MIGRTN     END-IF.                                                    </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/laba05_reset.py:146–154</h3>
+        <pre class="src">146          )
+147          if not fetch.ok or not fetch.rows:
+148              logger.error(&quot;LABA05: fetch failed dms=%s msg=%s&quot;, fetch.rtncode_dms, fetch.message)
+149              return ResetOutcome(
+150                  return_code=RC_DB_ERROR,
+151                  before_jv_number=None,
+152                  after_jv_number=None,
+153                  message=f&quot;fetch failed: dms={fetch.rtncode_dms} sqlcode={fetch.sqlcode}&quot;,
+154              )</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">return_code</div><div class="val equal">99</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">return_code</div><div class="val equal">99</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABA05-002</span>
+    <span class="label">SELECT JV-CONTROL-REC row from CONTROL_RECORD_TABLE</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Seed JV-NUMBER=42 in CONTROL_RECORD_TABLE
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/cobol/LABA05.cbl:152–174</h3>
+        <pre class="src">152  MIGRTN     MOVE &#x27;JV-CONTROL-REC&#x27;              TO DB-DMSREC-NAME 
+153  MIGRTN     MOVE &#x27;SELECT&#x27;                      TO DB-FUNCTION          
+154  MIGRTN     MOVE &#x27;FETCH&#x27;                       TO DB-FUNCTION-TYPE     
+155  MIGRTN     INITIALIZE                            DB-SET-NAME          
+156  MIGRTN     MOVE JV-CONTROL-REC                TO DB-DATA              
+157  MIGRTN     CALL &#x27;DBIO&#x27; USING DB-DMSREC-NAME                           
+158  MIGRTN                       DB-FUNCTION                  
+159  MIGRTN                       DB-FUNCTION-TYPE             
+160  MIGRTN                       DB-SET-NAME                  
+161  MIGRTN                       DB-DATA                      
+162  MIGRTN                       DB-ROWID                     
+163  MIGRTN                       DB-MISC                      
+164  MIGRTN                       DB-RETURN-CODE               
+165  MIGRTN                       DB-MESSAGE                   
+166  MIGRTN     PERFORM DMCA-ERRFLDS THRU DMCA-ERRFLDS-EXIT.
+167  MIGRTN     IF DB-OK                               
+168  MIGRTN         MOVE DB-DATA  TO JV-CONTROL-REC    
+169  MIGRTN         MOVE DB-ROWID TO 287-ROWID         
+170  MIGRTN     END-IF                                 
+171             IF ERROR-NUM NOT EQUAL &#x27;0000&#x27;
+172                 DISPLAY &#x27;ERROR ON FETCH CONTROL REC&#x27; UPON PRINTER
+173             ELSE 
+174                 DISPLAY &#x27;FETCHED CONTROL REC&#x27; UPON PRINTER.  </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/laba05_reset.py:137–158</h3>
+        <pre class="src">137          # Step 1: FETCH the control record (LABA05.cbl:152-174).
+138          fetch = dispatcher.select_one(
+139              &quot;&quot;&quot;
+140              SELECT CONTROL_RECORD_DATA
+141                FROM CONTROL_RECORD_TABLE
+142               WHERE CONTROL_RECORD_NAME = ?
+143                 AND CONTROL_RECORD_NUMBER = ?
+144              &quot;&quot;&quot;,
+145              (CONTROL_RECORD_NAME, CONTROL_RECORD_NUMBER),
+146          )
+147          if not fetch.ok or not fetch.rows:
+148              logger.error(&quot;LABA05: fetch failed dms=%s msg=%s&quot;, fetch.rtncode_dms, fetch.message)
+149              return ResetOutcome(
+150                  return_code=RC_DB_ERROR,
+151                  before_jv_number=None,
+152                  after_jv_number=None,
+153                  message=f&quot;fetch failed: dms={fetch.rtncode_dms} sqlcode={fetch.sqlcode}&quot;,
+154              )
+155  
+156          data: str = fetch.rows[0][0]
+157          before = _extract_jv_number(data)
+158          logger.info(&quot;LABA05: PRIOR JV NUMBER WAS %06d&quot;, before)</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">before_jv_number</div><div class="val equal">42</div><div class="key">fetch_ok</div><div class="val equal">True</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">before_jv_number</div><div class="val equal">42</div><div class="key">fetch_ok</div><div class="val equal">True</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABA05-003</span>
+    <span class="label">Display JV-NUMBER before mutation</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Seed JV-NUMBER=99
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/cobol/LABA05.cbl:176–205</h3>
+        <pre class="src">176         MODIFY-CTRL-REC. 
+177             DISPLAY &#x27;Before modification: &#x27; UPON PRINTER.
+178             PERFORM 9999-DISPLAY-REC THRU 9999-DISPLAY-REC-X.
+179             MOVE 1   TO JV-NUMBER.   
+180  MIGRTN*    MODIFY JV-CONTROL-REC RECORD.
+181  MIGRTN     MOVE &#x27;JV-CONTROL-REC&#x27;              TO DB-DMSREC-NAME       
+182  MIGRTN     MOVE &#x27;UPDATE&#x27;                      TO DB-FUNCTION          
+183  MIGRTN     MOVE &#x27;MODIFY&#x27;                      TO DB-FUNCTION-TYPE     
+184  MIGRTN     INITIALIZE                            DB-SET-NAME          
+185  MIGRTN     MOVE JV-CONTROL-REC                TO DB-DATA              
+186  MIGRTN     CALL &#x27;DBIO&#x27; USING DB-DMSREC-NAME                           
+187  MIGRTN                       DB-FUNCTION                  
+188  MIGRTN                       DB-FUNCTION-TYPE             
+189  MIGRTN                       DB-SET-NAME                  
+190  MIGRTN                       DB-DATA                      
+191  MIGRTN                       DB-ROWID                     
+192  MIGRTN                       DB-MISC                      
+193  MIGRTN                       DB-RETURN-CODE               
+194  MIGRTN                       DB-MESSAGE                   
+195  MIGRTN     PERFORM DMCA-ERRFLDS THRU DMCA-ERRFLDS-EXIT.
+196             IF ERROR-NUM NOT EQUAL &#x27;0000&#x27;
+197                 DISPLAY &#x27;ERROR ON MODIFY CONTROL REC&#x27; UPON PRINTER   
+198  MIGRTN*        CALL &#x27;ABORTRUN&#x27;  
+199  MIGRTN         MOVE 99 TO RETURN-CODE
+200  MIGRTN         STOP RUN
+201             ELSE 
+202                 DISPLAY &#x27; &#x27; UPON PRINTER 
+203                 DISPLAY &#x27;After modification: &#x27; UPON PRINTER  
+204                 PERFORM 9999-DISPLAY-REC THRU 9999-DISPLAY-REC-X 
+205             END-IF.  </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/laba05_reset.py:156–158</h3>
+        <pre class="src">156          data: str = fetch.rows[0][0]
+157          before = _extract_jv_number(data)
+158          logger.info(&quot;LABA05: PRIOR JV NUMBER WAS %06d&quot;, before)</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">before_jv_number</div><div class="val equal">99</div><div class="key">displayed_before_update</div><div class="val equal">True</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">before_jv_number</div><div class="val equal">99</div><div class="key">displayed_before_update</div><div class="val equal">True</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABA05-004</span>
+    <span class="label">Reset JV-NUMBER to 1 and UPDATE</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Seed JV-NUMBER=99 → run LABA05
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/cobol/LABA05.cbl:184–205</h3>
+        <pre class="src">184  MIGRTN     INITIALIZE                            DB-SET-NAME          
+185  MIGRTN     MOVE JV-CONTROL-REC                TO DB-DATA              
+186  MIGRTN     CALL &#x27;DBIO&#x27; USING DB-DMSREC-NAME                           
+187  MIGRTN                       DB-FUNCTION                  
+188  MIGRTN                       DB-FUNCTION-TYPE             
+189  MIGRTN                       DB-SET-NAME                  
+190  MIGRTN                       DB-DATA                      
+191  MIGRTN                       DB-ROWID                     
+192  MIGRTN                       DB-MISC                      
+193  MIGRTN                       DB-RETURN-CODE               
+194  MIGRTN                       DB-MESSAGE                   
+195  MIGRTN     PERFORM DMCA-ERRFLDS THRU DMCA-ERRFLDS-EXIT.
+196             IF ERROR-NUM NOT EQUAL &#x27;0000&#x27;
+197                 DISPLAY &#x27;ERROR ON MODIFY CONTROL REC&#x27; UPON PRINTER   
+198  MIGRTN*        CALL &#x27;ABORTRUN&#x27;  
+199  MIGRTN         MOVE 99 TO RETURN-CODE
+200  MIGRTN         STOP RUN
+201             ELSE 
+202                 DISPLAY &#x27; &#x27; UPON PRINTER 
+203                 DISPLAY &#x27;After modification: &#x27; UPON PRINTER  
+204                 PERFORM 9999-DISPLAY-REC THRU 9999-DISPLAY-REC-X 
+205             END-IF.  </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/laba05_reset.py:160–170</h3>
+        <pre class="src">160          # Step 2: MOVE 1 TO JV-NUMBER and UPDATE (LABA05.cbl:184-205).
+161          new_data = _replace_jv_number(data, TARGET_JV_NUMBER)
+162          update = dispatcher.update(
+163              &quot;&quot;&quot;
+164              UPDATE CONTROL_RECORD_TABLE
+165                 SET CONTROL_RECORD_DATA = ?
+166               WHERE CONTROL_RECORD_NAME = ?
+167                 AND CONTROL_RECORD_NUMBER = ?
+168              &quot;&quot;&quot;,
+169              (new_data, CONTROL_RECORD_NAME, CONTROL_RECORD_NUMBER),
+170          )</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">after_jv_number</div><div class="val equal">1</div><div class="key">persisted_jv_number</div><div class="val equal">1</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">after_jv_number</div><div class="val equal">1</div><div class="key">persisted_jv_number</div><div class="val equal">1</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABA05-005</span>
+    <span class="label">COMMIT on success / ROLLBACK + rc=99 on any DBIO error</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Force UPDATE to return non-zero DMS code
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/DBIO.pco:374–398</h3>
+        <pre class="src">374         5300-TRANSLATE-SQLCODE.
+375             EVALUATE DB-SQLCODE-NUM
+376                 WHEN 0
+377                     MOVE &#x27;0000&#x27; TO DB-RTNCODE-DMS
+378                 WHEN 100
+379                     MOVE &#x27;0013&#x27;    TO DB-RTNCODE-DMS
+380                     IF  (DB-SET-NAME &gt; SPACES) 
+381                     AND (DB-FUNCTION-TYPE NOT = &#x27;FETCH OWNER&#x27;)
+382                        MOVE &#x27;0007&#x27; TO DB-RTNCODE-DMS
+383                     END-IF
+384                 WHEN -1
+385                     MOVE &#x27;0005&#x27;    TO DB-RTNCODE-DMS
+386                 WHEN -8103
+387                     MOVE &#x27;0000&#x27; TO DB-RTNCODE-DMS
+388                     DISPLAY &quot;RECEIVED ORACLE ERROR -8103, CONTINUE...&quot;
+389                     DISPLAY &quot; &quot;
+390                     DISPLAY &quot;TABLE NAME    = &quot; DB-TABLE-NAME
+391                     DISPLAY &quot;FUNCTION      = &quot; DB-FUNCTION
+392                     DISPLAY &quot;FUNCTION TYPE = &quot; DB-FUNCTION-TYPE
+393                     DISPLAY &quot;SET NAME      = &quot; DB-SET-NAME
+394                     DISPLAY &quot;KEY VALUE     = &quot; DB-CONSTRAINT
+395                     DISPLAY &quot;ROWID         = &quot; DB-ROWID
+396                 WHEN OTHER
+397                     MOVE &#x27;9999&#x27;    TO DB-RTNCODE-DMS
+398             END-EVALUATE.</pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/laba05_reset.py:171–180</h3>
+        <pre class="src">171          if not update.ok:
+172              dispatcher.rollback()
+173              logger.error(&quot;LABA05: update failed dms=%s msg=%s&quot;, update.rtncode_dms, update.message)
+174              return ResetOutcome(
+175                  return_code=RC_DB_ERROR,
+176                  before_jv_number=before,
+177                  after_jv_number=None,
+178                  message=f&quot;update failed: dms={update.rtncode_dms} sqlcode={update.sqlcode}&quot;,
+179              )
+180  </pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">return_code</div><div class="val equal">99</div><div class="key">after_jv_number</div><div class="val equal">None</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">return_code</div><div class="val equal">99</div><div class="key">after_jv_number</div><div class="val equal">None</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABA05-006</span>
+    <span class="label">JV-NUMBER at byte offset 24..30 inside 400-byte blob</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> 400-byte blob with sentinel surroundings + JV=001234
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/copybooks/JV-CONTROL-REC.cpy:1–12</h3>
+        <pre class="src"> 1         01  JV-CONTROL-REC  EXTERNAL.
+ 2             05  JV-CONTROL-1              PIC 9(006).
+ 3             05  JV-CONTROL-2              PIC 9(006).
+ 4             05  JV-CONTROL-3              PIC 9(006).
+ 5             05  JV-CONTROL-4              PIC 9(006).
+ 6             05  JV-NUMBER                 PIC 9(006) USAGE BINARY.
+ 7             05  FILLER                    PIC X(009).
+ 8             05  JV-CONTROL-5              PIC 9(006).
+ 9             05  FILLER                    PIC X(010).
+10  
+11  MIGRTN 01  287-CURRENCY-STATUS EXTERNAL.
+12  MIGRTN     05  287-ROWID                            PIC X(18).</pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/laba05_reset.py:91–121</h3>
+        <pre class="src"> 91  def _extract_jv_number(data: str) -&gt; int:
+ 92      &quot;&quot;&quot;Decode the JV-NUMBER stretch out of CONTROL_RECORD_DATA.
+ 93  
+ 94      Legacy: source/procobol/CONTROL-RECORD-TABLE-IO.pco:21-28 distinguishes
+ 95      JV-CONTROL-REC-B (binary form, used to talk to the DB) from
+ 96      JV-CONTROL-REC-D (display form, used to talk to in-memory COBOL).
+ 97  
+ 98      Demo: the seeded data is the display form, so we parse 6 ASCII digits.
+ 99  
+100      # PLACEHOLDER for production: replace this with
+101      #   struct.unpack(&#x27;&gt;I&#x27;, data[24:30])  (or equivalent for the legacy COMP)
+102      &quot;&quot;&quot;
+103      chunk = data[JV_NUMBER_SLICE]
+104      return int(chunk)
+105  
+106  
+107  def _replace_jv_number(data: str, new_value: int) -&gt; str:
+108      &quot;&quot;&quot;Write a new JV-NUMBER back into the 400-byte CONTROL_RECORD_DATA.
+109  
+110      The replacement preserves the surrounding bytes exactly (no padding
+111      drift). PLACEHOLDER for production: produce the binary form here.
+112      &quot;&quot;&quot;
+113      if len(data) != JV_CONTROL_DATA_LENGTH:
+114          raise ValueError(
+115              f&quot;CONTROL_RECORD_DATA must be {JV_CONTROL_DATA_LENGTH} bytes; &quot;
+116              f&quot;got {len(data)}&quot;
+117          )
+118      encoded = f&quot;{new_value:06d}&quot;
+119      if len(encoded) != 6:
+120          raise ValueError(&quot;JV_NUMBER must fit in 6 zoned-display digits&quot;)
+121      return data[: JV_NUMBER_SLICE.start] + encoded + data[JV_NUMBER_SLICE.stop :]</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">extracted</div><div class="val equal">1234</div><div class="key">round_trip</div><div class="val equal">5678</div><div class="key">surroundings_preserved</div><div class="val equal">True</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">extracted</div><div class="val equal">1234</div><div class="key">round_trip</div><div class="val equal">5678</div><div class="key">surroundings_preserved</div><div class="val equal">True</div></div></div></div></div>
+    <div class="notes"><strong>Note.</strong> Binary↔display: byte layout proven by round-trip; production layer uses struct.unpack/pack (see ASSUMPTIONS A-2).</div>
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-001</span>
+    <span class="label">Process date MM/DD/CCYY → YYYYMMDD reshuffling</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> CARDFILE = &#x27;12/30/2025&#x27;
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:224–234</h3>
+        <pre class="src">224             OPEN INPUT CARD-FILE 
+225             READ CARD-FILE 
+226             CLOSE CARD-FILE 
+227             
+228             MOVE CARD-DATE        TO WS-PARM-DATE
+229             MOVE WS-PARM-MM       TO WS-PROCESS-DATE-MM                  CHG-645 
+230             MOVE WS-PARM-DD       TO WS-PROCESS-DATE-DD                  CHG-645 
+231             MOVE WS-PARM-CC       TO WS-PROCESS-DATE-CC                  CHG-645 
+232             MOVE WS-PARM-YY       TO WS-PROCESS-DATE-YY                  CHG-645 
+233             DISPLAY &#x27;PROCESS DATE = &#x27; WS-PARM-DATE
+234                        UPON PRINTER.</pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:257–277</h3>
+        <pre class="src">257  def read_process_date(card_path: Path) -&gt; str:
+258      &quot;&quot;&quot;Read the MM/DD/CCYY date from CARDFILE and reshuffle to YYYYMMDD.
+259  
+260      Legacy: LABD20.pco:224-232. The COBOL code moves CARD-DATE into
+261      WS-PARM-DATE, then assembles WS-PROCESS-DATE-CC / -YY / -MM / -DD into
+262      YYYYMMDD form. The file contains a single record with MM/DD/CCYY in the
+263      first 10 bytes (the dotcard layout is from CHG-645).
+264      &quot;&quot;&quot;
+265      line = card_path.read_text(encoding=&quot;utf-8&quot;).strip().splitlines()[0]
+266      mm_dd_ccyy = line[:10]
+267      parts = mm_dd_ccyy.split(&quot;/&quot;)
+268      if len(parts) != 3:
+269          raise ValueError(f&quot;CARDFILE date must be MM/DD/CCYY; got {mm_dd_ccyy!r}&quot;)
+270      mm, dd, ccyy = parts
+271      if not (mm.isdigit() and dd.isdigit() and ccyy.isdigit()):
+272          raise ValueError(f&quot;CARDFILE date components must be numeric; got {parts}&quot;)
+273      return f&quot;{ccyy}{mm}{dd}&quot;
+274  
+275  
+276  # ---------------------------------------------------------------------------
+277  # Comment-file iteration</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">process_date</div><div class="val equal">&#x27;20251230&#x27;</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">process_date</div><div class="val equal">&#x27;20251230&#x27;</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-002</span>
+    <span class="label">TST123-COMMENT-REC = 300 bytes (8+6+2+10+10+230+20+14)</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Synthetic happy-path record at canonical offsets
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:43–55</h3>
+        <pre class="src">43         01  TST123-COMMENT-REC.                                          CHG-015 
+44             05  TST123-LOAN-DT-NR              PIC X(026).               CHG-015 
+45             05  TST123-LOAN-DT-NR-REDEF REDEFINES TST123-LOAN-DT-NR.     CHG-015 
+46                 15 TST123-COMMENT-DT           PIC 9(008).               CHG-015 
+47                 15 TST123-JV-NUMBER            PIC 9(006).               CHG-015 
+48                 15 TST123-SECTION-ID           PIC 9(002).               CHG-015 
+49                 15 TST123-LOAN-NUMBER          PIC 9(010).               CHG-015 
+50             05  TST123-COMMENT-HIST.                                     CHG-015 
+51                 15 TST123-SCHEDULE-DOC-NO      PIC X(010).               CHG-015 
+52                 15 TST123-COMMENT-TEXT         PIC X(230).               CHG-015 
+53             05  TST123-COMMENT-REQUESTOR       PIC X(020).               CHG-015 
+54        *    05  TST123-COMMENT-APPROVER        PIC X(020).               CHG-015 
+55             05  TST123-COMMENT-APPROVER        PIC X(014).               CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:85–102</h3>
+        <pre class="src"> 85  # Total length = 8+6+2+10 (TST123-LOAN-DT-NR composite) + 10+230 (HIST) + 20
+ 86  #               + 14 = 300 bytes exactly.
+ 87  # ---------------------------------------------------------------------------
+ 88  TST123_RECORD_LENGTH = 300
+ 89  
+ 90  # Byte offsets (0-based, end-exclusive). Match LABD20.pco:43-55.
+ 91  COMMENT_DT_SLICE = slice(0, 8)        # PIC 9(008)
+ 92  JV_NUMBER_SLICE = slice(8, 14)        # PIC 9(006)
+ 93  SECTION_ID_SLICE = slice(14, 16)      # PIC 9(002)
+ 94  LOAN_NUMBER_SLICE = slice(16, 26)     # PIC 9(010)
+ 95  LOAN_DT_NR_SLICE = slice(0, 26)       # composite redefine
+ 96  SCHEDULE_DOC_NO_SLICE = slice(26, 36) # PIC X(010)
+ 97  COMMENT_TEXT_SLICE = slice(36, 266)   # PIC X(230)
+ 98  COMMENT_HIST_SLICE = slice(26, 266)   # composite SCHED_DOC_NO + TEXT
+ 99  REQUESTOR_SLICE = slice(266, 286)     # PIC X(020)
+100  APPROVER_SLICE = slice(286, 300)      # PIC X(014)
+101  &quot;&quot;&quot;APPROVER is 14 bytes per LABD20.pco line 55 (the commented line 54 says
+102  20 bytes — DO NOT use that). See RISKS-AND-GAPS.md Risk 5.&quot;&quot;&quot;</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">length</div><div class="val equal">300</div><div class="key">comment_dt</div><div class="val equal">&#x27;20251230&#x27;</div><div class="key">jv_number</div><div class="val equal">&#x27;000123&#x27;</div><div class="key">section_id</div><div class="val equal">&#x27;01&#x27;</div><div class="key">loan_number</div><div class="val equal">&#x27;0000001000&#x27;</div><div class="key">schedule_doc_no</div><div class="val equal">&#x27;DOC1234567&#x27;</div><div class="key">requestor_len</div><div class="val equal">20</div><div class="key">approver_len</div><div class="val equal">14</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">length</div><div class="val equal">300</div><div class="key">comment_dt</div><div class="val equal">&#x27;20251230&#x27;</div><div class="key">jv_number</div><div class="val equal">&#x27;000123&#x27;</div><div class="key">section_id</div><div class="val equal">&#x27;01&#x27;</div><div class="key">loan_number</div><div class="val equal">&#x27;0000001000&#x27;</div><div class="key">schedule_doc_no</div><div class="val equal">&#x27;DOC1234567&#x27;</div><div class="key">requestor_len</div><div class="val equal">20</div><div class="key">approver_len</div><div class="val equal">14</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-003</span>
+    <span class="label">First 26 bytes form JC_SUBMITTED composite primary key</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Synthetic record with date=20251230 jv=000123 section=01 loan=0000001000
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:44–49</h3>
+        <pre class="src">44             05  TST123-LOAN-DT-NR              PIC X(026).               CHG-015 
+45             05  TST123-LOAN-DT-NR-REDEF REDEFINES TST123-LOAN-DT-NR.     CHG-015 
+46                 15 TST123-COMMENT-DT           PIC 9(008).               CHG-015 
+47                 15 TST123-JV-NUMBER            PIC 9(006).               CHG-015 
+48                 15 TST123-SECTION-ID           PIC 9(002).               CHG-015 
+49                 15 TST123-LOAN-NUMBER          PIC 9(010).               CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:124–128</h3>
+        <pre class="src">124      @property
+125      def submitted_key(self) -&gt; str:
+126          &quot;&quot;&quot;The 26-byte composite primary key used by JC_SUBMITTED_COMMENT_TBL
+127          (cite: LABD20.pco:329 — JC_SUBMITTED = :WS-TST123-LOAN-DT-NR).&quot;&quot;&quot;
+128          return self.loan_dt_nr</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">submitted_key</div><div class="val equal">&#x27;20251230000123010000001000&#x27;</div><div class="key">key_len</div><div class="val equal">26</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">submitted_key</div><div class="val equal">&#x27;20251230000123010000001000&#x27;</div><div class="key">key_len</div><div class="val equal">26</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-004</span>
+    <span class="label">Reject all-spaces record</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Synthetic record: ...
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:261–263</h3>
+        <pre class="src">261             IF TST123-COMMENT-REC EQUAL SPACES                           CHG-015 
+262                MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+263             END-IF.                                                      CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:216–256</h3>
+        <pre class="src">216  def determine_disposition(record: CommentRecord) -&gt; tuple[bool, list[str]]:
+217      &quot;&quot;&quot;Apply the validation rules from LABD20.pco:261-307.
+218  
+219      Returns (is_valid, reasons-if-invalid).
+220      The legacy flag WS-TST123-RECORD-FLAG=1 → invalid (LABD20.pco:262, 271,
+221      273, 280, 286, 292, 298, 302, 306).
+222      &quot;&quot;&quot;
+223      reasons: list[str] = []
+224  
+225      if record.raw.strip() == &quot;&quot;:
+226          reasons.append(&quot;blank record&quot;)
+227  
+228      if not record.comment_dt.isdigit():
+229          reasons.append(&quot;comment date is non-numeric&quot;)
+230      elif not check_cymd_dt(record.comment_dt):
+231          reasons.append(&quot;comment date is not a valid YYYYMMDD calendar date&quot;)
+232  
+233      if not (record.jv_number.isdigit() and int(record.jv_number) &gt; 0):
+234          reasons.append(&quot;JV number is non-numeric or zero&quot;)
+235  
+236      if not record.section_id.isdigit():
+237          reasons.append(&quot;section id is non-numeric&quot;)
+238  
+239      if not record.loan_number.isdigit():
+240          reasons.append(&quot;loan number is non-numeric&quot;)
+241  
+242      if record.comment_text.strip() == &quot;&quot;:
+243          reasons.append(&quot;comment text is blank&quot;)
+244  
+245      if record.requestor.strip() == &quot;&quot;:
+246          reasons.append(&quot;requestor is blank&quot;)
+247  
+248      if record.approver.strip() == &quot;&quot;:
+249          reasons.append(&quot;approver is blank&quot;)
+250  
+251      return (not reasons, reasons)
+252  
+253  
+254  # ---------------------------------------------------------------------------
+255  # Card file (process date)
+256  # ---------------------------------------------------------------------------</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-005</span>
+    <span class="label">Reject non-numeric comment date</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Synthetic record: ABCDEFGH000123010000001000DOC1234567synthetic comment text...
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:265–274</h3>
+        <pre class="src">265             IF TST123-COMMENT-DT  NUMERIC                                CHG-015 
+266                MOVE TST123-COMMENT-DT TO FROM-CYMD-DT                    CHG-015 
+267                PERFORM CHECK-CYMD-DT                                     CHG-645 
+268                IF DATE-IS-VALID                                          CHG-015 
+269                   CONTINUE                                               CHG-015 
+270                ELSE                                                      CHG-015 
+271                 MOVE 1 TO WS-TST123-RECORD-FLAG                          CHG-015 
+272             ELSE                                                         CHG-015 
+273                MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+274             END-IF.                                                      CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:216–256</h3>
+        <pre class="src">216  def determine_disposition(record: CommentRecord) -&gt; tuple[bool, list[str]]:
+217      &quot;&quot;&quot;Apply the validation rules from LABD20.pco:261-307.
+218  
+219      Returns (is_valid, reasons-if-invalid).
+220      The legacy flag WS-TST123-RECORD-FLAG=1 → invalid (LABD20.pco:262, 271,
+221      273, 280, 286, 292, 298, 302, 306).
+222      &quot;&quot;&quot;
+223      reasons: list[str] = []
+224  
+225      if record.raw.strip() == &quot;&quot;:
+226          reasons.append(&quot;blank record&quot;)
+227  
+228      if not record.comment_dt.isdigit():
+229          reasons.append(&quot;comment date is non-numeric&quot;)
+230      elif not check_cymd_dt(record.comment_dt):
+231          reasons.append(&quot;comment date is not a valid YYYYMMDD calendar date&quot;)
+232  
+233      if not (record.jv_number.isdigit() and int(record.jv_number) &gt; 0):
+234          reasons.append(&quot;JV number is non-numeric or zero&quot;)
+235  
+236      if not record.section_id.isdigit():
+237          reasons.append(&quot;section id is non-numeric&quot;)
+238  
+239      if not record.loan_number.isdigit():
+240          reasons.append(&quot;loan number is non-numeric&quot;)
+241  
+242      if record.comment_text.strip() == &quot;&quot;:
+243          reasons.append(&quot;comment text is blank&quot;)
+244  
+245      if record.requestor.strip() == &quot;&quot;:
+246          reasons.append(&quot;requestor is blank&quot;)
+247  
+248      if record.approver.strip() == &quot;&quot;:
+249          reasons.append(&quot;approver is blank&quot;)
+250  
+251      return (not reasons, reasons)
+252  
+253  
+254  # ---------------------------------------------------------------------------
+255  # Card file (process date)
+256  # ---------------------------------------------------------------------------</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-006</span>
+    <span class="label">Reject invalid calendar date (DATECONV-PD)</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-low">LOW</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Inferred / partly unresolvable ·
+      <strong>Input:</strong> Synthetic record: 20251345000123010000001000DOC1234567synthetic comment text...
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:266–274</h3>
+        <pre class="src">266                MOVE TST123-COMMENT-DT TO FROM-CYMD-DT                    CHG-015 
+267                PERFORM CHECK-CYMD-DT                                     CHG-645 
+268                IF DATE-IS-VALID                                          CHG-015 
+269                   CONTINUE                                               CHG-015 
+270                ELSE                                                      CHG-015 
+271                 MOVE 1 TO WS-TST123-RECORD-FLAG                          CHG-015 
+272             ELSE                                                         CHG-015 
+273                MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+274             END-IF.                                                      CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:196–214</h3>
+        <pre class="src">196  def check_cymd_dt(yyyymmdd: str) -&gt; bool:
+197      &quot;&quot;&quot;Stub for the legacy CHECK-CYMD-DT (PERFORM at LABD20.pco:267).
+198  
+199      The DATECONV-PD copybook that defines CHECK-CYMD-DT was NOT supplied;
+200      see migration/RISKS-AND-GAPS.md Risk 1 and ASSUMPTIONS-AND-PLACEHOLDERS.md A-5.
+201  
+202      # PLACEHOLDER: replace with the legacy DATECONV-PD logic once it is
+203      # provided. Our stub uses Python&#x27;s calendar checks, which match modern
+204      # Gregorian rules but cannot validate against any custom JV business
+205      # calendar rules the legacy program may have enforced.
+206      &quot;&quot;&quot;
+207      if not yyyymmdd.isdigit() or len(yyyymmdd) != 8:
+208          return False
+209      try:
+210          dt.date(int(yyyymmdd[0:4]), int(yyyymmdd[4:6]), int(yyyymmdd[6:8]))
+211      except ValueError:
+212          return False
+213      return True
+214  </pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div></div></div>
+    <div class="notes"><strong>Note.</strong> DATECONV-PD copybook not supplied; using Gregorian-calendar stub (ASSUMPTIONS A-5). Real CHECK-CYMD-DT may apply business-calendar gates that change this output.</div>
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-007</span>
+    <span class="label">Reject JV-NUMBER non-numeric or ≤ 0</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Synthetic record: 20251230000000010000001000DOC1234567synthetic comment text...
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:276–281</h3>
+        <pre class="src">276             IF ( TST123-JV-NUMBER NUMERIC )  AND                         CHG-015 
+277                ( TST123-JV-NUMBER &gt; 0 )                                  CHG-015 
+278                  CONTINUE                                                CHG-015 
+279             ELSE                                                         CHG-015 
+280                MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+281             END-IF.                                                      CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:216–256</h3>
+        <pre class="src">216  def determine_disposition(record: CommentRecord) -&gt; tuple[bool, list[str]]:
+217      &quot;&quot;&quot;Apply the validation rules from LABD20.pco:261-307.
+218  
+219      Returns (is_valid, reasons-if-invalid).
+220      The legacy flag WS-TST123-RECORD-FLAG=1 → invalid (LABD20.pco:262, 271,
+221      273, 280, 286, 292, 298, 302, 306).
+222      &quot;&quot;&quot;
+223      reasons: list[str] = []
+224  
+225      if record.raw.strip() == &quot;&quot;:
+226          reasons.append(&quot;blank record&quot;)
+227  
+228      if not record.comment_dt.isdigit():
+229          reasons.append(&quot;comment date is non-numeric&quot;)
+230      elif not check_cymd_dt(record.comment_dt):
+231          reasons.append(&quot;comment date is not a valid YYYYMMDD calendar date&quot;)
+232  
+233      if not (record.jv_number.isdigit() and int(record.jv_number) &gt; 0):
+234          reasons.append(&quot;JV number is non-numeric or zero&quot;)
+235  
+236      if not record.section_id.isdigit():
+237          reasons.append(&quot;section id is non-numeric&quot;)
+238  
+239      if not record.loan_number.isdigit():
+240          reasons.append(&quot;loan number is non-numeric&quot;)
+241  
+242      if record.comment_text.strip() == &quot;&quot;:
+243          reasons.append(&quot;comment text is blank&quot;)
+244  
+245      if record.requestor.strip() == &quot;&quot;:
+246          reasons.append(&quot;requestor is blank&quot;)
+247  
+248      if record.approver.strip() == &quot;&quot;:
+249          reasons.append(&quot;approver is blank&quot;)
+250  
+251      return (not reasons, reasons)
+252  
+253  
+254  # ---------------------------------------------------------------------------
+255  # Card file (process date)
+256  # ---------------------------------------------------------------------------</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-008</span>
+    <span class="label">Reject non-numeric SECTION-ID</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Synthetic record: 20251230000123XY0000001000DOC1234567synthetic comment text...
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:283–287</h3>
+        <pre class="src">283             IF ( TST123-SECTION-ID NUMERIC )                             CHG-015 
+284                CONTINUE                                                  CHG-015 
+285             ELSE                                                         CHG-015 
+286                MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+287             END-IF.                                                      CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:216–256</h3>
+        <pre class="src">216  def determine_disposition(record: CommentRecord) -&gt; tuple[bool, list[str]]:
+217      &quot;&quot;&quot;Apply the validation rules from LABD20.pco:261-307.
+218  
+219      Returns (is_valid, reasons-if-invalid).
+220      The legacy flag WS-TST123-RECORD-FLAG=1 → invalid (LABD20.pco:262, 271,
+221      273, 280, 286, 292, 298, 302, 306).
+222      &quot;&quot;&quot;
+223      reasons: list[str] = []
+224  
+225      if record.raw.strip() == &quot;&quot;:
+226          reasons.append(&quot;blank record&quot;)
+227  
+228      if not record.comment_dt.isdigit():
+229          reasons.append(&quot;comment date is non-numeric&quot;)
+230      elif not check_cymd_dt(record.comment_dt):
+231          reasons.append(&quot;comment date is not a valid YYYYMMDD calendar date&quot;)
+232  
+233      if not (record.jv_number.isdigit() and int(record.jv_number) &gt; 0):
+234          reasons.append(&quot;JV number is non-numeric or zero&quot;)
+235  
+236      if not record.section_id.isdigit():
+237          reasons.append(&quot;section id is non-numeric&quot;)
+238  
+239      if not record.loan_number.isdigit():
+240          reasons.append(&quot;loan number is non-numeric&quot;)
+241  
+242      if record.comment_text.strip() == &quot;&quot;:
+243          reasons.append(&quot;comment text is blank&quot;)
+244  
+245      if record.requestor.strip() == &quot;&quot;:
+246          reasons.append(&quot;requestor is blank&quot;)
+247  
+248      if record.approver.strip() == &quot;&quot;:
+249          reasons.append(&quot;approver is blank&quot;)
+250  
+251      return (not reasons, reasons)
+252  
+253  
+254  # ---------------------------------------------------------------------------
+255  # Card file (process date)
+256  # ---------------------------------------------------------------------------</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-009</span>
+    <span class="label">Reject non-numeric LOAN-NUMBER</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Synthetic record: 2025123000012301ZZZZZZZZZZDOC1234567synthetic comment text...
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:289–293</h3>
+        <pre class="src">289             IF TST123-LOAN-NUMBER NUMERIC                                CHG-015 
+290                CONTINUE                                                  CHG-015 
+291             ELSE                                                         CHG-015 
+292                MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+293             END-IF.                                                      CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:216–256</h3>
+        <pre class="src">216  def determine_disposition(record: CommentRecord) -&gt; tuple[bool, list[str]]:
+217      &quot;&quot;&quot;Apply the validation rules from LABD20.pco:261-307.
+218  
+219      Returns (is_valid, reasons-if-invalid).
+220      The legacy flag WS-TST123-RECORD-FLAG=1 → invalid (LABD20.pco:262, 271,
+221      273, 280, 286, 292, 298, 302, 306).
+222      &quot;&quot;&quot;
+223      reasons: list[str] = []
+224  
+225      if record.raw.strip() == &quot;&quot;:
+226          reasons.append(&quot;blank record&quot;)
+227  
+228      if not record.comment_dt.isdigit():
+229          reasons.append(&quot;comment date is non-numeric&quot;)
+230      elif not check_cymd_dt(record.comment_dt):
+231          reasons.append(&quot;comment date is not a valid YYYYMMDD calendar date&quot;)
+232  
+233      if not (record.jv_number.isdigit() and int(record.jv_number) &gt; 0):
+234          reasons.append(&quot;JV number is non-numeric or zero&quot;)
+235  
+236      if not record.section_id.isdigit():
+237          reasons.append(&quot;section id is non-numeric&quot;)
+238  
+239      if not record.loan_number.isdigit():
+240          reasons.append(&quot;loan number is non-numeric&quot;)
+241  
+242      if record.comment_text.strip() == &quot;&quot;:
+243          reasons.append(&quot;comment text is blank&quot;)
+244  
+245      if record.requestor.strip() == &quot;&quot;:
+246          reasons.append(&quot;requestor is blank&quot;)
+247  
+248      if record.approver.strip() == &quot;&quot;:
+249          reasons.append(&quot;approver is blank&quot;)
+250  
+251      return (not reasons, reasons)
+252  
+253  
+254  # ---------------------------------------------------------------------------
+255  # Card file (process date)
+256  # ---------------------------------------------------------------------------</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-010</span>
+    <span class="label">Reject blank COMMENT-TEXT</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Synthetic record: 20251230000123010000001000DOC1234567...
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:297–299</h3>
+        <pre class="src">297             IF  TST123-COMMENT-TEXT      EQUAL SPACES                    CHG-015 
+298                MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+299             END-IF.                                                      CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:216–256</h3>
+        <pre class="src">216  def determine_disposition(record: CommentRecord) -&gt; tuple[bool, list[str]]:
+217      &quot;&quot;&quot;Apply the validation rules from LABD20.pco:261-307.
+218  
+219      Returns (is_valid, reasons-if-invalid).
+220      The legacy flag WS-TST123-RECORD-FLAG=1 → invalid (LABD20.pco:262, 271,
+221      273, 280, 286, 292, 298, 302, 306).
+222      &quot;&quot;&quot;
+223      reasons: list[str] = []
+224  
+225      if record.raw.strip() == &quot;&quot;:
+226          reasons.append(&quot;blank record&quot;)
+227  
+228      if not record.comment_dt.isdigit():
+229          reasons.append(&quot;comment date is non-numeric&quot;)
+230      elif not check_cymd_dt(record.comment_dt):
+231          reasons.append(&quot;comment date is not a valid YYYYMMDD calendar date&quot;)
+232  
+233      if not (record.jv_number.isdigit() and int(record.jv_number) &gt; 0):
+234          reasons.append(&quot;JV number is non-numeric or zero&quot;)
+235  
+236      if not record.section_id.isdigit():
+237          reasons.append(&quot;section id is non-numeric&quot;)
+238  
+239      if not record.loan_number.isdigit():
+240          reasons.append(&quot;loan number is non-numeric&quot;)
+241  
+242      if record.comment_text.strip() == &quot;&quot;:
+243          reasons.append(&quot;comment text is blank&quot;)
+244  
+245      if record.requestor.strip() == &quot;&quot;:
+246          reasons.append(&quot;requestor is blank&quot;)
+247  
+248      if record.approver.strip() == &quot;&quot;:
+249          reasons.append(&quot;approver is blank&quot;)
+250  
+251      return (not reasons, reasons)
+252  
+253  
+254  # ---------------------------------------------------------------------------
+255  # Card file (process date)
+256  # ---------------------------------------------------------------------------</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-011</span>
+    <span class="label">Reject blank REQUESTOR</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Synthetic record: 20251230000123010000001000DOC1234567synthetic comment text...
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:301–303</h3>
+        <pre class="src">301             IF  TST123-COMMENT-REQUESTOR EQUAL SPACES                    CHG-015 
+302                MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+303             END-IF.                                                      CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:216–256</h3>
+        <pre class="src">216  def determine_disposition(record: CommentRecord) -&gt; tuple[bool, list[str]]:
+217      &quot;&quot;&quot;Apply the validation rules from LABD20.pco:261-307.
+218  
+219      Returns (is_valid, reasons-if-invalid).
+220      The legacy flag WS-TST123-RECORD-FLAG=1 → invalid (LABD20.pco:262, 271,
+221      273, 280, 286, 292, 298, 302, 306).
+222      &quot;&quot;&quot;
+223      reasons: list[str] = []
+224  
+225      if record.raw.strip() == &quot;&quot;:
+226          reasons.append(&quot;blank record&quot;)
+227  
+228      if not record.comment_dt.isdigit():
+229          reasons.append(&quot;comment date is non-numeric&quot;)
+230      elif not check_cymd_dt(record.comment_dt):
+231          reasons.append(&quot;comment date is not a valid YYYYMMDD calendar date&quot;)
+232  
+233      if not (record.jv_number.isdigit() and int(record.jv_number) &gt; 0):
+234          reasons.append(&quot;JV number is non-numeric or zero&quot;)
+235  
+236      if not record.section_id.isdigit():
+237          reasons.append(&quot;section id is non-numeric&quot;)
+238  
+239      if not record.loan_number.isdigit():
+240          reasons.append(&quot;loan number is non-numeric&quot;)
+241  
+242      if record.comment_text.strip() == &quot;&quot;:
+243          reasons.append(&quot;comment text is blank&quot;)
+244  
+245      if record.requestor.strip() == &quot;&quot;:
+246          reasons.append(&quot;requestor is blank&quot;)
+247  
+248      if record.approver.strip() == &quot;&quot;:
+249          reasons.append(&quot;approver is blank&quot;)
+250  
+251      return (not reasons, reasons)
+252  
+253  
+254  # ---------------------------------------------------------------------------
+255  # Card file (process date)
+256  # ---------------------------------------------------------------------------</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-012</span>
+    <span class="label">Reject blank APPROVER</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Synthetic record: 20251230000123010000001000DOC1234567synthetic comment text...
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:305–307</h3>
+        <pre class="src">305             IF  TST123-COMMENT-APPROVER  EQUAL SPACES                    CHG-015 
+306                MOVE 1 TO WS-TST123-RECORD-FLAG                           CHG-015 
+307             END-IF.                                                      CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:216–256</h3>
+        <pre class="src">216  def determine_disposition(record: CommentRecord) -&gt; tuple[bool, list[str]]:
+217      &quot;&quot;&quot;Apply the validation rules from LABD20.pco:261-307.
+218  
+219      Returns (is_valid, reasons-if-invalid).
+220      The legacy flag WS-TST123-RECORD-FLAG=1 → invalid (LABD20.pco:262, 271,
+221      273, 280, 286, 292, 298, 302, 306).
+222      &quot;&quot;&quot;
+223      reasons: list[str] = []
+224  
+225      if record.raw.strip() == &quot;&quot;:
+226          reasons.append(&quot;blank record&quot;)
+227  
+228      if not record.comment_dt.isdigit():
+229          reasons.append(&quot;comment date is non-numeric&quot;)
+230      elif not check_cymd_dt(record.comment_dt):
+231          reasons.append(&quot;comment date is not a valid YYYYMMDD calendar date&quot;)
+232  
+233      if not (record.jv_number.isdigit() and int(record.jv_number) &gt; 0):
+234          reasons.append(&quot;JV number is non-numeric or zero&quot;)
+235  
+236      if not record.section_id.isdigit():
+237          reasons.append(&quot;section id is non-numeric&quot;)
+238  
+239      if not record.loan_number.isdigit():
+240          reasons.append(&quot;loan number is non-numeric&quot;)
+241  
+242      if record.comment_text.strip() == &quot;&quot;:
+243          reasons.append(&quot;comment text is blank&quot;)
+244  
+245      if record.requestor.strip() == &quot;&quot;:
+246          reasons.append(&quot;requestor is blank&quot;)
+247  
+248      if record.approver.strip() == &quot;&quot;:
+249          reasons.append(&quot;approver is blank&quot;)
+250  
+251      return (not reasons, reasons)
+252  
+253  
+254  # ---------------------------------------------------------------------------
+255  # Card file (process date)
+256  # ---------------------------------------------------------------------------</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-013</span>
+    <span class="label">Duplicate detection on 26-byte JC_SUBMITTED key</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Insert same record twice; second pass must dedupe
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:317–339</h3>
+        <pre class="src">317         DETERMINE-IF-DUPLICATE.                                          CHG-015 
+318        *** MOVE FD VARIABLES TO WS HOST VARIABLES ***
+319             MOVE TST123-COMMENT-REC        TO WS-TST123-COMMENT-REC.       
+320             MOVE TST123-SCHEDULE-DOC-NO    TO WS-TST123-SCHEDULE-DOC-NO.
+321             MOVE &#x27;DETERMINE-IF-DUPLICATE&#x27;  TO WS-PARA-NAME.              CHG-631
+322             MOVE &#x27;S&#x27;                       TO WS-PROCESSING-SW.          CHG-631
+323             MOVE &#x27;JC_SUBMITTED_COMMENT_TBL&#x27; TO WS-TABLE-NAME.            CHG-631
+324             MOVE &#x27;SELECT&#x27;                   TO WS-COMMAND-NAME.          CHG-631
+325             EXEC SQL                                                     CHG-015
+326                  SELECT JC_SUBMITTED_NUMBER 
+327                  INTO :WS-CHECK-NUMBER                                   CHG-017 
+328                  FROM JC_SUBMITTED_COMMENT_TBL                           CHG-017 
+329                  WHERE JC_SUBMITTED = :WS-TST123-LOAN-DT-NR                
+330             END-EXEC.                                                    CHG-015 
+331             IF SQLCODE NOT = 0 AND 100                                   CHG-631
+332                GO TO 9999-ROLL-BACK                                      CHG-631
+333             END-IF.                                                      CHG-631
+334             IF SQLCODE = 0                                               CHG-015 
+335                 DISPLAY &#x27;DUPLICATE ENTRY &#x27; TST123-LOAN-DT-NR             CHG-015 
+336                 UPON PRINTER                                             CHG-015 
+337             ELSE                                                         CHG-015 
+338                 IF SQLCODE = 100                                         CHG-015 
+339                    PERFORM  CREATE-COMMENT-RECORD.                       CHG-015</pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:409–440</h3>
+        <pre class="src">409      def _handle_record(self, raw: str, process_date: str) -&gt; None:
+410          self.stats.total_read += 1
+411          try:
+412              record = parse_comment_record(raw)
+413          except ValueError as exc:
+414              self.stats.rejected += 1
+415              self.stats.rejected_reasons.append(f&quot;parse error: {exc}&quot;)
+416              return
+417  
+418          is_valid, reasons = determine_disposition(record)
+419          if not is_valid:
+420              self.stats.rejected += 1
+421              self.stats.rejected_reasons.extend(reasons)
+422              logger.info(&quot;REJECTED %s reasons=%s&quot;, record.submitted_key, reasons)
+423              return
+424  
+425          # Duplicate check (LABD20.pco:317-339).
+426          dupe = self.dispatcher.select_one(
+427              self.SELECT_DUPE_SQL, (record.submitted_key,)
+428          )
+429          if dupe.rtncode_dms not in (db_dispatcher.DMS_OK, db_dispatcher.DMS_NOT_FOUND):
+430              self._fatal_rollback(
+431                  f&quot;duplicate-check failed dms={dupe.rtncode_dms} sqlcode={dupe.sqlcode}&quot;
+432              )
+433  
+434          if dupe.ok:
+435              self.stats.duplicates += 1
+436              logger.info(&quot;DUPLICATE ENTRY %s&quot;, record.submitted_key)
+437              return
+438  
+439          self._insert(record, process_date)
+440  </pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">duplicates_second_pass</div><div class="val equal">1</div><div class="key">inserted_second_pass</div><div class="val equal">0</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">duplicates_second_pass</div><div class="val equal">1</div><div class="key">inserted_second_pass</div><div class="val equal">0</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-014</span>
+    <span class="label">INSERT 9 cols incl. literal &#x27;LABD20&#x27; + TO_DATE</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Insert one happy-path record; inspect inserted row columns
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:342–372</h3>
+        <pre class="src">342         CREATE-COMMENT-RECORD.                                           CHG-015 
+343             MOVE TST123-JV-NUMBER  TO WS-TST123-JV-NUMBER.               CHG-015 
+344             MOVE TST123-SECTION-ID TO WS-TST123-SECTION-ID.              CHG-015 
+345             ADD 1 TO WS-JV-COUNTER.                                      CHG-015 
+346  
+347             MOVE &#x27;CREATE-COMMENT-RECORD&#x27;  TO WS-PARA-NAME.               CHG-631
+348             MOVE &#x27;S&#x27;              TO WS-PROCESSING-SW.                   CHG-631
+349             MOVE &#x27;JC_SUBMITTED_COMMENT_TBL&#x27; TO WS-TABLE-NAME.            CHG-631
+350             MOVE &#x27;INSERT&#x27;         TO WS-COMMAND-NAME.                    CHG-631
+351  
+352             EXEC SQL INSERT INTO JC_SUBMITTED_COMMENT_TBL                CHG-017 
+353                      (JC_SUBMITTED,                  
+354                       JC_SUBMITTED_NUMBER,           
+355                       JC_SUBMITTED_SCHED_DOC_NO,     
+356                       JC_SUBMITTED_COMMENT_HIST,     
+357                       JC_SUBMITTED_COMMENT_REQUESTOR,
+358                       JC_SUBMITTED_COMMENT_APPROVER, 
+359                       JC_SUBMITTED_CONTROL_NUM,
+360                       JC_SUBMITTED_UPDT_PROG_ID,
+361                       JC_SUBMITTED_UPDT_PROG_DT)      
+362              VALUES   
+363                      (:WS-TST123-LOAN-DT-NR,                             CHG-017 
+364                       :WS-JV-COUNTER,                                    CHG-017 
+365                       :WS-TST123-SCHEDULE-DOC-NO,                        CHG-015 
+366                       :WS-TST123-COMMENT-HIST,                           CHG-015 
+367                       :WS-TST123-COMMENT-REQUESTOR,                      CHG-015 
+368                       :WS-TST123-COMMENT-APPROVER,                       CHG-015 
+369                       :WS-CONTROL-NUM,                                   CHG-015 
+370                       &#x27;LABD20&#x27;,                                          CHG-015 
+371                       TO_DATE(:WS-PROCESS-DATE,&#x27;YYYYMMDD&#x27;))
+372             END-EXEC.                                                    CHG-015</pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:441–465</h3>
+        <pre class="src">441      def _insert(self, record: CommentRecord, process_date: str) -&gt; None:
+442          &quot;&quot;&quot;CREATE-COMMENT-RECORD path (LABD20.pco:342-389).&quot;&quot;&quot;
+443          self.stats.accepted += 1
+444          # ASSUMPTION A-7: JC_SUBMITTED_NUMBER is a monotonic counter equal
+445          # to the in-batch accepted count, mirroring WS-JV-COUNTER (LABD20.pco:345).
+446          jc_number = self.stats.accepted
+447          params = (
+448              record.submitted_key,
+449              jc_number,
+450              record.schedule_doc_no,
+451              record.comment_hist,
+452              record.requestor,
+453              record.approver,
+454              record.control_num,
+455              &quot;LABD20&quot;,
+456              self._format_process_date(process_date),
+457          )
+458          result = self.dispatcher.insert(self.INSERT_SQL, params)
+459          if not result.ok:
+460              self._fatal_rollback(
+461                  f&quot;INSERT failed dms={result.rtncode_dms} sqlcode={result.sqlcode}&quot;
+462              )
+463          self.stats.inserted += 1
+464  
+465      # ------- post-process --------------------------------------------------</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">col_count</div><div class="val equal">9</div><div class="key">has_jc_submitted</div><div class="val equal">True</div><div class="key">has_updt_prog_id</div><div class="val equal">True</div><div class="key">updt_prog_id_value</div><div class="val equal">&#x27;LABD20&#x27;</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">col_count</div><div class="val equal">9</div><div class="key">has_jc_submitted</div><div class="val equal">True</div><div class="key">has_updt_prog_id</div><div class="val equal">True</div><div class="key">updt_prog_id_value</div><div class="val equal">&#x27;LABD20&#x27;</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-015</span>
+    <span class="label">Per-batch in-memory counter WS-JV-COUNTER</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Run loader with 3 distinct happy-path records
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:345–345</h3>
+        <pre class="src">345             ADD 1 TO WS-JV-COUNTER.                                      CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:441–465</h3>
+        <pre class="src">441      def _insert(self, record: CommentRecord, process_date: str) -&gt; None:
+442          &quot;&quot;&quot;CREATE-COMMENT-RECORD path (LABD20.pco:342-389).&quot;&quot;&quot;
+443          self.stats.accepted += 1
+444          # ASSUMPTION A-7: JC_SUBMITTED_NUMBER is a monotonic counter equal
+445          # to the in-batch accepted count, mirroring WS-JV-COUNTER (LABD20.pco:345).
+446          jc_number = self.stats.accepted
+447          params = (
+448              record.submitted_key,
+449              jc_number,
+450              record.schedule_doc_no,
+451              record.comment_hist,
+452              record.requestor,
+453              record.approver,
+454              record.control_num,
+455              &quot;LABD20&quot;,
+456              self._format_process_date(process_date),
+457          )
+458          result = self.dispatcher.insert(self.INSERT_SQL, params)
+459          if not result.ok:
+460              self._fatal_rollback(
+461                  f&quot;INSERT failed dms={result.rtncode_dms} sqlcode={result.sqlcode}&quot;
+462              )
+463          self.stats.inserted += 1
+464  
+465      # ------- post-process --------------------------------------------------</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">inserted</div><div class="val equal">3</div><div class="key">accepted</div><div class="val equal">3</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">inserted</div><div class="val equal">3</div><div class="key">accepted</div><div class="val equal">3</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-016</span>
+    <span class="label">UPDATE JC_COUNT_TBL &#x27;MA&#x27; when WS-JV-COUNTER &gt; stored count</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-medium">MEDIUM</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed (literals + control flow) ·
+      <strong>Input:</strong> Seed JC_COUNT_NUM=0; insert 5 happy records
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:392–405</h3>
+        <pre class="src">392         POST-PROCESS.                                                    CHG-015 
+393             IF WS-JV-COUNTER &gt; WS-JV-COUNTERS                            CHG-015
+394                 MOVE &#x27;POST-PROCESS&#x27;  TO WS-PARA-NAME                     CHG-631
+395                 MOVE &#x27;S&#x27;              TO WS-PROCESSING-SW                CHG-631
+396                 MOVE &#x27;JC_COUNT_TBL&#x27; TO WS-TABLE-NAME                     CHG-631
+397                 MOVE &#x27;UPDATE&#x27;         TO WS-COMMAND-NAME                 CHG-631
+398                 EXEC SQL UPDATE JC_COUNT_TBL                             CHG-017 
+399                    SET JC_SECTION_COUNT = :WS-JV-COUNTER                 CHG-017 
+400                    WHERE JC_SECTION = &#x27;MA&#x27;                               CHG-017 
+401                 END-EXEC                                                 CHG-015
+402                 IF SQLCODE NOT = 0                                       CHG-631
+403                    GO TO 9999-ROLL-BACK                                  CHG-631
+404                 END-IF                                                   CHG-631
+405             END-IF.                                                      CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:466–493</h3>
+        <pre class="src">466      def _post_process(self, section: str) -&gt; None:
+467          &quot;&quot;&quot;POST-PROCESS UPDATE block (LABD20.pco:392-405).
+468  
+469          Legacy: only update JC_COUNT_TBL if WS-JV-COUNTER &gt; WS-JV-COUNTERS.
+470          We infer WS-JV-COUNTERS = current JC_COUNT_NUM for the section
+471          (see ASSUMPTIONS A-10).
+472          &quot;&quot;&quot;
+473          existing = self.dispatcher.select_one(
+474              self.SELECT_COUNT_FOR_SECTION_SQL, (section,)
+475          )
+476          prior = int(existing.rows[0][0]) if existing.ok and existing.rows else 0
+477          if self.stats.accepted &lt;= prior:
+478              logger.info(
+479                  &quot;POST-PROCESS: counter %d not greater than prior %d — skip update&quot;,
+480                  self.stats.accepted,
+481                  prior,
+482              )
+483              return
+484  
+485          result = self.dispatcher.update(
+486              self.UPDATE_COUNT_SQL, (self.stats.accepted, section)
+487          )
+488          if not result.ok:
+489              self._fatal_rollback(
+490                  f&quot;JC_COUNT_TBL UPDATE failed dms={result.rtncode_dms} sqlcode={result.sqlcode}&quot;
+491              )
+492  
+493      # ------- close-sql-environment + stats --------------------------------</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">count_after_update</div><div class="val equal">5</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">count_after_update</div><div class="val equal">5</div></div></div></div></div>
+    <div class="notes"><strong>Note.</strong> Hardcoded section &#x27;MA&#x27; preserved; SME to confirm origin of WS-JV-COUNTERS comparand (ASSUMPTIONS A-10, RISKS Risk 8).</div>
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-017</span>
+    <span class="label">COMMIT + emit COUNT(*) stats on submitted/rejected/applied</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Run loader with 3 happy records → COUNTs reflect totals
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:408–446</h3>
+        <pre class="src">408         CLOSE-SQL-ENVIRONMENT.                                           CHG-015
+409             MOVE &#x27;CLOSE-SQL-ENVIRONMENT&#x27;  TO WS-PARA-NAME.               CHG-631
+410             MOVE &#x27;S&#x27;              TO WS-PROCESSING-SW.                   CHG-631
+411             MOVE &#x27; &#x27;              TO WS-TABLE-NAME.                      CHG-631
+412             MOVE &#x27;COMMIT&#x27;         TO WS-COMMAND-NAME.                    CHG-631
+413             EXEC SQL COMMIT WORK END-EXEC.                               CHG-015
+414             IF SQLCODE NOT = 0                                           CHG-631
+415                GO TO 9999-ROLL-BACK                                      CHG-631
+416             END-IF.                                                      CHG-631
+417             MOVE &#x27;CLOSE-SQL-ENVIRONMENT&#x27;  TO WS-PARA-NAME.               CHG-631
+418             MOVE &#x27;S&#x27;              TO WS-PROCESSING-SW.                   CHG-631
+419             MOVE &#x27;JC_SUBMITTED_COMMENT_TBL&#x27; TO WS-TABLE-NAME.            CHG-631
+420             MOVE &#x27;SELECT&#x27;         TO WS-COMMAND-NAME.                    CHG-631
+421             EXEC SQL SELECT COUNT(*) INTO  :WS-TOTAL-SUBMIT-END-CNT      CHG-015 
+422                FROM JC_SUBMITTED_COMMENT_TBL                             CHG-017 
+423             END-EXEC.                                                    CHG-015
+424             IF SQLCODE NOT = 0                                           CHG-631
+425                GO TO 9999-ROLL-BACK                                      CHG-631
+426             END-IF.                                                      CHG-631
+427             MOVE &#x27;CLOSE-SQL-ENVIRONMENT&#x27;  TO WS-PARA-NAME.               CHG-631
+428             MOVE &#x27;S&#x27;              TO WS-PROCESSING-SW.                   CHG-631
+429             MOVE &#x27;JC_REJECTED_COMMENT_TBL&#x27; TO WS-TABLE-NAME.             CHG-631
+430             MOVE &#x27;SELECT&#x27;         TO WS-COMMAND-NAME.                    CHG-631
+431             EXEC SQL SELECT COUNT(*) INTO  :WS-TOTAL-REJECT-END-CNT      CHG-015 
+432                FROM JC_REJECTED_COMMENT_TBL                              CHG-017 
+433             END-EXEC.                                                    CHG-015
+434             IF SQLCODE NOT = 0                                           CHG-631
+435                GO TO 9999-ROLL-BACK                                      CHG-631
+436             END-IF.                                                      CHG-631
+437             MOVE &#x27;CLOSE-SQL-ENVIRONMENT&#x27;  TO WS-PARA-NAME.               CHG-631
+438             MOVE &#x27;S&#x27;              TO WS-PROCESSING-SW.                   CHG-631
+439             MOVE &#x27;JC_APPLIED_COMMENT_TBL&#x27; TO WS-TABLE-NAME.              CHG-631
+440             MOVE &#x27;SELECT&#x27;         TO WS-COMMAND-NAME.                    CHG-631
+441             EXEC SQL SELECT COUNT(*) INTO  :WS-TOTAL-APPLIED-END-CNT     CHG-015 
+442                FROM JC_APPLIED_COMMENT_TBL                               CHG-017 
+443             END-EXEC.                                                    CHG-015 
+444             IF SQLCODE NOT = 0                                           CHG-631
+445                GO TO 9999-ROLL-BACK                                      CHG-631
+446             END-IF.                                                      CHG-631</pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:494–513</h3>
+        <pre class="src">494      def _commit_environment(self) -&gt; None:
+495          &quot;&quot;&quot;CLOSE-SQL-ENVIRONMENT (LABD20.pco:408-446). COMMIT + stats.&quot;&quot;&quot;
+496          commit = self.dispatcher.commit()
+497          if not commit.ok:
+498              self._fatal_rollback(
+499                  f&quot;COMMIT failed dms={commit.rtncode_dms} sqlcode={commit.sqlcode}&quot;
+500              )
+501  
+502          self.stats.submitted_total = self.dispatcher.count_rows(
+503              &quot;JC_SUBMITTED_COMMENT_TBL&quot;
+504          )
+505          self.stats.rejected_total = self.dispatcher.count_rows(
+506              &quot;JC_REJECTED_COMMENT_TBL&quot;
+507          )
+508          self.stats.applied_total = self.dispatcher.count_rows(
+509              &quot;JC_APPLIED_COMMENT_TBL&quot;
+510          )
+511          logger.info(&quot;\n%s&quot;, self.stats.format_report())
+512  
+513      # ------- helpers -------------------------------------------------------</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">submitted_total</div><div class="val equal">3</div><div class="key">rejected_total</div><div class="val equal">0</div><div class="key">applied_total</div><div class="val equal">0</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">submitted_total</div><div class="val equal">3</div><div class="key">rejected_total</div><div class="val equal">0</div><div class="key">applied_total</div><div class="val equal">0</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-018</span>
+    <span class="label">Truncate COMMENT-FILE so next run does not re-process</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> One happy record → COMMENT-FILE is zero bytes after run
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:215–218</h3>
+        <pre class="src">215             CLOSE COMMENT-FILE.                                          CHG-015 
+216             
+217             OPEN OUTPUT COMMENT-FILE.
+218             CLOSE COMMENT-FILE.</pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:302–314</h3>
+        <pre class="src">302  def truncate_file(comment_path: Path) -&gt; None:
+303      &quot;&quot;&quot;Mirror the OPEN OUTPUT / CLOSE truncate at LABD20.pco:215-218.
+304  
+305      Legacy semantics: opening a sequential file with OPEN OUTPUT positions
+306      at byte 0; the immediate CLOSE leaves the file with zero bytes. We
+307      reproduce that by writing an empty string.
+308      &quot;&quot;&quot;
+309      comment_path.write_text(&quot;&quot;, encoding=&quot;utf-8&quot;)
+310  
+311  
+312  # ---------------------------------------------------------------------------
+313  # Loader
+314  # ---------------------------------------------------------------------------</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">file_size_after</div><div class="val equal">0</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">file_size_after</div><div class="val equal">0</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-019</span>
+    <span class="label">SQLCODE → DMS translation drives rollback decisions</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Charles ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> Translate canonical SQLCODE values
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/DBIO.pco:374–398</h3>
+        <pre class="src">374         5300-TRANSLATE-SQLCODE.
+375             EVALUATE DB-SQLCODE-NUM
+376                 WHEN 0
+377                     MOVE &#x27;0000&#x27; TO DB-RTNCODE-DMS
+378                 WHEN 100
+379                     MOVE &#x27;0013&#x27;    TO DB-RTNCODE-DMS
+380                     IF  (DB-SET-NAME &gt; SPACES) 
+381                     AND (DB-FUNCTION-TYPE NOT = &#x27;FETCH OWNER&#x27;)
+382                        MOVE &#x27;0007&#x27; TO DB-RTNCODE-DMS
+383                     END-IF
+384                 WHEN -1
+385                     MOVE &#x27;0005&#x27;    TO DB-RTNCODE-DMS
+386                 WHEN -8103
+387                     MOVE &#x27;0000&#x27; TO DB-RTNCODE-DMS
+388                     DISPLAY &quot;RECEIVED ORACLE ERROR -8103, CONTINUE...&quot;
+389                     DISPLAY &quot; &quot;
+390                     DISPLAY &quot;TABLE NAME    = &quot; DB-TABLE-NAME
+391                     DISPLAY &quot;FUNCTION      = &quot; DB-FUNCTION
+392                     DISPLAY &quot;FUNCTION TYPE = &quot; DB-FUNCTION-TYPE
+393                     DISPLAY &quot;SET NAME      = &quot; DB-SET-NAME
+394                     DISPLAY &quot;KEY VALUE     = &quot; DB-CONSTRAINT
+395                     DISPLAY &quot;ROWID         = &quot; DB-ROWID
+396                 WHEN OTHER
+397                     MOVE &#x27;9999&#x27;    TO DB-RTNCODE-DMS
+398             END-EVALUATE.</pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/db_dispatcher.py:64–108</h3>
+        <pre class="src"> 64  def translate_sqlcode(
+ 65      sqlcode: int,
+ 66      *,
+ 67      set_name: str = &quot;&quot;,
+ 68      function_type: str = &quot;&quot;,
+ 69  ) -&gt; str:
+ 70      &quot;&quot;&quot;Reproduce 5300-TRANSLATE-SQLCODE from DBIO.pco:374-398.
+ 71  
+ 72      The legacy logic is verbatim:
+ 73        0     → 0000
+ 74        100   → 0013 (or 0007 if a DB-SET-NAME is non-blank AND function-type
+ 75                is not &#x27;FETCH OWNER&#x27; — DBIO.pco:380-383)
+ 76        -1    → 0005
+ 77        -8103 → 0000 (with a stderr-style DISPLAY block — see DBIO.pco:387-395;
+ 78                we route that to the logger)
+ 79        other → 9999
+ 80      &quot;&quot;&quot;
+ 81      if sqlcode == 0:
+ 82          return DMS_OK
+ 83      if sqlcode == 100:
+ 84          if set_name.strip() and function_type != &quot;FETCH OWNER&quot;:
+ 85              return DMS_NOT_FOUND_SET
+ 86          return DMS_NOT_FOUND
+ 87      if sqlcode == -1:
+ 88          return DMS_BAD_FETCH
+ 89      if sqlcode == -8103:
+ 90          logger.warning(
+ 91              &quot;RECEIVED ORACLE ERROR -8103, CONTINUE...&quot;
+ 92          )  # PLACEHOLDER: DBIO.pco:388-395 also displays table/function/key/rowid
+ 93          return DMS_CONTINUE_8103
+ 94      return DMS_UNHANDLED
+ 95  
+ 96  
+ 97  # ---------------------------------------------------------------------------
+ 98  # Configuration — explicit env-var driven; never read credential files.
+ 99  # ---------------------------------------------------------------------------
+100  # ASSUMPTION A-1 (migration/ASSUMPTIONS-AND-PLACEHOLDERS.md):
+101  #   Production deployments must populate these via a managed secrets store.
+102  #   The demo defaults to in-memory sqlite for zero-setup walkthrough.
+103  ENV_DB_BACKEND = &quot;JV_DB_BACKEND&quot;      # &quot;sqlite&quot; (demo) or &quot;oracle&quot; (prod)
+104  ENV_DB_DSN = &quot;JV_DB_DSN&quot;              # Oracle DSN, or sqlite path
+105  ENV_DB_USER = &quot;JV_DB_USER&quot;
+106  ENV_DB_PASSWORD = &quot;JV_DB_PASSWORD&quot;    # SME-REVIEW: route via secrets manager
+107  
+108  </pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">0</div><div class="val equal">&#x27;0000&#x27;</div><div class="key">100_default</div><div class="val equal">&#x27;0013&#x27;</div><div class="key">100_set_name</div><div class="val equal">&#x27;0007&#x27;</div><div class="key">-1</div><div class="val equal">&#x27;0005&#x27;</div><div class="key">-942</div><div class="val equal">&#x27;9999&#x27;</div><div class="key">-8103</div><div class="val equal">&#x27;0000&#x27;</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">0</div><div class="val equal">&#x27;0000&#x27;</div><div class="key">100_default</div><div class="val equal">&#x27;0013&#x27;</div><div class="key">100_set_name</div><div class="val equal">&#x27;0007&#x27;</div><div class="key">-1</div><div class="val equal">&#x27;0005&#x27;</div><div class="key">-942</div><div class="val equal">&#x27;9999&#x27;</div><div class="key">-8103</div><div class="val equal">&#x27;0000&#x27;</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-020</span>
+    <span class="label">REJECTED counters increment; JC_REJECTED table is read-only here</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-low">LOW</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Inferred (gap) ·
+      <strong>Input:</strong> One JV=0 record → counter increments; table itself untouched
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:309–314</h3>
+        <pre class="src">309             IF TST123-RECORD-IN-ERROR                                    CHG-015 
+310                 ADD 1 TO WS-TST123-RECS-ERR-CNT                          CHG-015 
+311                 ADD 1 TO WS-ERRORS-CNT                                   CHG-015
+312             ELSE                                                         CHG-015 
+313                 PERFORM DETERMINE-IF-DUPLICATE                           CHG-015 
+314             END-IF.                                                      CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:409–440</h3>
+        <pre class="src">409      def _handle_record(self, raw: str, process_date: str) -&gt; None:
+410          self.stats.total_read += 1
+411          try:
+412              record = parse_comment_record(raw)
+413          except ValueError as exc:
+414              self.stats.rejected += 1
+415              self.stats.rejected_reasons.append(f&quot;parse error: {exc}&quot;)
+416              return
+417  
+418          is_valid, reasons = determine_disposition(record)
+419          if not is_valid:
+420              self.stats.rejected += 1
+421              self.stats.rejected_reasons.extend(reasons)
+422              logger.info(&quot;REJECTED %s reasons=%s&quot;, record.submitted_key, reasons)
+423              return
+424  
+425          # Duplicate check (LABD20.pco:317-339).
+426          dupe = self.dispatcher.select_one(
+427              self.SELECT_DUPE_SQL, (record.submitted_key,)
+428          )
+429          if dupe.rtncode_dms not in (db_dispatcher.DMS_OK, db_dispatcher.DMS_NOT_FOUND):
+430              self._fatal_rollback(
+431                  f&quot;duplicate-check failed dms={dupe.rtncode_dms} sqlcode={dupe.sqlcode}&quot;
+432              )
+433  
+434          if dupe.ok:
+435              self.stats.duplicates += 1
+436              logger.info(&quot;DUPLICATE ENTRY %s&quot;, record.submitted_key)
+437              return
+438  
+439          self._insert(record, process_date)
+440  </pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">in_memory_rejected</div><div class="val equal">1</div><div class="key">rejected_table_rows</div><div class="val equal">0</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">in_memory_rejected</div><div class="val equal">1</div><div class="key">rejected_table_rows</div><div class="val equal">0</div></div></div></div></div>
+    <div class="notes"><strong>Note.</strong> Supplied source does not populate JC_REJECTED_COMMENT_TBL — likely populated by a different program. SME to confirm.</div>
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-021</span>
+    <span class="label">WS-CONTROL-NUM = JV-NUMBER(6) + SECTION-ID(2) = 8 chars</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> jv=000123 section=01 → control_num = 00012301
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:160–165</h3>
+        <pre class="src">160             05  WS-TOTAL-SUBMIT-END-CNT        PIC 9(12).                CHG-015 
+161                                                                          CHG-015 
+162         01  WS-CONTROL-NUM                     PIC X(8).                 CHG-015 
+163         01  WS-CONTROL-NUMREDEF REDEFINES WS-CONTROL-NUM.                CHG-015 
+164             05 WS-TST123-JV-NUMBER             PIC 9(006).               CHG-015 
+165             05 WS-TST123-SECTION-ID            PIC 9(002).               CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:130–134</h3>
+        <pre class="src">130      @property
+131      def control_num(self) -&gt; str:
+132          &quot;&quot;&quot;WS-CONTROL-NUM = JV-NUMBER (6) + SECTION-ID (2) = 8 bytes.
+133          Cite: LABD20.pco:160-165 (WS-CONTROL-NUM redefine).&quot;&quot;&quot;
+134          return f&quot;{self.jv_number}{self.section_id}&quot;</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">control_num</div><div class="val equal">&#x27;00012301&#x27;</div><div class="key">len</div><div class="val equal">8</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">control_num</div><div class="val equal">&#x27;00012301&#x27;</div><div class="key">len</div><div class="val equal">8</div></div></div></div></div>
+    
+  </div>
+</details>
+
+<details>
+  <summary>
+    <span class="br-id">BR-LABD20-022</span>
+    <span class="label">COMMENT-HIST = SCHED-DOC-NO(10) + COMMENT-TEXT(230) verbatim</span>
+    <span class="pills">
+      <span class="pill pass">PASS</span>
+      <span class="pill conf-high">HIGH</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> Jill ·
+      <strong>Classification:</strong> Confirmed ·
+      <strong>Input:</strong> sched=DOC1234567 text=&#x27;hello world&#x27;
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — source/procobol/LABD20.pco:50–52</h3>
+        <pre class="src">50             05  TST123-COMMENT-HIST.                                     CHG-015 
+51                 15 TST123-SCHEDULE-DOC-NO      PIC X(010).               CHG-015 
+52                 15 TST123-COMMENT-TEXT         PIC X(230).               CHG-015 </pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — migration/converted-code/python/labd20_loader.py:95–99</h3>
+        <pre class="src">95  LOAN_DT_NR_SLICE = slice(0, 26)       # composite redefine
+96  SCHEDULE_DOC_NO_SLICE = slice(26, 36) # PIC X(010)
+97  COMMENT_TEXT_SLICE = slice(36, 266)   # PIC X(230)
+98  COMMENT_HIST_SLICE = slice(26, 266)   # composite SCHED_DOC_NO + TEXT
+99  REQUESTOR_SLICE = slice(266, 286)     # PIC X(020)</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">hist_starts_with_doc</div><div class="val equal">True</div><div class="key">hist_len</div><div class="val equal">240</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">hist_starts_with_doc</div><div class="val equal">True</div><div class="key">hist_len</div><div class="val equal">240</div></div></div></div></div>
+    
+  </div>
+</details>
+
+</div>
+<footer>
+  Cognition — federal modernization preview. Synthetic data only.
+</footer>
+</body>
+</html>
