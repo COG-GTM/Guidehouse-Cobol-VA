@@ -1,0 +1,47 @@
+========================================================================
+Cognition × Guidehouse — JV COBOL modernization demo
+========================================================================
+Process date           : 20260115
+
+LABA05 fiscal-year reset
+  return code          : 0
+  JV-NUMBER before     : 99
+  JV-NUMBER after      : 1
+  message              : JV-NUMBER reset to 1
+
+LABD20 comment loader
+  records read         : 21
+  inserted             : 7
+  duplicates           : 2
+  rejected             : 12
+  submitted total      : 7
+
+Rejection reasons (first 12):
+  - section id is non-numeric
+  - blank record
+  - comment date is non-numeric
+  - JV number is non-numeric or zero
+  - section id is non-numeric
+  - loan number is non-numeric
+  - comment text is blank
+  - requestor is blank
+  - approver is blank
+  - comment date is non-numeric
+  - comment date is not a valid YYYYMMDD calendar date
+  - JV number is non-numeric or zero
+
+Mock-DB final state (truncated for readability):
+  [CONTROL_RECORD_TABLE]: 1 row(s)
+  [JC_SUBMITTED_COMMENT_TBL]: 7 row(s)
+  [JC_COUNT_TBL]: 1 row(s)
+
+*** COMMENT PROCESSING ***
+PROCESS DATE              : 20260115
+COMMENTS READ             : 21
+COMMENTS ACCEPTED         : 7
+COMMENTS REJECTED         : 12
+COMMENTS DUPLICATE        : 2
+COMMENTS INSERTED         : 7
+JC_SUBMITTED TOTAL        : 7
+JC_REJECTED TOTAL         : 0
+JC_APPLIED  TOTAL         : 0
