@@ -60,6 +60,12 @@ from python.labd20_loader import (  # noqa: E402
 )
 from python.laba05_reset import ResetOutcome  # noqa: E402
 from python.laba05_reset import run as laba05_run  # noqa: E402
+from python.parity_engine import (  # noqa: E402
+    ParityRow,
+    read_source_span,
+    run_all as run_parity,
+    summary as parity_summary,
+)
 
 
 SYNTHETIC_DATA = REPO_ROOT / "migration" / "test-data" / "synthetic_comments.dat"
@@ -262,7 +268,11 @@ HTML_TEMPLATE = """<!doctype html>
 <body>
 <header>
   <span class="wordmark">▰ Cognition <span class="mono">/ JV demo</span></span>
-  <span style="font-size:12px; opacity:0.8;">Demo output — pending SME review</span>
+  <span style="font-size:12px; opacity:0.8;">
+    <a href="/" style="color:#fff; opacity:0.9;">dashboard</a> ·
+    <a href="/parity" style="color:#fff; opacity:0.9;">parity console</a> ·
+    Demo output — pending SME review
+  </span>
 </header>
 <div class="container">
   <h1>JV COBOL modernization — live demo</h1>
@@ -350,6 +360,252 @@ def _render_html(report: dict[str, Any]) -> str:
     )
 
 
+# ---------------------------------------------------------------------------
+# Parity console rendering
+# ---------------------------------------------------------------------------
+PARITY_PAGE = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Cognition — COBOL↔Python parity console</title>
+<style>
+  * {{ box-sizing: border-box; }}
+  body {{
+    font-family: 'Inter Tight','Inter',system-ui,sans-serif;
+    margin:0; padding:0; background:#fafafa; color:#111;
+  }}
+  header {{ background:#000; color:#fff; padding:18px 28px;
+            display:flex; align-items:center; justify-content:space-between; }}
+  .wordmark {{ font-weight:600; font-size:18px; letter-spacing:0.3px; }}
+  header a {{ color:#fff; opacity:0.85; text-decoration:none; margin-left:8px; }}
+  header a:hover {{ opacity:1; }}
+  .container {{ max-width:1280px; margin:0 auto; padding:24px; }}
+  h1 {{ font-size:24px; margin:0 0 4px; font-weight:600; }}
+  .subtitle {{ color:#555; font-size:14px; margin-bottom:18px; }}
+  .banner {{
+    background:#fff7e6; border:1px solid #f0c674; color:#5a3e00;
+    padding:14px 18px; border-radius:10px; margin:18px 0 22px;
+    font-size:13px; line-height:1.55;
+  }}
+  .banner strong {{ color:#7a4a00; }}
+  .stat-row {{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }}
+  .card {{ background:#fff; border:1px solid #e2e2e2; border-radius:10px;
+           padding:14px 18px; flex:1; min-width:180px; }}
+  .card .label {{ color:#666; font-size:11px; text-transform:uppercase;
+                  letter-spacing:0.6px; }}
+  .card .value {{ font-size:26px; font-weight:600; margin-top:2px; }}
+  .pill {{ display:inline-block; padding:2px 10px; border-radius:999px;
+           font-size:11px; font-weight:600; letter-spacing:0.2px; }}
+  .pill.pass {{ background:#d6f5dd; color:#14532d; }}
+  .pill.fail {{ background:#fadbd8; color:#7c1d12; }}
+  .pill.unresolved {{ background:#fde7c5; color:#7a4a00; }}
+  .pill.conf-high {{ background:#dbeafe; color:#1e3a8a; }}
+  .pill.conf-medium {{ background:#fde7c5; color:#7a4a00; }}
+  .pill.conf-low {{ background:#fadbd8; color:#7c1d12; }}
+  details {{ background:#fff; border:1px solid #e2e2e2; border-radius:10px;
+             padding:0; margin-bottom:10px; }}
+  details[open] {{ box-shadow:0 4px 14px rgba(0,0,0,0.04); }}
+  summary {{ cursor:pointer; padding:14px 18px; display:flex;
+              align-items:center; gap:10px; font-size:14px;
+              list-style:none; outline:none; }}
+  summary::-webkit-details-marker {{ display:none; }}
+  summary .br-id {{ font-family:'JetBrains Mono', ui-monospace,
+                     SFMono-Regular, monospace; font-weight:600;
+                     color:#111; min-width:140px; }}
+  summary .label {{ flex:1; color:#222; }}
+  summary .pills {{ display:flex; gap:6px; }}
+  .body {{ padding:0 18px 16px; }}
+  .meta {{ font-size:12px; color:#555; margin-bottom:8px; }}
+  .grid3 {{ display:grid; grid-template-columns: 1fr 1fr; gap:14px;
+            margin-top:8px; }}
+  .col {{ background:#fafafa; border:1px solid #ececec; border-radius:8px;
+          overflow:hidden; }}
+  .col h3 {{ margin:0; font-size:12px; padding:8px 12px;
+             background:#f4f4f4; color:#333; font-weight:600;
+             text-transform:uppercase; letter-spacing:0.6px; }}
+  pre.src {{ margin:0; padding:12px; font-size:11.5px;
+              font-family:'JetBrains Mono', ui-monospace, monospace;
+              background:#0d0d0d; color:#e8e8e8; overflow-x:auto;
+              line-height:1.5; }}
+  .diff {{ display:grid; grid-template-columns: 1fr 1fr; gap:10px;
+            font-family:'JetBrains Mono', ui-monospace, monospace;
+            font-size:12px; }}
+  .diff > div {{ background:#fafafa; border:1px solid #ececec;
+                 border-radius:6px; padding:10px; }}
+  .diff h4 {{ margin:0 0 6px; font-size:11px; color:#666;
+              text-transform:uppercase; letter-spacing:0.5px;
+              font-family:'Inter Tight',sans-serif; }}
+  .diff .kv {{ display:grid; grid-template-columns: max-content 1fr;
+               gap:6px 14px; }}
+  .diff .kv .key {{ color:#555; }}
+  .diff .kv .val.equal {{ color:#14532d; }}
+  .diff .kv .val.mismatch {{ color:#7c1d12; font-weight:600; }}
+  .notes {{ background:#fff7e6; border-left:3px solid #f0c674;
+             color:#5a3e00; padding:8px 12px; margin-top:10px;
+             font-size:12px; border-radius:0 6px 6px 0; }}
+  footer {{ color:#666; font-size:12px; padding:24px; text-align:center; }}
+</style>
+</head>
+<body>
+<header>
+  <span class="wordmark">▰ Cognition <span style="opacity:0.8;">/ parity console</span></span>
+  <span style="font-size:12px;">
+    <a href="/">dashboard</a> · <a href="/parity">parity console</a>
+  </span>
+</header>
+<div class="container">
+  <h1>COBOL↔Python parity per business requirement</h1>
+  <div class="subtitle">
+    {n_total} checks · derived golden output vs. live Python execution against
+    the in-memory mock Oracle. Click any row for source + diff.
+  </div>
+
+  <div class="banner">
+    <strong>How to read this.</strong>
+    The <em>expected</em> column is a <strong>golden output derived line-by-line
+    from the COBOL/Pro*COBOL source</strong> — it is not produced by running
+    the legacy program. There is no Pro*COBOL precompiler or Oracle on this
+    box, so re-executing the COBOL itself is out of scope here.
+    The <em>actual</em> column is produced live by the modernized Python
+    against an in-memory mock Oracle. In a real engagement, flip one config
+    switch and the expected column becomes a live mainframe execution against
+    the same synthetic input, producing the byte-for-byte diff that SBA
+    question 2 / 14 describes.
+  </div>
+
+  <div class="stat-row">
+    <div class="card"><div class="label">PASS</div><div class="value" style="color:#14532d;">{n_pass}</div></div>
+    <div class="card"><div class="label">FAIL</div><div class="value" style="color:#7c1d12;">{n_fail}</div></div>
+    <div class="card"><div class="label">UNRESOLVED</div><div class="value" style="color:#7a4a00;">{n_unresolved}</div></div>
+    <div class="card"><div class="label">confidence</div><div class="value" style="font-size:16px;">
+      <span class="pill conf-high">HIGH {n_high}</span>
+      <span class="pill conf-medium">MED {n_med}</span>
+      <span class="pill conf-low">LOW {n_low}</span>
+    </div></div>
+  </div>
+
+  {rows_html}
+</div>
+<footer>
+  Cognition — federal modernization preview. Synthetic data only.
+</footer>
+</body>
+</html>
+"""
+
+
+def _diff_kv(expected: dict[str, Any], actual: dict[str, Any]) -> str:
+    """Render side-by-side expected vs. actual key/value lists."""
+    keys = list(dict.fromkeys(list(expected.keys()) + list(actual.keys())))
+    exp_rows = []
+    act_rows = []
+    for k in keys:
+        e = expected.get(k, "(missing)")
+        a = actual.get(k, "(missing)")
+        cls = "equal" if e == a else "mismatch"
+        exp_rows.append(
+            f'<div class="key">{escape(str(k))}</div>'
+            f'<div class="val {cls}">{escape(repr(e))}</div>'
+        )
+        act_rows.append(
+            f'<div class="key">{escape(str(k))}</div>'
+            f'<div class="val {cls}">{escape(repr(a))}</div>'
+        )
+    return (
+        '<div class="diff">'
+        '<div><h4>expected — derived from COBOL source</h4>'
+        f'<div class="kv">{"".join(exp_rows)}</div></div>'
+        '<div><h4>actual — live Python output</h4>'
+        f'<div class="kv">{"".join(act_rows)}</div></div>'
+        '</div>'
+    )
+
+
+def _render_parity_row(r: ParityRow) -> str:
+    status_cls = r.status.lower()
+    conf_cls = f"conf-{r.confidence.lower()}"
+    cobol_src = read_source_span(r.cobol_path, r.cobol_lines[0], r.cobol_lines[1])
+    py_src = read_source_span(r.python_path, r.python_lines[0], r.python_lines[1])
+    notes_block = (
+        f'<div class="notes"><strong>Note.</strong> {escape(r.notes)}</div>'
+        if r.notes
+        else ""
+    )
+    return f"""
+<details>
+  <summary>
+    <span class="br-id">{escape(r.br_id)}</span>
+    <span class="label">{escape(r.label)}</span>
+    <span class="pills">
+      <span class="pill {status_cls}">{escape(r.status)}</span>
+      <span class="pill {conf_cls}">{escape(r.confidence)}</span>
+    </span>
+  </summary>
+  <div class="body">
+    <div class="meta">
+      <strong>Asked by:</strong> {escape(r.owner)} ·
+      <strong>Classification:</strong> {escape(r.classification)} ·
+      <strong>Input:</strong> {escape(r.input_desc)}
+    </div>
+    <div class="grid3">
+      <div class="col">
+        <h3>COBOL source — {escape(r.cobol_path)}:{r.cobol_lines[0]}–{r.cobol_lines[1]}</h3>
+        <pre class="src">{escape(cobol_src)}</pre>
+      </div>
+      <div class="col">
+        <h3>Python conversion — {escape(r.python_path)}:{r.python_lines[0]}–{r.python_lines[1]}</h3>
+        <pre class="src">{escape(py_src)}</pre>
+      </div>
+    </div>
+    <div style="margin-top:12px;">{_diff_kv(r.expected, r.actual)}</div>
+    {notes_block}
+  </div>
+</details>
+"""
+
+
+def _render_parity_html(rows: list[ParityRow]) -> str:
+    summary = parity_summary(rows)
+    n_high = sum(1 for r in rows if r.confidence == "HIGH")
+    n_med = sum(1 for r in rows if r.confidence == "MEDIUM")
+    n_low = sum(1 for r in rows if r.confidence == "LOW")
+    rows_html = "".join(_render_parity_row(r) for r in rows)
+    return PARITY_PAGE.format(
+        n_total=len(rows),
+        n_pass=summary.get("PASS", 0),
+        n_fail=summary.get("FAIL", 0),
+        n_unresolved=summary.get("UNRESOLVED", 0),
+        n_high=n_high,
+        n_med=n_med,
+        n_low=n_low,
+        rows_html=rows_html,
+    )
+
+
+def cmd_parity(args: argparse.Namespace) -> int:
+    """CLI: run the parity sweep and print a tabular summary."""
+    rows = run_parity()
+    summary = parity_summary(rows)
+    width = max(len(r.br_id) for r in rows)
+    print(
+        f"Parity sweep: PASS={summary.get('PASS',0)} "
+        f"FAIL={summary.get('FAIL',0)} "
+        f"UNRESOLVED={summary.get('UNRESOLVED',0)} "
+        f"(of {len(rows)} business requirements)"
+    )
+    print("-" * 72)
+    for r in rows:
+        print(f"  {r.status:5}  {r.br_id:<{width}}  {r.label}")
+        if r.status != "PASS":
+            print(f"          expected = {r.expected}")
+            print(f"          actual   = {r.actual}")
+    if args.out:
+        out = Path(args.out)
+        out.write_text(_render_parity_html(rows), encoding="utf-8")
+        print(f"Wrote parity console HTML to {out}")
+    return 0 if summary.get("FAIL", 0) == 0 else 1
+
+
 def cmd_serve(args: argparse.Namespace) -> int:
     import http.server
     import socketserver
@@ -359,9 +615,15 @@ def cmd_serve(args: argparse.Namespace) -> int:
     report = _run_full_demo(comments_path)
     html = _render_html(report)
 
+    parity_rows = run_parity()
+    parity_html = _render_parity_html(parity_rows)
+
     out_path = work_dir / "index.html"
     out_path.write_text(html, encoding="utf-8")
+    parity_path = work_dir / "parity.html"
+    parity_path.write_text(parity_html, encoding="utf-8")
     print(f"Wrote dashboard to {out_path}")
+    print(f"Wrote parity console to {parity_path}")
 
     if args.no_serve:
         return 0
@@ -373,11 +635,33 @@ def cmd_serve(args: argparse.Namespace) -> int:
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.end_headers()
                 self.wfile.write(html.encode("utf-8"))
+            elif self.path in ("/parity", "/parity.html"):
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(parity_html.encode("utf-8"))
             elif self.path == "/report.json":
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
                 self.end_headers()
                 self.wfile.write(json.dumps(report, indent=2, default=str).encode())
+            elif self.path == "/parity.json":
+                payload = [
+                    {
+                        "br_id": r.br_id, "label": r.label, "owner": r.owner,
+                        "status": r.status, "confidence": r.confidence,
+                        "classification": r.classification,
+                        "cobol": f"{r.cobol_path}:{r.cobol_lines[0]}-{r.cobol_lines[1]}",
+                        "python": f"{r.python_path}:{r.python_lines[0]}-{r.python_lines[1]}",
+                        "expected": r.expected, "actual": r.actual,
+                        "notes": r.notes,
+                    }
+                    for r in parity_rows
+                ]
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(payload, indent=2, default=str).encode())
             else:
                 self.send_response(404)
                 self.end_headers()
@@ -387,6 +671,7 @@ def cmd_serve(args: argparse.Namespace) -> int:
 
     address = ("127.0.0.1", args.port)
     print(f"Serving demo dashboard at http://127.0.0.1:{args.port}/ — Ctrl-C to stop.")
+    print(f"Parity console:           http://127.0.0.1:{args.port}/parity")
     with socketserver.TCPServer(address, Handler) as httpd:
         try:
             httpd.serve_forever()
@@ -412,6 +697,10 @@ def main(argv: list[str] | None = None) -> int:
     p_serve.add_argument("--no-serve", action="store_true", help="Generate the HTML and exit.")
     p_serve.add_argument("--work-dir", help="Where to copy synthetic input (truncate-safe).")
     p_serve.set_defaults(func=cmd_serve)
+
+    p_parity = sub.add_parser("parity", help="Run the 28-BR COBOL↔Python parity sweep.")
+    p_parity.add_argument("--out", help="Optional path to write the parity console HTML.")
+    p_parity.set_defaults(func=cmd_parity)
 
     args = parser.parse_args(argv)
     return args.func(args)
