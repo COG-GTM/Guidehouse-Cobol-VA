@@ -420,7 +420,7 @@
         "JC_SUBMITTED_COMMENT_TBL",
         "JC_SUBMITTED_COMMENT_APPROVER"
       ],
-      "note": "U-5: APPROVER input slice is 14 bytes (LABD20.pco line 55) but Oracle column is CHAR(20); modernized loader right-pads to 20"
+      "note": "U-5: APPROVER input slice is 14 bytes (LABD20.pco line 55) but Oracle column is CHAR(20); the modernized loader stores the 14-byte slice as-is. Oracle CHAR(20) would right-pad on the database side."
     }
   ],
   "insert_shape": {
@@ -524,7 +524,7 @@
       "python_width": 14,
       "oracle_width": 20,
       "matches": false,
-      "known_issue": "U-5: APPROVER input slice is 14 bytes (LABD20.pco line 55) but Oracle column is CHAR(20); modernized loader right-pads to 20"
+      "known_issue": "U-5: APPROVER input slice is 14 bytes (LABD20.pco line 55) but Oracle column is CHAR(20); the modernized loader stores the 14-byte slice as-is. Oracle CHAR(20) would right-pad on the database side."
     }
   }
 }

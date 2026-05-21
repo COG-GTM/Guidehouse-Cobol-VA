@@ -48,9 +48,12 @@ in modern Unix views).
 
 > **Note on APPROVER width mismatch:** The FD declares 14 bytes (active line 55),
 > but the Oracle column `JC_SUBMITTED_COMMENT_APPROVER` is `CHAR(20)` per the
-> describe file. Oracle right-pads with spaces; behavior preserved. Flag for SME
-> review whether the deprecated 20-byte FD line (line 54) was intentionally
-> shortened or whether downstream code expects 20.
+> describe file. The modernized Python loader stores the 14-byte slice as-is
+> (see `migration/test-results/schema-parity-report.json` —
+> `actual_length: 14`); Oracle `CHAR(20)` would right-pad on the database side
+> at write time, but the demo sqlite target does not. Flag for SME review
+> whether the deprecated 20-byte FD line (line 54) was intentionally shortened
+> or whether downstream code expects 20.
 
 ### Lineage: card file → bind variable
 

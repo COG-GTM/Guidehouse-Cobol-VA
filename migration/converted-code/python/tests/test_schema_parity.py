@@ -138,7 +138,8 @@ KNOWN_ISSUES: dict[tuple[str, str], str] = {
     ),
     ("JC_SUBMITTED_COMMENT_TBL", "JC_SUBMITTED_COMMENT_APPROVER"): (
         "U-5: APPROVER input slice is 14 bytes (LABD20.pco line 55) but "
-        "Oracle column is CHAR(20); modernized loader right-pads to 20"
+        "Oracle column is CHAR(20); the modernized loader stores the 14-byte "
+        "slice as-is. Oracle CHAR(20) would right-pad on the database side."
     ),
 }
 
@@ -1017,9 +1018,10 @@ class TestByteWidthParity:
         parity_report: ParityReport,
     ):
         """U-5: the APPROVER slice is 14 bytes (LABD20.pco line 55) but the
-        Oracle column is CHAR(20). The loader right-pads to 20. This test
-        verifies the mismatch is **detected** and surfaced as a known-issue
-        annotation — it must NOT fail."""
+        Oracle column is CHAR(20). The modernized loader stores the 14-byte
+        slice as-is; Oracle CHAR(20) would right-pad on the database side.
+        This test verifies the mismatch is **detected** and surfaced as a
+        known-issue annotation — it must NOT fail."""
         slice_width = APPROVER_SLICE.stop - APPROVER_SLICE.start
         oracle_width = (
             oracle_tables["JC_SUBMITTED_COMMENT_TBL"]
