@@ -17,16 +17,30 @@
 
 ## A. Assumptions (where a decision had to be made)
 
-### A-1 — Calendar-date validation stub for the missing `DATECONV-WS` / `DATECONV-PD` copybooks
+### A-1 — ~~Calendar-date validation stub for the missing `DATECONV-WS` / `DATECONV-PD` copybooks~~ RETIRED 2026-05-21
+
+**Status:** ~~LOW confidence stub~~ **RETIRED.** Customer follow-up shipment supplied the full date-conversion closure (`DATECONV-WS`, `DATECONV-PD`, `DATECONV.cbl`, `JDN-CONSTANTS-WS`, `JDN-PACKET-WS`, `JDN-RECORD-WS`, `JDN-RECORD-ACCESS`). Stub replaced by faithful Python port at `migration/converted-code/python/dateconv.py`. `BR-LABD20-006` parity row promoted LOW → HIGH.
+
+**Original framing (preserved for audit trail):**
+
+> | Aspect | Value |
+> | --- | --- |
+> | ~~Confidence~~ | ~~**LOW** (cannot verify against the real copybook)~~ |
+> | ~~Source citation~~ | ~~`LABD20.pco:182` (`COPY DATECONV-WS.`); `LABD20.pco:266-267` (call to `CHECK-CYMD-DT`, sets `DATE-IS-VALID`)~~ |
+> | ~~Decision~~ | ~~Implement `check_cymd_dt(yyyymmdd: str) -> bool` that returns `True` iff: (a) string is exactly 8 numeric digits, (b) year ≥ 1900 and ≤ 2100, (c) month in 1..12, (d) day in 1..days-in-month with Feb-29 leap-year handling.~~ |
+> | ~~Placeholder marker in code~~ | ~~`# PLACEHOLDER (Risk 1):` and `# SME-REVIEW:` in `labd20_loader.py`~~ |
+> | ~~Risk~~ | ~~[Risk 1](./RISKS-AND-GAPS.md#risk-1)~~ |
+> | ~~SME-action~~ | ~~Provide `DATECONV-WS` / `DATECONV-PD`, or sign off that the stub semantics are acceptable.~~ |
+
+**New post-resolution facts:**
 
 | Aspect | Value |
 | --- | --- |
-| Confidence | **LOW** (cannot verify against the real copybook) |
-| Source citation | `LABD20.pco:182` (`COPY DATECONV-WS.`); `LABD20.pco:266-267` (call to `CHECK-CYMD-DT`, sets `DATE-IS-VALID`) |
-| Decision | Implement `check_cymd_dt(yyyymmdd: str) -> bool` that returns `True` iff: (a) string is exactly 8 numeric digits, (b) year ≥ 1900 and ≤ 2100, (c) month in 1..12, (d) day in 1..days-in-month with Feb-29 leap-year handling. |
-| Placeholder marker in code | `# PLACEHOLDER (Risk 1):` and `# SME-REVIEW:` in `labd20_loader.py` |
-| Risk | [Risk 1](./RISKS-AND-GAPS.md#risk-1--missing-dateconv-ws-and-dateconv-pd-copybooks) |
-| SME-action | Provide `DATECONV-WS` / `DATECONV-PD`, or sign off that the stub semantics are acceptable. |
+| Confidence | **HIGH** (faithful port of customer's `DATECONV.cbl`; covered by GnuCOBOL runtime parity diff) |
+| Source citation | `source/cobol/DATECONV.cbl` (`PROGRAM-ID. DATECONV`); `source/copybooks/DATECONV-WS.cpy`; `source/copybooks/DATECONV-PD.cpy` (`CHECK-CYMD-DT` paragraph sets `DATESUB-FUNC = 1` then `CALL 'DATECONV'`); `LABD20.pco:182, 266-267, 531` |
+| Implementation | `migration/converted-code/python/dateconv.py` ports all 42 `DATESUB-FUNC` entry paragraphs, including `CHECK-CYMD-DT`. Internally delegates to Python's `datetime.date` (Gregorian) for the four base operations the customer's IAI-2012 migration also delegates to via COBOL-85 intrinsic functions (`INTEGER-OF-DATE`, `DATE-OF-INTEGER`, `INTEGER-OF-DAY`, `DAY-OF-INTEGER`). |
+| Runtime parity evidence | `migration/test-results/cobol-parity-report.html` (GnuCOBOL legacy ⇔ Python port, byte-for-byte diff across ~50 vectors covering all `DATESUB-FUNC` codes, leap years, century rollover, invalid dates, year bounds). |
+| Risk | [Risk 1](./RISKS-AND-GAPS.md#risk-1--missing-dateconv-ws-and-dateconv-pd-copybooks-closed-2026-05-21) — CLOSED |
 
 ### A-2 — Display-only representation of `JV-NUMBER` at the DB boundary
 
@@ -120,9 +134,11 @@
 
 ## B. Placeholders (stubs that intentionally do less than the legacy program)
 
-### P-1 — `check_cymd_dt` calendar validation
+### P-1 — ~~`check_cymd_dt` calendar validation~~ RETIRED 2026-05-21
 
-See [A-1](#a-1--calendar-date-validation-stub-for-the-missing-dateconv-ws--dateconv-pd-copybooks). Marked `# PLACEHOLDER (Risk 1):` in the loader.
+~~See [A-1](#a-1--calendar-date-validation-stub-for-the-missing-dateconv-ws--dateconv-pd-copybooks). Marked `# PLACEHOLDER (Risk 1):` in the loader.~~
+
+**Retired 2026-05-21.** The stub was replaced by `migration/converted-code/python/dateconv.py` — a faithful port of the customer-supplied `DATECONV.cbl`. The loader now calls `dateconv.check_cymd_dt(yyyymmdd)` against the ported subprogram. The `# PLACEHOLDER (Risk 1)` markers in `labd20_loader.py` were demoted to `# DATECONV-PORT (A-1 RESOLVED 2026-05-21)` audit annotations. See [A-1 above](#a-1) and [Risk 1](./RISKS-AND-GAPS.md#risk-1--missing-dateconv-ws-and-dateconv-pd-copybooks-closed-2026-05-21).
 
 ### P-2 — Error printer output
 
@@ -144,7 +160,7 @@ The COBOL programs route many messages to `UPON PRINTER`. Modernized Python rout
 
 | # | Item | Blocking artifact |
 | --- | --- | --- |
-| U-1 | Exact behavior of `CHECK-CYMD-DT` | `DATECONV-PD` copybook |
+| ~~U-1~~ | ~~Exact behavior of `CHECK-CYMD-DT`~~ | ~~`DATECONV-PD` copybook~~ — **RESOLVED 2026-05-21** (customer follow-up shipment). |
 | U-2 | Whether any in-memory caller of `JV-CONTROL-REC` reads the binary form outside `CONTROL-RECORD-TABLE-IO` | Customer codebase inventory |
 | U-3 | Full set of `*-IO` modules used in production | Customer codebase inventory |
 | U-4 | Production environment-variable list (`CARDFILE`, `COMMENT`, `ORACLE_*`, etc.) | Customer ops runbook |

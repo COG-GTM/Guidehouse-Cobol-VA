@@ -55,12 +55,13 @@ Do not modify customer-supplied source files under `source/` unless explicitly a
 
 ## Known Missing Artifacts
 
-`LABD20.pco` references these copybooks, but they were not supplied:
-
-- `DATECONV-WS`
-- `DATECONV-PD`
-
-Always call this out in requirements, lineage, conversion, tests, and confidence notes. Exact legacy date-validation fidelity cannot be fully verified without these copybooks.
+> ~~`LABD20.pco` references these copybooks, but they were not supplied: `DATECONV-WS`, `DATECONV-PD`. Always call this out in requirements, lineage, conversion, tests, and confidence notes. Exact legacy date-validation fidelity cannot be fully verified without these copybooks.~~
+>
+> **Resolved 2026-05-21 (customer follow-up shipment).** Guidehouse supplied the full date-conversion subsystem closure: `source/copybooks/DATECONV-WS.cpy`, `source/copybooks/DATECONV-PD.cpy`, `source/cobol/DATECONV.cbl` (the `PROGRAM-ID. DATECONV` subprogram itself), and its four internal JDN helpers (`JDN-CONSTANTS-WS.cpy`, `JDN-PACKET-WS.cpy`, `JDN-RECORD-WS.cpy`, `JDN-RECORD-ACCESS.cpy`). Every `COPY` and `CALL` originating from `LABD20.pco` now resolves end-to-end. The IAI-2012 migration markers (`MIGRTN` comment column) inside `DATECONV.cbl` are preserved verbatim — see [`analysis/dateconv-function-inventory.md`](./analysis/dateconv-function-inventory.md) for the 42-function inventory, `DATESUB-FUNC` codes, and intrinsic-function mapping.
+>
+> **Effect on the demo:** [Risk 1](./migration/RISKS-AND-GAPS.md#risk-1) → CLOSED. [Assumption A-1](./migration/ASSUMPTIONS-AND-PLACEHOLDERS.md#a-1) → retired. [`BR-LABD20-006`](./migration/business-requirements/requirements-with-citations.md) → confidence LOW → HIGH. The Python `check_cymd_dt` stub in `migration/converted-code/python/labd20_loader.py` is replaced by a faithful port (`migration/converted-code/python/dateconv.py`).
+>
+> **Important:** the customer-supplied artifacts under `source/` are treated as the "before" (frozen, verbatim) state. The modernized Python port under `migration/converted-code/python/` is the "after" state. Do not edit the source copybooks; record any analytical commentary in `analysis/`, `business-requirements/`, or `migration/`.
 
 ## Required Output Locations
 
