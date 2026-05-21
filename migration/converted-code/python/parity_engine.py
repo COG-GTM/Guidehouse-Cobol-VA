@@ -65,6 +65,7 @@ from python.laba05_reset import (  # noqa: E402
     _replace_jv_number,
 )
 from python.laba05_reset import run as laba05_run  # noqa: E402
+from python import dateconv  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -483,15 +484,20 @@ def check_labd20_005(workspace: Path) -> ParityRow:
 def check_labd20_006(workspace: Path) -> ParityRow:
     row = _validation_check(
         br_id="BR-LABD20-006",
-        label="Reject invalid calendar date (DATECONV-PD)",
+        label="Reject invalid calendar date (DATECONV CHECK-CYMD-DT)",
         cobol_lines=(266, 274),
-        python_lines=(196, 214),
+        python_lines=(196, 207),
         record=_make_record(comment_dt="20251345"),
         expect_accept=False,
         expect_reason_fragment="not a valid YYYYMMDD calendar date",
-        confidence="LOW",
-        classification="Inferred / partly unresolvable",
-        notes="DATECONV-PD copybook not supplied; using Gregorian-calendar stub (ASSUMPTIONS A-5). Real CHECK-CYMD-DT may apply business-calendar gates that change this output.",
+        confidence="HIGH",
+        classification="Confirmed (customer artifact)",
+        notes=(
+            "DATECONV-WS/PD/cbl supplied 2026-05-21; check_cymd_dt now delegates "
+            "to a faithful port of CHECK-CYMD-DT (DATESUB-FUNC=1). Covered by "
+            "GnuCOBOL runtime parity diff "
+            "(migration/test-results/cobol-parity-report.html). Risk 1 RESOLVED."
+        ),
     )
     return row
 
@@ -872,6 +878,181 @@ def check_labd20_022(workspace: Path) -> ParityRow:
 
 
 # ---------------------------------------------------------------------------
+# DATECONV port parity checks (BR-DATECONV-001 … BR-DATECONV-010).
+# All ten functions exercise migration/converted-code/python/dateconv.py against
+# the matching DATECONV.cbl paragraph. Each "expected" vector is derived from
+# the COBOL paragraph logic (e.g. INTEGER-OF-DATE for 1601-01-01 = 1) — exactly
+# what a GnuCOBOL run would produce. Vectors deliberately cover leap-day,
+# century-rollover, and fiscal-year boundary cases.
+# ---------------------------------------------------------------------------
+def _dateconv_row(
+    br_id: str,
+    label: str,
+    cobol_lines: tuple[int, int],
+    python_lines: tuple[int, int],
+    input_desc: str,
+    expected: dict[str, Any],
+    actual: dict[str, Any],
+) -> ParityRow:
+    return ParityRow(
+        br_id=br_id,
+        label=label,
+        owner="Jill",
+        cobol_path="source/cobol/DATECONV.cbl",
+        cobol_lines=cobol_lines,
+        python_path="migration/converted-code/python/dateconv.py",
+        python_lines=python_lines,
+        confidence="HIGH",
+        classification="Confirmed (customer artifact)",
+        input_desc=input_desc,
+        expected=expected,
+        actual=actual,
+        status=_status(expected, actual),
+        notes="DATECONV.cbl supplied 2026-05-21; faithful Python port.",
+    )
+
+
+def check_dateconv_001(workspace: Path) -> ParityRow:
+    # 100-CHECK-CYMD-DT (DATESUB-FUNC=1). Leap-day vectors: 20240229 OK,
+    # 19000229 invalid (Gregorian 100-rule), 20000229 OK (400-rule).
+    cases = {"20240229": True, "19000229": False, "20000229": True, "20251345": False}
+    actual = {k: dateconv.check_cymd_dt(k)[1] for k in cases}
+    return _dateconv_row(
+        "BR-DATECONV-001",
+        "Validate CYMD (CHECK-CYMD-DT, func 1)",
+        (225, 229), (193, 201),
+        "20240229/19000229/20000229/20251345 (leap-day matrix + bad month)",
+        cases, actual,
+    )
+
+
+def check_dateconv_002(workspace: Path) -> ParityRow:
+    # 900-CHECK-MDY-DT (DATESUB-FUNC=9). MMDDYY century inference: YY>52 → 19xx.
+    cases = {"022924": True, "022925": False, "010100": True, "133024": False}
+    actual = {k: dateconv.check_mdy_dt(k)[1] for k in cases}
+    return _dateconv_row(
+        "BR-DATECONV-002",
+        "Validate MDY (CHECK-MDY-DT, func 9)",
+        (369, 376), (204, 211),
+        "022924/022925/010100/133024 (leap + non-leap + Y2K boundary + bad month)",
+        cases, actual,
+    )
+
+
+def check_dateconv_003(workspace: Path) -> ParityRow:
+    # 200-YMD-TO-JUL (DATESUB-FUNC=2). 240101 → 24001, 241231 → 24366 (leap).
+    cases = {"240101": 24001, "241231": 24366, "250301": 25060}
+    actual = {k: dateconv.ymd_to_jul(k)[1] for k in cases}
+    return _dateconv_row(
+        "BR-DATECONV-003",
+        "Convert YMD -> Julian (YMD-TO-JUL, func 2)",
+        (231, 245), (213, 226),
+        "240101/241231 (leap year-end)/250301 (non-leap March 1)",
+        cases, actual,
+    )
+
+
+def check_dateconv_004(workspace: Path) -> ParityRow:
+    # 300-JUL-TO-YMD (DATESUB-FUNC=3). 24001 → 240101, 24366 → 241231.
+    cases = {"24001": 240101, "24366": 241231, "25060": 250301}
+    actual = {k: dateconv.jul_to_ymd(k)[1] for k in cases}
+    return _dateconv_row(
+        "BR-DATECONV-004",
+        "Convert Julian -> YMD (JUL-TO-YMD, func 3)",
+        (247, 261), (228, 238),
+        "Round-trip vectors of BR-DATECONV-003",
+        cases, actual,
+    )
+
+
+def check_dateconv_005(workspace: Path) -> ParityRow:
+    # 400-DIF-JUL (DATESUB-FUNC=4). DAYS-DIF = TO - FROM.
+    cases = {("24001", "24366"): 365, ("24001", "25001"): 366, ("25001", "24001"): -366}
+    actual = {pair: dateconv.dif_jul(*pair)[1] for pair in cases}
+    return _dateconv_row(
+        "BR-DATECONV-005",
+        "Difference between two Juls (DIF-JUL, func 4)",
+        (263, 287), (308, 313),
+        "Full leap year / cross-year forward / cross-year backward",
+        {f"{a}->{b}": v for (a, b), v in cases.items()},
+        {f"{a}->{b}": v for (a, b), v in actual.items()},
+    )
+
+
+def check_dateconv_006(workspace: Path) -> ParityRow:
+    # 700-ADD-JUL (DATESUB-FUNC=7). 24366 + 1 → 25001 (wrap).
+    cases = {("24365", 1): 24366, ("24366", 1): 25001, ("25001", -1): 24366}
+    actual = {pair: dateconv.add_jul(*pair)[1] for pair in cases}
+    return _dateconv_row(
+        "BR-DATECONV-006",
+        "Add days to Julian (ADD-JUL, func 7)",
+        (337, 351), (380, 393),
+        "Leap-year day 366 wrap forward + 1 / forward across year / backward across year",
+        {f"{a}+{n}": v for (a, n), v in cases.items()},
+        {f"{a}+{n}": v for (a, n), v in actual.items()},
+    )
+
+
+def check_dateconv_007(workspace: Path) -> ParityRow:
+    # 2200-ADD-MONTHS-TO-CYMD (DATESUB-FUNC=22). End-of-month snap.
+    cases = {("20240131", 1): 20240229, ("20230131", 1): 20230228, ("20240229", 12): 20250228}
+    actual = {pair: dateconv.add_months_to_cymd(*pair)[1] for pair in cases}
+    return _dateconv_row(
+        "BR-DATECONV-007",
+        "Add months to CYMD (ADD-MONTHS-TO-CYMD, func 22)",
+        (589, 600), (428, 437),
+        "Jan31+1 → Feb29 (leap) / Jan31+1 → Feb28 (non-leap) / Feb29+12 → Feb28 (post-leap snap)",
+        {f"{a}+{n}": v for (a, n), v in cases.items()},
+        {f"{a}+{n}": v for (a, n), v in actual.items()},
+    )
+
+
+def check_dateconv_008(workspace: Path) -> ParityRow:
+    # 2500-CYMD-TO-INT (DATESUB-FUNC=25). 16010101 (epoch) → 1, 20240101 known JDN.
+    cases = {"16010101": 1, "20240101": 154498, "20250101": 154864}
+    actual = {k: dateconv.cymd_to_int(k)[1] for k in cases}
+    return _dateconv_row(
+        "BR-DATECONV-008",
+        "Convert CYMD -> integer-of-date (CYMD-TO-INT, func 25)",
+        (634, 646), (270, 277),
+        "1601-01-01 epoch / 2024 leap year / 2025 non-leap (366-day delta)",
+        cases, actual,
+    )
+
+
+def check_dateconv_009(workspace: Path) -> ParityRow:
+    # 600-DIF-CYMD-30 (DATESUB-FUNC=6). 30-day-month accounting.
+    cases = {
+        ("20240115", "20240215"): 30,       # one 30-day month
+        ("20240101", "20250101"): 360,      # one full year = 360 days
+        ("20240115", "20250215"): 390,      # 13 months
+    }
+    actual = {pair: dateconv.dif_cymd_30(*pair)[1] for pair in cases}
+    return _dateconv_row(
+        "BR-DATECONV-009",
+        "30-day-month difference CYMD (DIF-CYMD-30, func 6)",
+        (315, 335), (343, 348),
+        "Monthly / annual / 13-month spans on a 30-day calendar",
+        {f"{a}->{b}": v for (a, b), v in cases.items()},
+        {f"{a}->{b}": v for (a, b), v in actual.items()},
+    )
+
+
+def check_dateconv_010(workspace: Path) -> ParityRow:
+    # 4000-DIF-FY (DATESUB-FUNC=37). YYYY-only diff inferred from YY.
+    cases = {("240301", "250901"): 1, ("240101", "240901"): 0, ("990101", "010101"): 2}
+    actual = {pair: dateconv.dif_fy(*pair)[1] for pair in cases}
+    return _dateconv_row(
+        "BR-DATECONV-010",
+        "Federal fiscal-year difference (DIF-FY, func 37)",
+        (847, 859), (367, 376),
+        "FY2024->FY2025 / same FY / 1999->2001 century rollover",
+        {f"{a}->{b}": v for (a, b), v in cases.items()},
+        {f"{a}->{b}": v for (a, b), v in actual.items()},
+    )
+
+
+# ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
 ALL_CHECKS: list[Callable[[Path], ParityRow]] = [
@@ -903,6 +1084,16 @@ ALL_CHECKS: list[Callable[[Path], ParityRow]] = [
     check_labd20_020,
     check_labd20_021,
     check_labd20_022,
+    check_dateconv_001,
+    check_dateconv_002,
+    check_dateconv_003,
+    check_dateconv_004,
+    check_dateconv_005,
+    check_dateconv_006,
+    check_dateconv_007,
+    check_dateconv_008,
+    check_dateconv_009,
+    check_dateconv_010,
 ]
 
 

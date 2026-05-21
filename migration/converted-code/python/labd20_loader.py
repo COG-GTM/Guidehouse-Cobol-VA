@@ -41,9 +41,12 @@ ASSUMPTIONS (see migration/ASSUMPTIONS-AND-PLACEHOLDERS.md)
 - A-4: TST123-COMMENT-REC is exactly 300 bytes (8+6+2+10 + 10+230 + 20 + 14).
   The active line 55 of LABD20.pco gives APPROVER=14 bytes; the commented
   line 54 is the deprecated 20-byte form. See RISKS-AND-GAPS.md Risk 5.
-- A-5: DATECONV-WS and DATECONV-PD are missing. Our `check_cymd_dt` stub uses
-  Python's datetime.date(...) for calendar validation. See RISKS-AND-GAPS.md
-  Risk 1 — SME confirmation required to ensure exact parity.
+- A-1 RESOLVED 2026-05-21: DATECONV-WS, DATECONV-PD, DATECONV.cbl and the four
+  JDN-* copybooks were supplied verbatim. `check_cymd_dt` is no longer a stub;
+  it delegates to migration/converted-code/python/dateconv.py, a faithful port
+  of CHECK-CYMD-DT (DATESUB-FUNC=1) covering all 40 entry paragraphs. See
+  migration/ASSUMPTIONS-AND-PLACEHOLDERS.md A-1 (RETIRED) and
+  analysis/dateconv-function-inventory.md.
 - A-7: Oracle column names + types are taken from
   database/descriptions/describe JC_SUBMITTED_COMMENT_TBL.txt.
 - A-8: The post-process UPDATE keys on JC_SECTION='MA' as the legacy code
@@ -193,24 +196,15 @@ def parse_comment_record(raw: str) -> CommentRecord:
     )
 
 
+# DATECONV-PORT (A-1 RESOLVED 2026-05-21): faithful port of customer's
+# DATECONV.cbl CHECK-CYMD-DT (DATESUB-FUNC=1); see
+# migration/converted-code/python/dateconv.py and
+# analysis/dateconv-function-inventory.md.
 def check_cymd_dt(yyyymmdd: str) -> bool:
-    """Stub for the legacy CHECK-CYMD-DT (PERFORM at LABD20.pco:267).
-
-    The DATECONV-PD copybook that defines CHECK-CYMD-DT was NOT supplied;
-    see migration/RISKS-AND-GAPS.md Risk 1 and ASSUMPTIONS-AND-PLACEHOLDERS.md A-5.
-
-    # PLACEHOLDER: replace with the legacy DATECONV-PD logic once it is
-    # provided. Our stub uses Python's calendar checks, which match modern
-    # Gregorian rules but cannot validate against any custom JV business
-    # calendar rules the legacy program may have enforced.
-    """
-    if not yyyymmdd.isdigit() or len(yyyymmdd) != 8:
-        return False
-    try:
-        dt.date(int(yyyymmdd[0:4]), int(yyyymmdd[4:6]), int(yyyymmdd[6:8]))
-    except ValueError:
-        return False
-    return True
+    """CHECK-CYMD-DT (PERFORM at LABD20.pco:267) → DATECONV func 1."""
+    from .dateconv import check_cymd_dt as _dateconv_check_cymd_dt
+    status, _ = _dateconv_check_cymd_dt(yyyymmdd)
+    return status == "OK"
 
 
 def determine_disposition(record: CommentRecord) -> tuple[bool, list[str]]:

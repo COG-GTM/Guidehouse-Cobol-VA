@@ -188,6 +188,27 @@ Plus a small inference helper:
 
 The Python port at `migration/converted-code/python/dateconv.py` re-implements all 40 entry paragraphs through a single `DateConv` class (and module-level convenience functions). The dispatcher is preserved as `DATESUB-FUNC` to keep diagnostic traceability against `DATECONV.cbl` line numbers. See `migration/converted-code/python/dateconv.py` and `migration/test-results/cobol-parity-report.html` for parity evidence.
 
+### 8.1 Implementation map (line citations into `dateconv.py`)
+
+Phase B port shipped 2026-05-21. Concrete entry points:
+
+| Artifact | Where to look |
+| --- | --- |
+| `ConvDates` dataclass (mirrors `DATECONV-WS` `CONV-DATES` group) | `migration/converted-code/python/dateconv.py:48-100` |
+| Status-code constants (mirror `JDN-CONSTANTS-WS` `JDN-Con-*`) | `migration/converted-code/python/dateconv.py:30-42` |
+| `DateConv.dispatch` (replaces `000-SELECT` IF/ELSE chain) | `migration/converted-code/python/dateconv.py:185-193` |
+| `_DISPATCH` table (`DATESUB-FUNC` → method) | `migration/converted-code/python/dateconv.py:627-669` |
+| `_run01_check_cymd_dt` ← `100-CHECK-CYMD-DT` (`DATECONV.cbl:225-229`) | `migration/converted-code/python/dateconv.py:195-201` |
+| `_run07_add_jul` ← `700-ADD-JUL` (`DATECONV.cbl:337-351`) | `migration/converted-code/python/dateconv.py:476-491` |
+| `_run22_add_months_to_cymd` ← `2200-ADD-MONTHS-TO-CYMD` (`DATECONV.cbl:589-600`) | `migration/converted-code/python/dateconv.py:553-561` |
+| `_run37_dif_fy` ← `4000-DIF-FY` (`DATECONV.cbl:847-859`) | `migration/converted-code/python/dateconv.py:445-453` |
+| Module-level convenience functions (40 names) | `migration/converted-code/python/dateconv.py:836-1082` |
+| Pytest coverage (77 cases across 10 test classes) | `migration/converted-code/python/tests/test_dateconv.py` |
+| Parity rows BR-DATECONV-001…010 | `migration/converted-code/python/parity_engine.py:880-1057` |
+| `BR-LABD20-006` confidence flip (LOW → HIGH) | `migration/converted-code/python/parity_engine.py:484-503` |
+
+The `check_cymd_dt` stub that previously lived in `migration/converted-code/python/labd20_loader.py:196-214` was retired and now delegates here via a one-line import (`labd20_loader.py:196-204`).
+
 ## 9. Citations
 
 - `source/cobol/DATECONV.cbl` — `PROGRAM-ID. DATECONV`; internal dispatcher at `000-SELECT`; IAI-2012 `MIGRTN` markers preserved verbatim.
