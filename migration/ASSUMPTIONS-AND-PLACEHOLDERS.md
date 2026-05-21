@@ -69,7 +69,7 @@
 | --- | --- |
 | Confidence | **MEDIUM** (the *active* FD says 14; a commented predecessor at line 54 said 20; working storage at line 141 uses 20 as a redefinition window) |
 | Source citation | `LABD20.pco:54` (commented `PIC X(020)`); `LABD20.pco:55` (active `PIC X(014)`); `LABD20.pco:141` (`WS-TST123-COMMENT-APPROVER PIC X(020)`) |
-| Decision | Python parser uses the FD-defined 14-byte width. Total record length = 8 + 6 + 2 + 10 + 10 + 230 + 20 + 14 = **300 bytes**. The Oracle target column `JC_SUBMITTED_COMMENT_APPROVER` is `CHAR(20)`; the Python loader right-pads the parsed 14-byte field to 20 bytes for the INSERT. |
+| Decision | Python parser uses the FD-defined 14-byte width. Total record length = 8 + 6 + 2 + 10 + 10 + 230 + 20 + 14 = **300 bytes**. The Oracle target column `JC_SUBMITTED_COMMENT_APPROVER` is `CHAR(20)`; the modernized Python loader stores the 14-byte slice as-is. Oracle `CHAR(20)` would right-pad on the database side; the demo `sqlite` target does not. The `migration/test-results/schema-parity-report.json` byte-width row reflects this (`python_width: 14`, `oracle_width: 20`, `actual_length: 14`). |
 | Placeholder marker in code | `# ASSUMPTION (A-4):` in `labd20_loader.py` |
 | Risk | [Risk 5](./RISKS-AND-GAPS.md#risk-5--fixed-width-record-layout-byte-precision) |
 | SME-action | Confirm canonical width — is the 14-byte FD correct, or was the comment-out at line 54 a regression? |
