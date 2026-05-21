@@ -78,6 +78,7 @@ from typing import Iterable, Optional, Sequence
 
 from . import db_dispatcher
 from .db_dispatcher import DBDispatcher
+from .dateconv import check_cymd_dt as _dateconv_check_cymd_dt
 
 logger = logging.getLogger(__name__)
 
@@ -202,7 +203,6 @@ def parse_comment_record(raw: str) -> CommentRecord:
 # analysis/dateconv-function-inventory.md.
 def check_cymd_dt(yyyymmdd: str) -> bool:
     """CHECK-CYMD-DT (PERFORM at LABD20.pco:267) → DATECONV func 1."""
-    from .dateconv import check_cymd_dt as _dateconv_check_cymd_dt
     status, _ = _dateconv_check_cymd_dt(yyyymmdd)
     return status == "OK"
 
@@ -276,21 +276,25 @@ def iter_records(comment_path: Path) -> Iterable[str]:
     Legacy: LABD20.pco:239 (OPEN INPUT), :247-253 (READ AT END loop). The
     legacy file is "line sequential" — records are 300 bytes followed by a
     newline. We tolerate both newline-terminated and no-newline records.
+
+    Implementation note: the file is streamed line-by-line rather than
+    slurped into memory via read_text() + splitlines() so peak memory stays
+    bounded by a single record (300 bytes) regardless of file size. The
+    rstrip("\n").rstrip("\r") pair matches the prior splitlines() handling
+    of both LF and CRLF newlines.
     """
-    text = comment_path.read_text(encoding="utf-8")
-    if not text:
-        return
-    # Strip trailing newline of the file, then split on newlines.
-    for raw in text.splitlines():
-        if not raw:
-            continue
-        # Pad short last records to TST123_RECORD_LENGTH with spaces (matches
-        # legacy fixed-width semantics).
-        if len(raw) < TST123_RECORD_LENGTH:
-            raw = raw.ljust(TST123_RECORD_LENGTH)
-        elif len(raw) > TST123_RECORD_LENGTH:
-            raw = raw[:TST123_RECORD_LENGTH]
-        yield raw
+    with comment_path.open(encoding="utf-8") as fh:
+        for raw in fh:
+            raw = raw.rstrip("\n").rstrip("\r")
+            if not raw:
+                continue
+            # Pad short last records to TST123_RECORD_LENGTH with spaces
+            # (matches legacy fixed-width semantics).
+            if len(raw) < TST123_RECORD_LENGTH:
+                raw = raw.ljust(TST123_RECORD_LENGTH)
+            elif len(raw) > TST123_RECORD_LENGTH:
+                raw = raw[:TST123_RECORD_LENGTH]
+            yield raw
 
 
 def truncate_file(comment_path: Path) -> None:
