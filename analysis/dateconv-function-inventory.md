@@ -184,6 +184,27 @@ Plus a small inference helper:
 | --- | --- |
 | `JDN-Acc-CC-Inferred` | If `JDN-YY` is non-numeric or > 72, infer century 19; otherwise 20. Provides backward compatibility with 2-digit-year callers. |
 
+### 7.1 Two distinct two-digit-year rules (added 2026-05-21 post-Devin-Review)
+
+DATECONV does **not** have a single century-inference rule — it has two, and the
+thresholds differ. Any port that collapses both into one helper silently
+diverges on `YY` in 53–72. The original 52-vector harness all used `YY=24/25`,
+so the gap was never exercised and the byte-for-byte parity claim looked
+clean before the rule split was caught by adversarial code review.
+
+| Rule | Source | Threshold | Used by |
+| --- | --- | --- | --- |
+| Local CYMD validation | `source/cobol/DATECONV.cbl:1054-1059` (`9920-CALC-YY-TO-YYYY`, change marker `CH-001`) | `YY > 52 → 19xx` | `900-CHECK-MDY-DT`, `1500-DIF-JUL-30`, `1800-YMD-TO-CYMD`, `2700-MDY-TO-MDCY`, `4000-DIF-FY`, plus the validation prelude inside `1000-MDY-TO-JUL` and `2800-DIF-JUL-NO-CHECK` |
+| JDN-Acc core | `source/copybooks/JDN-RECORD-ACCESS.cpy:74-79` (`JDN-Acc-CC-Inferred`, change marker `CHG-002`) | `YY > 72 → 19xx` | Every paragraph that PERFORMs `JDN-Acc-Int-Of-Date` or `JDN-Acc-Int-Of-Day` with `JDN-CC = ZERO` (i.e. 200/300/400/500/700/800/1000-conversion/1100/1400/1700/2100/2300/2800-conversion/3100/3300/3500/4100/4200/4300/4400/4500) |
+
+The Python port mirrors this in `migration/converted-code/python/dateconv.py`
+as two helpers — `_cc_inferred` (rule 1, `> 52`) and `_cc_inferred_jdn`
+(rule 2, `> 72`) — plus a `via_jdn=True` keyword on `_ymd_to_cymd` /
+`_mdy_to_cymd` so every callsite mirrors the threshold its COBOL paragraph
+actually emits. The parity harness exercises the threshold gap with 28
+adversarial vectors at `migration/test-results/dateconv-test-vectors.txt`
+Section 7 (`YY 60/72/73` across FUNC 2/3/5/8/9/10/11/14/17/18/21/23/27/28/31/33/35/37/38/39/40/41/42).
+
 ## 8. Modernized Port
 
 The Python port at `migration/converted-code/python/dateconv.py` re-implements all 40 entry paragraphs through a single `DateConv` class (and module-level convenience functions). The dispatcher is preserved as `DATESUB-FUNC` to keep diagnostic traceability against `DATECONV.cbl` line numbers. See `migration/converted-code/python/dateconv.py` and `migration/test-results/cobol-parity-report.html` for parity evidence.

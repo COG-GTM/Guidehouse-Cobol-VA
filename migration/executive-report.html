@@ -718,6 +718,13 @@
         <h4>Runtime diff exposed 13 Python defects the unit tests passed</h4>
         <p><code>TO-INT-DT</code> leakage, alias-field omissions in JUL/CYMD/ADD-MONTHS, 30-day-month off-by-one, and over-strict <code>BETWEEN</code> validation — 14/52 → 1/52, fixed before merge. The one remaining diff is a <em>documented modernization improvement</em>: Python correctly rejects 02/29/1900 (Gregorian) where legacy COBOL accepts it (Julian).</p>
       </div>
+      <div class="ev highlight">
+        <span class="badge">adversarial review</span>
+        <div class="when">T6 · 14th bug caught by Devin Review</div>
+        <div class="stamp">2026-05-21</div>
+        <h4>Code review caught a defect the 52-vector harness missed</h4>
+        <p>After the harness ran clean, <a href="https://github.com/COG-GTM/Guidehouse-Cobol/pull/8">Devin Review</a> spotted that <code>DATECONV</code> has <em>two</em> century-inference rules — <code>9920-CALC-YY-TO-YYYY</code> (<code>YY &gt; 52</code>) and <code>JDN-Acc-CC-Inferred</code> at <code>JDN-RECORD-ACCESS.cpy:74-79</code> (<code>YY &gt; 72</code>, change marker <code>CHG-002</code>) — and the Python port had collapsed both into a single rule. The original 52 vectors all used <code>YY=24/25</code> so the gap (<code>YY 53–72</code>) was never exercised. Split helpers <code>_cc_inferred</code> / <code>_cc_inferred_jdn</code>, threaded <code>via_jdn</code> through <code>_ymd_to_cymd</code> / <code>_mdy_to_cymd</code>, added 28 adversarial vectors covering every JDN-routed FUNC across <code>YY 60/72/73</code>. 80/80 byte-for-byte after the fix (+ the 1 documented modernization improvement).</p>
+      </div>
     </div>
 
     <!-- (b) Devin-caught-it callout -->

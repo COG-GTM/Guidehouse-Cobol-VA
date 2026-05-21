@@ -95,12 +95,38 @@ class ConvDates:
 
 
 # ---------------------------------------------------------------------------
-# Helpers — emulate the JDN-RECORD-ACCESS intrinsic-function core.
-# Source: source/copybooks/JDN-RECORD-ACCESS.cpy.
+# Century-inference helpers — DATECONV has TWO distinct century-inference
+# rules and the Python port must mirror each one only where COBOL uses it.
+#
+# Rule A: DATECONV.cbl:1054-1059 (9920-CALC-YY-TO-YYYY) — threshold > 52.
+#   Used by the *local* CYMD validation/normalization paragraphs that do
+#   NOT route through JDN-ACC for the conversion itself:
+#     900-CHECK-MDY-DT, 1500-DIF-JUL-30, 1800-YMD-TO-CYMD,
+#     2700-MDY-TO-MDCY, 4000-DIF-FY, plus the validation prelude inside
+#     1000-MDY-TO-JUL/2800-DIF-JUL-NO-CHECK (which DOES then route the
+#     conversion through JDN — see Rule B below).
+#
+# Rule B: source/copybooks/JDN-RECORD-ACCESS.cpy:74-79 (JDN-Acc-CC-Inferred,
+#   change marker CHG-002) — threshold > 72.  Used by every paragraph that
+#   PERFORMs JDN-ACC-INT-OF-DATE / JDN-ACC-INT-OF-DAY with JDN-CC=0:
+#     200/300/400/500/700/800/1000(conv)/1100/1400/1700/2100/2300/
+#     2800(conv)/3100/3300/3500/4100/4200/4300/4400/4500.
+#
+# Conflating these two thresholds produces wrong centuries for YY in 53-72:
+# Rule A places those in 19xx, Rule B places them in 20xx.  Each path must
+# use the threshold the customer COBOL actually emits.
 # ---------------------------------------------------------------------------
 def _cc_inferred(yy: int) -> int:
-    # JDN-Acc-CC-Inferred (DATECONV.cbl 9920-CALC-YY-TO-YYYY): YY > 52 → 19xx.
+    # DATECONV.cbl:1054-1059 (9920-CALC-YY-TO-YYYY): YY > 52 → 19xx, else 20xx.
+    # Local CYMD-validation rule used outside the JDN-ACC core.
     return 19 if yy > 52 else 20
+
+
+def _cc_inferred_jdn(yy: int) -> int:
+    # JDN-RECORD-ACCESS.cpy:74-79 (JDN-Acc-CC-Inferred, CHG-002): YY > 72 →
+    # 19xx, else 20xx.  Applies inside JDN-ACC-INT-OF-DATE/JDN-ACC-INT-OF-DAY
+    # whenever the caller PERFORMs the helper with JDN-CC = ZERO.
+    return 19 if yy > 72 else 20
 
 
 def _split_cymd(cymd: int) -> Tuple[int, int, int]:
@@ -119,14 +145,20 @@ def _split_jul(jul: int) -> Tuple[int, int]:
     return jul // 1000, jul % 1000
 
 
-def _ymd_to_cymd(ymd: int) -> int:
+def _ymd_to_cymd(ymd: int, *, via_jdn: bool = False) -> int:
+    # via_jdn=True selects JDN-Acc-CC-Inferred (> 72) to mirror callers whose
+    # COBOL paragraph PERFORMs JDN-ACC-INT-OF-DATE with JDN-CC=0; via_jdn=False
+    # selects 9920-CALC-YY-TO-YYYY (> 52) for the local CYMD-validation path.
     yy, mm, dd = _split_ymd(ymd)
-    return _cc_inferred(yy) * 1000000 + yy * 10000 + mm * 100 + dd
+    cc = _cc_inferred_jdn(yy) if via_jdn else _cc_inferred(yy)
+    return cc * 1000000 + yy * 10000 + mm * 100 + dd
 
 
-def _mdy_to_cymd(mdy: int) -> int:
+def _mdy_to_cymd(mdy: int, *, via_jdn: bool = False) -> int:
+    # See _ymd_to_cymd — same dual-threshold contract for MDY inputs.
     mm, dd, yy = _split_mdy(mdy)
-    return _cc_inferred(yy) * 1000000 + yy * 10000 + mm * 100 + dd
+    cc = _cc_inferred_jdn(yy) if via_jdn else _cc_inferred(yy)
+    return cc * 1000000 + yy * 10000 + mm * 100 + dd
 
 
 def _int_of_date(cymd: int) -> Tuple[str, int]:
@@ -146,10 +178,16 @@ def _int_of_date(cymd: int) -> Tuple[str, int]:
 def _int_of_day(jul_yyddd: int, century_hint: Optional[int] = None) -> Tuple[str, int, int]:
     """COBOL FUNCTION INTEGER-OF-DAY on JDN-YYYYDDD (5-digit YYDDD → infer CC).
 
+    Mirrors JDN-ACC-INT-OF-DAY with JDN-CC=0, which routes through
+    JDN-Acc-CC-Inferred (> 72) per JDN-RECORD-ACCESS.cpy:74-79. Every COBOL
+    paragraph that drives this helper (200/300/400/700/1000/1100/2300/2800/
+    3100/4100/4500) MOVEs ZERO TO JDN-CC before the PERFORM, so the JDN
+    threshold (not the 9920 > 52 threshold) is the correct default here.
+
     Returns (status, integer, yyyy).
     """
     yy, ddd = _split_jul(jul_yyddd)
-    cc = century_hint if century_hint is not None else _cc_inferred(yy)
+    cc = century_hint if century_hint is not None else _cc_inferred_jdn(yy)
     yyyy = cc * 100 + yy
     if yyyy < 1601:
         return STATUS_OOR_YYYY, 0, yyyy
@@ -205,13 +243,14 @@ class DateConv:
 
     # -- YMD ↔ Julian (codes 2, 3) -------------------------------------
     def _run02_ymd_to_jul(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:231-245 (200-YMD-TO-JUL).
-        status, _ = _int_of_date(_ymd_to_cymd(cd.from_ymd_dt))
+        # DATECONV.cbl:231-245 (200-YMD-TO-JUL). PERFORM JDN-ACC-INT-OF-DATE
+        # with JDN-CC=0 → century from JDN-Acc-CC-Inferred (> 72).
+        status, _ = _int_of_date(_ymd_to_cymd(cd.from_ymd_dt, via_jdn=True))
         if status != STATUS_OK:
             cd.to_jul_dt = 0
             _apply_status(cd, status)
             return
-        yyyy, _, _ = _split_cymd(_ymd_to_cymd(cd.from_ymd_dt))
+        yyyy, _, _ = _split_cymd(_ymd_to_cymd(cd.from_ymd_dt, via_jdn=True))
         d = date(yyyy, (cd.from_ymd_dt // 100) % 100, cd.from_ymd_dt % 100)
         ddd = d.timetuple().tm_yday
         cd.from_int_dt = d.toordinal() - _EPOCH_ORDINAL
@@ -232,13 +271,14 @@ class DateConv:
 
     # -- MDY ↔ Julian (codes 10, 11) -----------------------------------
     def _run10_mdy_to_jul(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:378-394 (1000-MDY-TO-JUL).
-        status, _ = _int_of_date(_mdy_to_cymd(cd.from_mdy_dt))
+        # DATECONV.cbl:378-394 (1000-MDY-TO-JUL). The conversion PERFORMs
+        # JDN-ACC-INT-OF-DATE with JDN-CC=0 (line 383) → JDN threshold (> 72).
+        status, _ = _int_of_date(_mdy_to_cymd(cd.from_mdy_dt, via_jdn=True))
         if status != STATUS_OK:
             cd.to_jul_dt = 0
             _apply_status(cd, status)
             return
-        yyyy, mm, dd = _split_cymd(_mdy_to_cymd(cd.from_mdy_dt))
+        yyyy, mm, dd = _split_cymd(_mdy_to_cymd(cd.from_mdy_dt, via_jdn=True))
         d = date(yyyy, mm, dd)
         cd.from_int_dt = d.toordinal() - _EPOCH_ORDINAL
         cd.to_jul_dt = (yyyy % 100) * 1000 + d.timetuple().tm_yday
@@ -366,8 +406,9 @@ class DateConv:
         cd.date_err_ind = "N"
 
     def _run33_ymd_to_int(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:774-787 (3300-YMD-TO-INT).
-        cymd = _ymd_to_cymd(cd.from_ymd_dt)
+        # DATECONV.cbl:774-787 (3300-YMD-TO-INT). PERFORM JDN-ACC-INT-OF-DATE
+        # with JDN-CC=0 → JDN threshold (> 72).
+        cymd = _ymd_to_cymd(cd.from_ymd_dt, via_jdn=True)
         status, jdn = _int_of_date(cymd)
         if status != STATUS_OK:
             cd.to_int_dt = 0
@@ -388,8 +429,9 @@ class DateConv:
         cd.date_err_ind = "N"
 
     def _run35_mdy_to_int(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:808-823 (3500-MDY-TO-INT).
-        cymd = _mdy_to_cymd(cd.from_mdy_dt)
+        # DATECONV.cbl:808-823 (3500-MDY-TO-INT). PERFORM JDN-ACC-INT-OF-DATE
+        # with JDN-CC=0 → JDN threshold (> 72).
+        cymd = _mdy_to_cymd(cd.from_mdy_dt, via_jdn=True)
         status, jdn = _int_of_date(cymd)
         if status != STATUS_OK:
             cd.to_int_dt = 0
@@ -417,15 +459,17 @@ class DateConv:
         _set_dif(cd, s1, s2, a, b)
 
     def _run05_dif_ymd(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:289-313 (500-DIF-YMD).
-        s1, a = _int_of_date(_ymd_to_cymd(cd.from_ymd_dt))
-        s2, b = _int_of_date(_ymd_to_cymd(cd.to_ymd_dt))
+        # DATECONV.cbl:289-313 (500-DIF-YMD). Both legs PERFORM
+        # JDN-ACC-INT-OF-DATE with JDN-CC=0 → JDN threshold (> 72).
+        s1, a = _int_of_date(_ymd_to_cymd(cd.from_ymd_dt, via_jdn=True))
+        s2, b = _int_of_date(_ymd_to_cymd(cd.to_ymd_dt, via_jdn=True))
         _set_dif(cd, s1, s2, a, b)
 
     def _run14_dif_mdy(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:428-456 (1400-DIF-MDY).
-        s1, a = _int_of_date(_mdy_to_cymd(cd.from_mdy_dt))
-        s2, b = _int_of_date(_mdy_to_cymd(cd.to_mdy_dt))
+        # DATECONV.cbl:428-456 (1400-DIF-MDY). JDN-ACC-INT-OF-DATE with
+        # JDN-CC=0 on both legs → JDN threshold (> 72).
+        s1, a = _int_of_date(_mdy_to_cymd(cd.from_mdy_dt, via_jdn=True))
+        s2, b = _int_of_date(_mdy_to_cymd(cd.to_mdy_dt, via_jdn=True))
         _set_dif(cd, s1, s2, a, b)
 
     def _run19_dif_cymd(self, cd: ConvDates) -> None:
@@ -486,13 +530,14 @@ class DateConv:
 
     def _run16_dif_mdy_30(self, cd: ConvDates) -> None:
         # DATECONV.cbl:483-503 (1600-DIF-MDY-30). 30-day-month over MDY inputs.
-        # The paragraph internally PERFORMs 1000-MDY-TO-JUL twice; the second
-        # call converts TO-MDY-DT and leaves TO-JUL-DT populated.
-        s1, a = _dif_cymd_30_int(_mdy_to_cymd(cd.from_mdy_dt))
-        s2, b = _dif_cymd_30_int(_mdy_to_cymd(cd.to_mdy_dt))
+        # The paragraph PERFORMs 1000-MDY-TO-JUL twice (lines 484, 490) — the
+        # cascade routes through JDN-ACC with JDN-CC=0, so the CYMD that
+        # backs the 30-day math uses the JDN threshold (> 72).
+        s1, a = _dif_cymd_30_int(_mdy_to_cymd(cd.from_mdy_dt, via_jdn=True))
+        s2, b = _dif_cymd_30_int(_mdy_to_cymd(cd.to_mdy_dt, via_jdn=True))
         _set_dif(cd, s1, s2, a, b)
         if s2 == STATUS_OK:
-            cymd_to = _mdy_to_cymd(cd.to_mdy_dt)
+            cymd_to = _mdy_to_cymd(cd.to_mdy_dt, via_jdn=True)
             yyyy, mm, dd = _split_cymd(cymd_to)
             try:
                 cd.to_jul_dt = (yyyy % 100) * 1000 + date(yyyy, mm, dd).timetuple().tm_yday
@@ -517,8 +562,9 @@ class DateConv:
         cd.date_err_ind = "N"
 
     def _run08_add_ymd(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:353-367 (800-ADD-YMD).
-        cymd = _ymd_to_cymd(cd.from_ymd_dt)
+        # DATECONV.cbl:353-367 (800-ADD-YMD). PERFORM JDN-ACC-INT-OF-DATE
+        # with JDN-CC=0 → JDN threshold (> 72).
+        cymd = _ymd_to_cymd(cd.from_ymd_dt, via_jdn=True)
         status, jdn = _int_of_date(cymd)
         if status != STATUS_OK:
             cd.to_ymd_dt = 0
@@ -534,8 +580,9 @@ class DateConv:
         cd.date_err_ind = "N"
 
     def _run17_add_mdy(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:505-521 (1700-ADD-MDY).
-        cymd = _mdy_to_cymd(cd.from_mdy_dt)
+        # DATECONV.cbl:505-521 (1700-ADD-MDY). PERFORM JDN-ACC-INT-OF-DATE
+        # with JDN-CC=0 → JDN threshold (> 72).
+        cymd = _mdy_to_cymd(cd.from_mdy_dt, via_jdn=True)
         status, jdn = _int_of_date(cymd)
         if status != STATUS_OK:
             cd.to_mdy_dt = 0
@@ -573,8 +620,12 @@ class DateConv:
 
     # -- ADD-MONTHS family (codes 21, 22, 41, 42) -----------------------
     def _run21_add_months_to_ymd(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:575-587 (2100-ADD-MONTHS-TO-YMD).
-        status, y, m, d = _add_months_cymd(_ymd_to_cymd(cd.from_ymd_dt), cd.months_to_add)
+        # DATECONV.cbl:575-587 (2100-ADD-MONTHS-TO-YMD). Routes through
+        # 9910-ADD-MONTHS, which PERFORMs JDN-ACC-INT-OF-DATE with JDN-CC=0
+        # for the YMD input → JDN threshold (> 72).
+        status, y, m, d = _add_months_cymd(
+            _ymd_to_cymd(cd.from_ymd_dt, via_jdn=True), cd.months_to_add
+        )
         if status != STATUS_OK:
             cd.to_ymd_dt = 0
             _apply_status(cd, status)
@@ -593,8 +644,11 @@ class DateConv:
         cd.date_err_ind = "N"
 
     def _run41_add_months_to_mdy(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:987-1003 (4400-ADD-MONTHS-TO-MDY).
-        status, y, m, d = _add_months_cymd(_mdy_to_cymd(cd.from_mdy_dt), cd.months_to_add)
+        # DATECONV.cbl:987-1003 (4400-ADD-MONTHS-TO-MDY). 9910-ADD-MONTHS
+        # PERFORMs JDN-ACC-INT-OF-DATE with JDN-CC=0 → JDN threshold (> 72).
+        status, y, m, d = _add_months_cymd(
+            _mdy_to_cymd(cd.from_mdy_dt, via_jdn=True), cd.months_to_add
+        )
         if status != STATUS_OK:
             cd.to_mdy_dt = 0
             _apply_status(cd, status)
@@ -643,17 +697,19 @@ class DateConv:
         )
 
     def _run39_range_ymd(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:901-939 (4200-RANGE-YMD).
-        s1, a = _int_of_date(_ymd_to_cymd(cd.from_ymd_dt))
-        s2, b = _int_of_date(_ymd_to_cymd(cd.to_ymd_dt))
-        s3, c = _int_of_date(_ymd_to_cymd(cd.between_ymd_dt))
+        # DATECONV.cbl:901-939 (4200-RANGE-YMD). All three legs PERFORM
+        # JDN-ACC-INT-OF-DATE with JDN-CC=0 → JDN threshold (> 72).
+        s1, a = _int_of_date(_ymd_to_cymd(cd.from_ymd_dt, via_jdn=True))
+        s2, b = _int_of_date(_ymd_to_cymd(cd.to_ymd_dt, via_jdn=True))
+        s3, c = _int_of_date(_ymd_to_cymd(cd.between_ymd_dt, via_jdn=True))
         _range_check(cd, a, b, c, s1, s2, s3)
 
     def _run40_range_mdy(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:941-985 (4300-RANGE-MDY).
-        s1, a = _int_of_date(_mdy_to_cymd(cd.from_mdy_dt))
-        s2, b = _int_of_date(_mdy_to_cymd(cd.to_mdy_dt))
-        s3, c = _int_of_date(_mdy_to_cymd(cd.between_mdy_dt))
+        # DATECONV.cbl:941-985 (4300-RANGE-MDY). All three legs PERFORM
+        # JDN-ACC-INT-OF-DATE with JDN-CC=0 → JDN threshold (> 72).
+        s1, a = _int_of_date(_mdy_to_cymd(cd.from_mdy_dt, via_jdn=True))
+        s2, b = _int_of_date(_mdy_to_cymd(cd.to_mdy_dt, via_jdn=True))
+        s3, c = _int_of_date(_mdy_to_cymd(cd.between_mdy_dt, via_jdn=True))
         _range_check(cd, a, b, c, s1, s2, s3)
 
 
@@ -791,8 +847,11 @@ def _add_months_cymd(cymd: int, months: int, force_eom: bool = False) -> Tuple[s
 
 def _no_check_int_of_day(jul_yyddd: int) -> int:
     # 2800-DIF-JUL-NO-CHECK tolerates DDD > 365 by carrying into the next year.
+    # COBOL DATECONV.cbl:690-707 / 714-731 routes the conversion through
+    # JDN-ACC-INT-OF-DAY with JDN-CC=0, so the JDN (> 72) threshold applies,
+    # NOT the 9920 (> 52) threshold used by the validation prelude.
     yy, ddd = _split_jul(jul_yyddd)
-    yyyy = _cc_inferred(yy) * 100 + yy
+    yyyy = _cc_inferred_jdn(yy) * 100 + yy
     if jul_yyddd == 0:
         return 0
     if ddd <= 365:

@@ -427,6 +427,15 @@ def render_report(
         '<code>source/cobol/DATECONV.cbl</code> verbatim under GnuCOBOL 3.1.2 and diffing '
         'byte-for-byte against the Python port over 52 vectors exposed them. They were '
         'patched in the same commit as the harness; this report regenerates daily.</p>'
+        '<p><b>Round 2 — Devin Review caught a 14th defect after the harness ran clean.</b> '
+        'The adversarial review surfaced a subtle century-inference threshold mismatch '
+        '(<code>9920-CALC-YY-TO-YYYY</code> uses <code>YY &gt; 52</code>; '
+        '<code>JDN-Acc-CC-Inferred</code> uses <code>YY &gt; 72</code>; the Python port '
+        'collapsed both into one rule). The original 52 vectors all used <code>YY=24/25</code>, '
+        'so the gap between the two thresholds was never exercised. <b>The harness alone '
+        'would have shipped the bug.</b> 28 additional <code>YY 53–72</code> vectors '
+        'now exercise every JDN-routed path on every push — they pass byte-for-byte '
+        'after the fix.</p>'
     )
     parts.append(
         '<table><thead><tr><th>#</th><th>Bug class</th><th>COBOL paragraph (source citation)</th>'
@@ -486,15 +495,44 @@ def render_report(
         '<td>Made <code>_range_check</code> lenient on BETWEEN — fall through to range '
         'comparison with <code>c=0</code> when only BETWEEN failed validation.</td></tr>'
     )
+    parts.append(
+        '<tr><td>5</td>'
+        '<td>Two-digit-year century-inference threshold collapsed to a single rule</td>'
+        '<td>DATECONV has <i>two</i> distinct 2-digit-year century rules. '
+        '<code>9920-CALC-YY-TO-YYYY</code> at <code>DATECONV.cbl:1054-1059</code> uses '
+        '<code>YY &gt; 52 → 19xx</code> for the local CYMD-validation paragraphs. '
+        '<code>JDN-Acc-CC-Inferred</code> at <code>JDN-RECORD-ACCESS.cpy:74-79</code> '
+        '(<code>CHG-002</code>) uses <code>YY &gt; 72 → 19xx</code> inside every '
+        '<code>JDN-Acc-Int-Of-Date</code> / <code>JDN-Acc-Int-Of-Day</code> call with '
+        '<code>JDN-CC=0</code>. <code>YY</code>s in the 53–72 gap diverge: rule (1) '
+        'puts them in 19xx, rule (2) puts them in 20xx.</td>'
+        '<td>Python\'s single <code>_cc_inferred</code> used <code>&gt; 52</code> for both '
+        'rules. For <code>YY=60</code> the JDN-routed conversions (e.g. <code>YMD-TO-JUL</code>, '
+        '<code>MDY-TO-INT</code>, <code>RANGE-MDY</code>) silently computed against 1960 '
+        'instead of 2060.</td>'
+        '<td>Devin Review (initially); 28 added vectors covering <code>YY 53–72</code> '
+        'across FUNC 2/3/5/8/10/11/14/17/21/23/28/31/33/35/38/39/40/41/42 (JDN-routed) '
+        'plus FUNC 9/18/27/37 (non-JDN, must KEEP <code>&gt; 52</code>).</td>'
+        '<td>Split into two helpers — <code>_cc_inferred</code> (rule 1, <code>&gt; 52</code>) '
+        'and <code>_cc_inferred_jdn</code> (rule 2, <code>&gt; 72</code>) — and added a '
+        '<code>via_jdn=True</code> parameter to <code>_ymd_to_cymd</code> / '
+        '<code>_mdy_to_cymd</code> so every callsite mirrors the threshold its COBOL '
+        'paragraph actually emits.</td></tr>'
+    )
     parts.append('</tbody></table>')
     parts.append(
         '<p class="callout"><b>Why this matters for federal buyers.</b> Modernization '
         'efforts routinely ship "semantically equivalent" ports that pass their own unit '
         'tests and then drift from the legacy system in edge cases the test suite never '
         'covered. A runtime parity loop — compile the customer\'s actual COBOL, diff '
-        'byte-for-byte — is the verification federal acquisition wants. This harness '
-        'caught 13 such defects on the first run and now executes on every push to the '
-        'branch.</p>'
+        'byte-for-byte — is the verification federal acquisition wants. The harness '
+        'caught 13 defects on the first run; <i>adversarial code review</i> then caught a '
+        '14th (the dual-threshold century rule) that the harness alone would have shipped '
+        'because the original vectors all stayed in <code>YY 24/25</code>. The complete '
+        'verification stack is now: <b>compile the customer\'s COBOL → diff byte-for-byte '
+        '→ review for vector coverage gaps → add adversarial vectors → lock in.</b> '
+        'Every push to the branch re-runs all 80 vectors; the YY 53–72 band is now a '
+        'permanent regression gate.</p>'
     )
     parts.append('</section>')
 
