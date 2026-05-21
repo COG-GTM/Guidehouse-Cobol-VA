@@ -20,7 +20,7 @@ specifically requested in Question 7e.
 | `source/procobol/CONTROL-RECORD-TABLE-IO.pco` | 406 | CRUD module. SQL extracted; dispatch wired via `db_dispatcher.py`. |
 | Supplied copybooks | ~110 (combined) | All read; `JV-CONTROL-REC.cpy` and `CONTROL-RECORD-TABLE.cpy` drive byte layouts. |
 | **Subtotal — COBOL/Pro*COBOL analysed** | **~1,633** | |
-| Missing copybooks (`DATECONV-WS`, `DATECONV-PD`) | — | Flagged. Risk 1. |
+| ~~Missing copybooks (`DATECONV-WS`, `DATECONV-PD`)~~ **Resolved 2026-05-21** | Supplied (2 copybooks + `DATECONV.cbl` + 4 JDN helpers) | ~~Flagged. Risk 1.~~ Risk 1 CLOSED, A-1 RETIRED. Faithful port at `migration/converted-code/python/dateconv.py`. |
 
 | Generated artifact | Lines | Notes |
 |--------------------|------:|-------|
@@ -83,9 +83,11 @@ specifically requested in Question 7e.
 | MEDIUM | 3 | 10% |
 | LOW / unresolvable | 4 | 13% |
 
-The four LOW items are all rooted in missing supplied artifacts (DATECONV
+~~The four LOW items are all rooted in missing supplied artifacts (DATECONV
 copybooks and the rejected/applied insert paths). They are explicitly flagged
-in every relevant file and queued for SME confirmation.
+in every relevant file and queued for SME confirmation.~~
+
+> **Resolved 2026-05-21:** the DATECONV-rooted LOW items (`BR-LABD20-006` + 2 unresolvables) closed when the customer's follow-up shipment arrived. `BR-LABD20-006` is now HIGH. Remaining LOW items relate only to `JC_REJECTED_COMMENT_TBL` / `JC_APPLIED_COMMENT_TBL` insert paths.
 
 ---
 
@@ -95,7 +97,7 @@ Items requiring human review before this code is shipped:
 
 | # | Item | Severity | Risk / assumption ID |
 |---|------|---------:|----------------------|
-| 1 | Confirm date-validation semantics (replace `check_cymd_dt` stub with `DATECONV-PD` logic). | HIGH | Risk 1, A-5 |
+| ~~1~~ **Resolved 2026-05-21** | ~~Confirm date-validation semantics (replace `check_cymd_dt` stub with `DATECONV-PD` logic).~~ DATECONV-PD supplied; faithful port at `migration/converted-code/python/dateconv.py` + GnuCOBOL parity verified. | ~~HIGH~~ Closed | ~~Risk 1, A-5~~ Risk 1 CLOSED, A-1 RETIRED, A-5 closed |
 | 2 | Confirm JV-NUMBER binary↔display conversion (`struct.unpack` form). | HIGH | Risk 2, A-3 |
 | 3 | Confirm origin of `WS-JV-COUNTERS` threshold. | MEDIUM | A-10, BR-LABD20-UR-003 |
 | 4 | Confirm JC_COUNT_TBL column name (`JC_SECTION_COUNT` per LABD20 vs `JC_COUNT_NUM` per describe file). | MEDIUM | Risk 8 |
@@ -119,7 +121,7 @@ fraction of effort that Devin already covered versus the residual SME work.
 | Requirements derivation | 90% (HIGH-confidence items) | 10% (4 LOW items) |
 | Dependency graph + lineage | 95% | 5% (string-built dispatch enumeration) |
 | SQL extraction + parameterization | 100% (everything in supplied source) | 0% (modulo Q4 column-name) |
-| Code conversion (Python) | 85% | 15% (DATECONV semantics + binary form + secrets wiring) |
+| Code conversion (Python) | ~~85%~~ **>95% (post 2026-05-21)** | ~~15% (DATECONV semantics + binary form + secrets wiring)~~ **<5% (binary form + secrets wiring; DATECONV semantics resolved 2026-05-21 via faithful port + GnuCOBOL parity)** |
 | Test generation | 100% (52 tests passing) | 0% (additional negative tests as desired) |
 | Synthetic data | 100% | 0% |
 | Documentation | 100% | n/a |

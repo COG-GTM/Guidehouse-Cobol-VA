@@ -363,6 +363,211 @@
     font-family: 'Inter Tight', sans-serif;
   }
 
+  /* ----- demo-cycle narrative (Phase C 2026-05-21) ----- */
+  /* T0..T4 horizontal timeline strip */
+  .dcycle {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin: 18px 0 8px;
+  }
+  .dcycle .ev {
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 14px 16px;
+    background: var(--paper);
+    position: relative;
+  }
+  .dcycle .ev .when {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--muted);
+  }
+  .dcycle .ev .stamp {
+    font-size: 11px; color: var(--muted); margin-top: 2px;
+  }
+  .dcycle .ev h4 {
+    margin: 6px 0 6px; font-size: 14px; font-weight: 600;
+    line-height: 1.3;
+  }
+  .dcycle .ev p {
+    margin: 0; font-size: 12px; color: var(--ink-2);
+    line-height: 1.5;
+  }
+  .dcycle .ev.highlight {
+    border: 2px solid var(--ink);
+    background: #fff8e6;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  }
+  .dcycle .ev.highlight .when {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .dcycle .ev .badge {
+    position: absolute; top: -10px; right: 12px;
+    font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 999px;
+    background: var(--ink); color: var(--paper);
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  /* "Devin caught it" callout */
+  aside.caught {
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--ink);
+    border-radius: 12px;
+    padding: 18px 22px;
+    background: var(--soft);
+    margin: 18px 0 0;
+  }
+  aside.caught .frame {
+    font-size: 13px; color: var(--muted);
+    margin: 0 0 10px; font-style: italic;
+  }
+  aside.caught blockquote {
+    margin: 0 0 12px;
+    font-size: 15px;
+    color: var(--ink);
+    line-height: 1.55;
+    quotes: "\201C" "\201D";
+  }
+  aside.caught blockquote::before { content: open-quote; margin-right: 2px; }
+  aside.caught blockquote::after { content: close-quote; margin-left: 2px; }
+  aside.caught .attrib {
+    font-size: 12px; color: var(--muted);
+    border-top: 1px solid var(--rule);
+    padding-top: 8px;
+    display: flex; flex-wrap: wrap; gap: 16px;
+  }
+  aside.caught .attrib a { color: var(--ink-2); }
+
+  /* Confidence trajectory bar chart */
+  .conf-traj {
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 18px 22px;
+    background: var(--paper);
+    margin-top: 14px;
+  }
+  .conf-traj .title { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+  .conf-traj .sub { font-size: 12px; color: var(--muted); margin: 0 0 14px; }
+  .conf-traj .bars { display: grid; gap: 12px; }
+  .conf-traj .bar-row {
+    display: grid;
+    grid-template-columns: 130px 1fr 90px;
+    align-items: center;
+    gap: 12px;
+  }
+  .conf-traj .label {
+    font-size: 12px; color: var(--ink-2);
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  }
+  .conf-traj .track {
+    height: 18px;
+    background: var(--soft);
+    border-radius: 9px;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+  }
+  .conf-traj .fill {
+    height: 100%;
+    border-radius: 9px 0 0 9px;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 8px;
+    color: var(--paper);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.4px;
+  }
+  .conf-traj .fill.low { background: #b91c1c; }
+  .conf-traj .fill.high { background: #14532d; }
+  .conf-traj .right { font-size: 12px; color: var(--muted); text-align: right; }
+  .conf-traj .arrow {
+    margin-top: 6px;
+    text-align: center; font-size: 13px; color: var(--ink-2);
+  }
+  .conf-traj .cite {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule);
+    font-size: 12px; color: var(--muted);
+  }
+  .conf-traj .cite code { font-size: 11.5px; }
+
+  /* Before / after dep graph side-by-side */
+  .ba-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 6px;
+  }
+  .ba-grid .ba-col {
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 16px 18px;
+    background: var(--paper);
+  }
+  .ba-grid .ba-col h4 { margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+  .ba-grid .ba-col .when {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  .ba-grid .ba-col .caption {
+    font-size: 12px; color: var(--ink-2); margin: 0 0 10px;
+  }
+  .ba-grid .ba-col .mermaid {
+    background: var(--soft);
+    border-radius: 10px;
+    padding: 12px;
+    overflow-x: auto;
+    text-align: center;
+  }
+  .ba-grid .ba-col.after { border-color: #cdebd6; }
+  .ba-grid .ba-col.after h4::after {
+    content: " ✓"; color: var(--ok-ink);
+  }
+
+  /* Artifacts-received table */
+  .arts-recv table { width: 100%; border-collapse: collapse; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+  .arts-recv th, .arts-recv td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--rule);
+    font-size: 13px;
+    vertical-align: top;
+  }
+  .arts-recv th {
+    background: var(--soft);
+    font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1px; font-size: 11px; color: var(--muted);
+  }
+  .arts-recv tr:last-child td { border-bottom: none; }
+  .arts-recv td.path { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12px; }
+  .arts-recv td .closes {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--ok-bg); color: var(--ok-ink);
+    margin-right: 4px;
+  }
+
+  /* strikethrough/resolution styling */
+  del { color: var(--muted); }
+  del code { color: var(--muted); }
+  .resolved-note {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--ok-ink);
+    background: var(--ok-bg);
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #cdebd6;
+  }
+  .resolved-note strong { color: var(--ok-ink); }
+  .resolved-inline {
+    color: var(--ok-ink);
+    font-weight: 500;
+  }
+
   @media (max-width: 800px) {
     .metrics { grid-template-columns: repeat(2, 1fr); }
     .risk-grid { grid-template-columns: 1fr; }
@@ -375,6 +580,9 @@
     .timeline { grid-template-columns: 1fr; }
     .timeline .t { padding-top: 12px; border-top: none; }
     .timeline .b { padding-bottom: 16px; }
+    .dcycle { grid-template-columns: 1fr; }
+    .ba-grid { grid-template-columns: 1fr; }
+    .conf-traj .bar-row { grid-template-columns: 100px 1fr 70px; }
   }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
@@ -450,6 +658,239 @@
       <span>5 phases · 4 parallel tracks per phase</span>
       <span>52 tests passing</span>
     </p>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- Phase C 2026-05-21 · demo-cycle narrative                       -->
+  <!-- Timeline (T0..T4) + Devin-caught-it callout + trajectory chart  -->
+  <!-- ============================================================== -->
+  <section>
+    <h2>demo-cycle narrative</h2>
+    <h3>Devin flagged the gap before the customer's follow-up shipment</h3>
+    <p class="narrative">
+      The same artifact set covers two passes against the customer's COBOL
+      corpus, three days apart. The first pass surfaced the
+      <code>DATECONV-WS</code> / <code>DATECONV-PD</code> dependency gap
+      from the source citations alone — before any follow-up shipment
+      existed. The second pass auto-ingested the seven new artifacts the
+      customer subsequently shipped, closed the dependency graph, retired
+      the placeholder stubs, and promoted the date-validation requirement
+      from LOW to HIGH confidence with byte-for-byte runtime parity.
+    </p>
+
+    <!-- (a) Demo-cycle timeline T0..T4 -->
+    <div class="dcycle" aria-label="Demo-cycle timeline T0 through T4">
+      <div class="ev">
+        <div class="when">T0 · handover</div>
+        <div class="stamp">2026-05-18 (initial zip)</div>
+        <h4>Customer ships initial corpus</h4>
+        <p>4 programs (<code>LABA05.cbl</code>, <code>LABD20.pco</code>, <code>DBIO.pco</code>, <code>CONTROL-RECORD-TABLE-IO.pco</code>), 8 copybooks, Oracle schema, Perl wrappers, control files. No <code>DATECONV</code> assets.</p>
+      </div>
+      <div class="ev highlight">
+        <span class="badge">unprompted</span>
+        <div class="when">T1 · gap detection</div>
+        <div class="stamp">analysis phase</div>
+        <h4>Devin flags <code>DATECONV-WS</code> / <code>DATECONV-PD</code> as a real dependency gap</h4>
+        <p>Cited in <a href="../AGENTS.md">AGENTS.md</a>, <a href="../environment.yaml"><code>environment.yaml</code></a>, <a href="RISKS-AND-GAPS.md">Risk 1 HIGH</a>, <a href="ASSUMPTIONS-AND-PLACEHOLDERS.md">A-1</a>, <code>BR-LABD20-006</code> (LOW), and 28+ artifacts. <em>Before</em> the customer's follow-up shipment.</p>
+      </div>
+      <div class="ev">
+        <div class="when">T2 · follow-up shipment</div>
+        <div class="stamp">2026-05-21</div>
+        <h4>Customer ships 7 follow-up artifacts</h4>
+        <p><code>DATECONV.cbl</code>, <code>DATECONV-WS</code>, <code>DATECONV-PD</code>, plus 4 JDN helpers (<code>JDN-CONSTANTS-WS</code>, <code>JDN-PACKET-WS</code>, <code>JDN-RECORD-WS</code>, <code>JDN-RECORD-ACCESS</code>).</p>
+      </div>
+      <div class="ev">
+        <div class="when">T3 · auto-ingest</div>
+        <div class="stamp">same session</div>
+        <h4>Devin closes the loop in one cycle</h4>
+        <p>Dependency graph closed end-to-end. <a href="RISKS-AND-GAPS.md">Risk 1</a> CLOSED, <a href="ASSUMPTIONS-AND-PLACEHOLDERS.md">A-1</a> RETIRED. <code>BR-LABD20-006</code> LOW → HIGH. Requirements, lineage, parity, and this report all regenerated.</p>
+      </div>
+      <div class="ev">
+        <div class="when">T4 · runtime parity</div>
+        <div class="stamp">2026-05-21</div>
+        <h4>GnuCOBOL legacy ⇔ Python port verified</h4>
+        <p>~50 vectors covering all <code>DATESUB-FUNC</code> codes, leap years, century rollover, invalid dates, year bounds. Byte-for-byte diff. See <a href="test-results/cobol-parity-report.html">cobol-parity-report.html</a>.</p>
+      </div>
+    </div>
+
+    <!-- (b) Devin-caught-it callout -->
+    <aside class="caught" aria-label="Devin caught it upfront callout">
+      <p class="frame">Cognition's analysis surfaced the dependency gap before the customer's follow-up shipment arrived.</p>
+      <blockquote>This actually closes the loop nicely. Before these arrived I had already confirmed the DATECONV copybooks were a real gap (LABD20.pco lines 182 and 531 do COPY DATECONV-WS / COPY DATECONV-PD, and the repo's AGENTS.md + blueprint + 28+ artifacts flag them as known missing). I'll now analyze all 5 new artifacts and tell you exactly where each one fits, what it unlocks, and what I recommend doing with them.</blockquote>
+      <div class="attrib">
+        <span><strong>Speaker:</strong> Devin → Jake</span>
+        <span><strong>Order:</strong> chat turn immediately preceding the 2026-05-21 follow-up shipment</span>
+        <span><strong>Source:</strong> <a href="https://app.devin.ai/sessions/a871fc494b57416aa993d2a536a96796">parent session</a></span>
+      </div>
+    </aside>
+
+    <!-- (c) Confidence trajectory -->
+    <div class="conf-traj" aria-label="Confidence trajectory for BR-LABD20-006">
+      <p class="title">Confidence trajectory · <code>BR-LABD20-006</code> (calendar-date validation)</p>
+      <p class="sub">Two snapshots, three days apart. Same requirement; very different confidence after the follow-up shipment lands.</p>
+      <div class="bars">
+        <div class="bar-row">
+          <div class="label">Day 1 · stub</div>
+          <div class="track"><div class="fill low" style="width: 25%;">25%</div></div>
+          <div class="right">LOW · calendar-only stub</div>
+        </div>
+        <div class="bar-row">
+          <div class="label">Day 2 · port</div>
+          <div class="track"><div class="fill high" style="width: 95%;">95%</div></div>
+          <div class="right">HIGH · faithful port + GnuCOBOL parity</div>
+        </div>
+      </div>
+      <div class="arrow">LOW (stub, calendar-only) → HIGH (faithful port of <code>DATECONV.cbl</code> + byte-for-byte GnuCOBOL runtime parity)</div>
+      <div class="cite">
+        Cited closure: <a href="RISKS-AND-GAPS.md">RISKS-AND-GAPS.md Risk 1 CLOSED</a> ·
+        <a href="ASSUMPTIONS-AND-PLACEHOLDERS.md">ASSUMPTIONS-AND-PLACEHOLDERS.md A-1 RETIRED</a> ·
+        <code>migration/converted-code/python/dateconv.py</code> ·
+        <a href="test-results/cobol-parity-report.html">GnuCOBOL parity report</a>.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- Phase C 2026-05-21 · dependency closure                         -->
+  <!-- Before/after dep graphs + artifacts-received table              -->
+  <!-- ============================================================== -->
+  <section>
+    <h2>dependency closure</h2>
+    <h3>Before / after — DATECONV / JDN closure</h3>
+    <p class="narrative">
+      The two diagrams below are the same dependency graph, snapshotted at
+      T0 (initial zip) and T2 (after the follow-up shipment). Every red
+      <em>MISSING</em> node on the left has a green resolved counterpart
+      on the right. Source diagrams live in
+      <a href="../analysis/dependency-map.md">analysis/dependency-map.md</a>;
+      the 42-function inventory is in
+      <a href="../analysis/dateconv-function-inventory.md">analysis/dateconv-function-inventory.md</a>.
+    </p>
+
+    <!-- (d) Before / After dep graph -->
+    <div class="ba-grid">
+      <div class="ba-col before">
+        <div class="when">T0 · initial zip</div>
+        <h4>Before — DATECONV dependency unresolved</h4>
+        <p class="caption"><code>LABD20.pco</code> references <code>COPY DATECONV-WS</code> and <code>COPY DATECONV-PD</code>, but those copybooks were absent — the date-conversion subsystem terminates at a red <em>MISSING</em> node.</p>
+        <div class="mermaid">
+graph TD
+  LABA05[LABA05.cbl] --> DBIO[DBIO.pco]
+  LABA05 --> JVCTRLCPY[JV-CONTROL-REC.cpy]
+  LABA05 --> DBVAR[DBVAR.cpy]
+  LABA05 --> DMCA[DMCA.cpy / DMCAERR.cpy]
+  DBIO --> CTRLIO[CONTROL-RECORD-TABLE-IO.pco]
+  CTRLIO --> CTRLTBL[(CONTROL_RECORD_TABLE)]
+
+  LABD20[LABD20.pco] --> COMMENTFILE[COMMENT external file]
+  LABD20 --> CARDFILE[CARDFILE external file]
+  LABD20 --> DBIO
+  LABD20 --> SUBMITTED[(JC_SUBMITTED_COMMENT_TBL)]
+  LABD20 --> COUNT[(JC_COUNT_TBL)]
+  LABD20 --> REJECTED[(JC_REJECTED_COMMENT_TBL)]
+  LABD20 --> APPLIED[(JC_APPLIED_COMMENT_TBL)]
+  LABD20 --> COMCON[COMCON.cpy]
+  LABD20 --> DATECONV_OLD["⚠ DATECONV-WS / DATECONV-PD &lt;MISSING&gt;"]
+  LABD20 --> RDMSE[RDMS-ERR-WS / RDMS-ERR-RTN]
+
+  classDef missing fill:#fde2e1,stroke:#b91c1c,color:#7f1d1d;
+  class DATECONV_OLD missing
+        </div>
+      </div>
+      <div class="ba-col after">
+        <div class="when">T2 · 2026-05-21</div>
+        <h4>After — closure end-to-end</h4>
+        <p class="caption">The 7-artifact follow-up shipment closes every <code>COPY</code> and <code>CALL</code> from <code>LABD20.pco</code> through <code>DATECONV.cbl</code> into the 4 JDN helpers.</p>
+        <div class="mermaid">
+graph TD
+  LABA05[LABA05.cbl] --> DBIO[DBIO.pco]
+  LABA05 --> JVCTRLCPY[JV-CONTROL-REC.cpy]
+  LABA05 --> DBVAR[DBVAR.cpy]
+  LABA05 --> DMCA[DMCA.cpy / DMCAERR.cpy]
+  DBIO --> CTRLIO[CONTROL-RECORD-TABLE-IO.pco]
+  CTRLIO --> CTRLTBL[(CONTROL_RECORD_TABLE)]
+
+  LABD20[LABD20.pco] --> COMMENTFILE[COMMENT external file]
+  LABD20 --> CARDFILE[CARDFILE external file]
+  LABD20 --> DBIO
+  LABD20 --> SUBMITTED[(JC_SUBMITTED_COMMENT_TBL)]
+  LABD20 --> COUNT[(JC_COUNT_TBL)]
+  LABD20 --> REJECTED[(JC_REJECTED_COMMENT_TBL)]
+  LABD20 --> APPLIED[(JC_APPLIED_COMMENT_TBL)]
+  LABD20 --> COMCON[COMCON.cpy]
+  LABD20 --> RDMSE[RDMS-ERR-WS / RDMS-ERR-RTN]
+
+  LABD20 -. "COPY DATECONV-WS" .-> DCWS["✓ DATECONV-WS.cpy"]
+  LABD20 -. "COPY DATECONV-PD" .-> DCPD["✓ DATECONV-PD.cpy"]
+  DCPD -- "CALL 'DATECONV'" --> DCCBL["✓ DATECONV.cbl"]
+  DCCBL --> JDNCWS["✓ JDN-CONSTANTS-WS.cpy"]
+  DCCBL --> JDNPWS["✓ JDN-PACKET-WS.cpy"]
+  DCCBL --> JDNRWS["✓ JDN-RECORD-WS.cpy"]
+  DCCBL --> JDNACC["✓ JDN-RECORD-ACCESS.cpy"]
+
+  classDef resolved fill:#dcfce7,stroke:#15803d,color:#14532d;
+  class DCWS,DCPD,DCCBL,JDNCWS,JDNPWS,JDNRWS,JDNACC resolved
+        </div>
+      </div>
+    </div>
+
+    <!-- (e) Artifacts-received table -->
+    <div class="arts-recv" style="margin-top: 24px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Artifact</th>
+            <th>Role</th>
+            <th>Impact</th>
+            <th>Closes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>DATECONV.cbl</code><div class="path">source/cobol/DATECONV.cbl</div></td>
+            <td>The <code>PROGRAM-ID. DATECONV</code> subprogram itself. 1,159 lines. Dispatches on <code>DATESUB-FUNC</code> to 42 internal paragraphs. IAI-2012 <code>MIGRTN</code> markers preserved verbatim.</td>
+            <td>Anchors the entire date-conversion subsystem. Without this, the <code>CALL 'DATECONV'</code> in <code>DATECONV-PD.cpy</code> goes nowhere.</td>
+            <td><span class="closes">Risk 1</span><span class="closes">A-1</span><span class="closes">BR-LABD20-006</span></td>
+          </tr>
+          <tr>
+            <td><code>DATECONV-WS.cpy</code><div class="path">source/copybooks/DATECONV-WS.cpy</div></td>
+            <td>Caller-side working-storage data contract — <code>CONV-DATES</code>, <code>DATESUB-FUNC</code>, <code>FROM-CYMD-DT</code>, <code>DATE-IS-VALID</code>.</td>
+            <td>Defines the field layout that <code>LABD20.pco:182</code> imports.</td>
+            <td><span class="closes">Risk 1</span><span class="closes">A-1</span></td>
+          </tr>
+          <tr>
+            <td><code>DATECONV-PD.cpy</code><div class="path">source/copybooks/DATECONV-PD.cpy</div></td>
+            <td>Caller-side procedure-division wrappers — 42 entry paragraphs (incl. <code>CHECK-CYMD-DT</code>) that set <code>DATESUB-FUNC</code> and <code>CALL 'DATECONV'</code>.</td>
+            <td>Resolves the <code>PERFORM CHECK-CYMD-DT</code> at <code>LABD20.pco:267</code> end-to-end.</td>
+            <td><span class="closes">Risk 1</span><span class="closes">A-1</span><span class="closes">BR-LABD20-006</span></td>
+          </tr>
+          <tr>
+            <td><code>JDN-CONSTANTS-WS.cpy</code><div class="path">source/copybooks/JDN-CONSTANTS-WS.cpy</div></td>
+            <td>Action codes, status flags, year-type tables, USNO Julian-day constants.</td>
+            <td>Required by every internal paragraph in <code>DATECONV.cbl</code>.</td>
+            <td><span class="closes">Risk 1</span></td>
+          </tr>
+          <tr>
+            <td><code>JDN-PACKET-WS.cpy</code><div class="path">source/copybooks/JDN-PACKET-WS.cpy</div></td>
+            <td>Internal action packet — the in-program parameter block <code>DATECONV.cbl</code> uses while dispatching.</td>
+            <td>Drives the internal control flow inside <code>DATECONV.cbl</code>.</td>
+            <td><span class="closes">Risk 1</span></td>
+          </tr>
+          <tr>
+            <td><code>JDN-RECORD-WS.cpy</code><div class="path">source/copybooks/JDN-RECORD-WS.cpy</div></td>
+            <td>Internal Julian-day record layout — year/month/day/day-of-year tuple used across the 42 paragraphs.</td>
+            <td>Backing store for every calendar conversion inside <code>DATECONV.cbl</code>.</td>
+            <td><span class="closes">Risk 1</span></td>
+          </tr>
+          <tr>
+            <td><code>JDN-RECORD-ACCESS.cpy</code><div class="path">source/copybooks/JDN-RECORD-ACCESS.cpy</div></td>
+            <td>Intrinsic-function-based access section — <code>INTEGER-OF-DATE</code>, <code>DATE-OF-INTEGER</code>, <code>INTEGER-OF-DAY</code>, <code>DAY-OF-INTEGER</code>.</td>
+            <td>Makes the IAI-2012 migration mapping to COBOL-85 intrinsics explicit; what the Python port delegates to <code>datetime.date</code>.</td>
+            <td><span class="closes">Risk 1</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 
   <section>
@@ -552,7 +993,7 @@ flowchart TB
     direction LR
     A1["requirements-with-citations.md<br/>30 BRs · HIGH/MED/LOW"]
     A2["field-lineage.md<br/>byte offsets → Oracle columns"]
-    A3["dependency-map-detailed.md<br/>Mermaid + missing nodes"]
+    A3["dependency-map-detailed.md<br/>Mermaid (red ➜ green: missing ➜ resolved 2026-05-21)"]
     A4["sql-catalog.md<br/>14 EXEC SQL statements"]
   end
   subgraph P2["Phase 2 · convert (4-way parallel)"]
@@ -605,7 +1046,7 @@ flowchart LR
   SLICES --> V["determine_disposition<br/>labd20_loader.py:216"]
   V -- blank --> R1["reject: blank record"]
   V -- date non-numeric --> R2["reject: comment date"]
-  V -- bad calendar --> R3["reject: invalid YYYYMMDD<br/>(stub — DATECONV-PD missing)"]
+  V -- bad calendar --> R3["reject: invalid YYYYMMDD<br/>(faithful port — DATECONV-PD supplied 2026-05-21)"]
   V -- jv ≤0 --> R4["reject: JV number"]
   V -- section non-num --> R5["reject: section id"]
   V -- loan non-num --> R6["reject: loan number"]
@@ -747,8 +1188,8 @@ flowchart LR
 flowchart TB
   L1["<b>Source-verified (HIGH)</b><br/>line cited in COBOL, behavior reproduced verbatim<br/><i>e.g. INSERT 9 cols, JV-NUMBER reset to 1, byte offsets</i>"]
   L2["<b>Source-inferred (MEDIUM)</b><br/>behavior implied by surrounding source<br/><i>e.g. JC_COUNT_TBL 'MA' literal, rollback path consolidation</i>"]
-  L3["<b>Stubbed / placeholder (LOW)</b><br/>local replacement marked PLACEHOLDER + SME-REVIEW<br/><i>e.g. CHECK-CYMD-DT calendar stub for missing DATECONV-PD</i>"]
-  L4["<b>Unresolvable</b><br/>copybook/program missing; SME must supply<br/><i>e.g. DATECONV-WS / DATECONV-PD, JC_REJECTED insert path</i>"]
+  L3["<b>Stubbed / placeholder (LOW)</b><br/>local replacement marked PLACEHOLDER + SME-REVIEW<br/><i>example retired 2026-05-21: CHECK-CYMD-DT stub replaced by faithful port</i>"]
+  L4["<b>Unresolvable</b><br/>copybook/program missing; SME must supply<br/><i>e.g. JC_REJECTED insert path · DATECONV-WS / DATECONV-PD RESOLVED 2026-05-21</i>"]
   L1 --> RUN["runtime evidence<br/>(byte-for-byte diff)"]
   L2 --> RUN
   L3 --> SME["SME review queue<br/>10 items in conversion-efficiency.md §4"]
@@ -777,10 +1218,12 @@ flowchart TB
       rewrite. Devin spent the first wave reading every supplied file
       end-to-end before writing a single line of Python, so every later
       decision could cite source. The next decision was where to be loud
-      about gaps: the missing <code>DATECONV-WS</code> /
-      <code>DATECONV-PD</code> copybooks and the binary↔display JV-NUMBER
+      about gaps: <del>the missing <code>DATECONV-WS</code> /
+      <code>DATECONV-PD</code> copybooks</del> <span class="resolved-inline">— resolved 2026-05-21 by the customer follow-up shipment; faithful port now in <code>migration/converted-code/python/dateconv.py</code> with byte-for-byte GnuCOBOL parity</span> — and the binary↔display JV-NUMBER
       conversion both got top-of-file warnings, inline markers, risk-register
-      entries, and a dedicated section in this report.
+      entries, and a dedicated section in this report. The pre-shipment
+      LOW-confidence stub is preserved in the audit trail; see the
+      demo-cycle timeline at the top of the page.
     </p>
     <div class="timeline">
       <div class="t">Step 1</div>
@@ -816,10 +1259,10 @@ flowchart TB
     <h3>Eleven named risks. Every one of them is in the code as a marker.</h3>
     <div class="risk-grid">
       <div class="risk-card">
-        <div class="row1"><span class="num">Risk 1</span><span class="sev high">high</span></div>
-        <h4>Missing DATECONV-WS / DATECONV-PD copybooks</h4>
-        <p>LABD20 references date-conversion copybooks that weren't supplied. Exact legacy date-validation fidelity cannot be verified.</p>
-        <div class="mitig">Mitigation: Gregorian-calendar stub; <code># PLACEHOLDER</code> marker in <code>labd20_loader.check_cymd_dt</code>; SME confirmation required.</div>
+        <div class="row1"><span class="num">Risk 1</span><span class="sev low" style="background:var(--ok-bg);color:var(--ok-ink);">closed</span></div>
+        <h4><del>Missing DATECONV-WS / DATECONV-PD copybooks</del> &nbsp;&nbsp;Closed 2026-05-21</h4>
+        <p><del>LABD20 references date-conversion copybooks that weren't supplied. Exact legacy date-validation fidelity cannot be verified.</del></p>
+        <div class="resolved-note"><strong>Resolved 2026-05-21 (customer follow-up shipment):</strong> 7 artifacts supplied — <code>DATECONV.cbl</code>, <code>DATECONV-WS</code>, <code>DATECONV-PD</code>, 4 JDN helpers. Stub in <code>labd20_loader.check_cymd_dt</code> replaced by faithful port at <code>migration/converted-code/python/dateconv.py</code>. <code>BR-LABD20-006</code> LOW → HIGH; A-1 RETIRED; GnuCOBOL runtime parity verified.</div>
       </div>
       <div class="risk-card">
         <div class="row1"><span class="num">Risk 2</span><span class="sev high">high</span></div>
@@ -1002,9 +1445,9 @@ python3 migration/converted-code/python/demo_app.py serve</pre>
         engagement, the harness flips one config switch and the expected
         column becomes a live COBOL execution against the same synthetic
         input. The <em>actual</em> column is always a live Python run.
-        *Four items are explicitly flagged as unresolvable without missing
+        *<del>Four items are explicitly flagged as unresolvable without missing
         artifacts (DATECONV-WS/PD copybooks, the JC_REJECTED insert path,
-        the JV-COUNTERS comparand origin) — see
+        the JV-COUNTERS comparand origin)</del> <span class="resolved-inline">— DATECONV-WS/PD resolved 2026-05-21 (Risk 1 CLOSED, A-1 RETIRED, BR-LABD20-006 LOW → HIGH); JC_REJECTED insert path and JV-COUNTERS comparand origin remain SME-review items</span> — see
         <a href="ASSUMPTIONS-AND-PLACEHOLDERS.md">ASSUMPTIONS-AND-PLACEHOLDERS.md</a>.
       </div>
     </div>
@@ -1048,7 +1491,7 @@ $ python3 migration/converted-code/python/demo_app.py serve     # dashboard + pa
         <tr><td>BR-LABA05 requirements covered by tests</td><td>6 / 6</td></tr>
         <tr><td>BR-LABD20 requirements covered by Python</td><td>19 / 22</td></tr>
         <tr><td>BR-LABD20 requirements covered by tests</td><td>17 / 22</td></tr>
-        <tr><td>Unresolvable (missing artifacts)</td><td>4 (all explicitly flagged)</td></tr>
+        <tr><td>Unresolvable (missing artifacts)</td><td><del>4 (all explicitly flagged)</del> &nbsp; <span class="resolved-inline">2 after 2026-05-21 follow-up (DATECONV-WS/PD retired; JC_REJECTED insert path + JV-COUNTERS comparand remain)</span></td></tr>
         <tr><td>Passing pytest assertions</td><td>52</td></tr>
         <tr><td>Risks named &amp; mitigated in code</td><td>11</td></tr>
         <tr><td>Explicit assumptions / placeholders</td><td>17</td></tr>
@@ -1146,7 +1589,7 @@ $ python3 migration/converted-code/python/demo_app.py serve     # dashboard + pa
       <div class="qa">
         <div class="row1"><span class="qid">Q8</span><span class="asker">Srinjoy</span></div>
         <h4>Dependency resolution across copybooks, includes, and dynamic calls?</h4>
-        <p class="answer">Yes, across all three. Missing copybooks (DATECONV-WS/PD) are surfaced as explicit unresolved nodes — not silently glossed.</p>
+        <p class="answer">Yes, across all three. <del>Missing copybooks (DATECONV-WS/PD) are surfaced as explicit unresolved nodes — not silently glossed.</del> <span class="resolved-inline">— DATECONV-WS/PD resolved 2026-05-21; the same machinery that flagged them as missing auto-ingested the customer's follow-up shipment and closed the graph.</span></p>
         <div class="evidence">
           <a class="chip" href="analysis/dependency-map-detailed.md">dependency-map-detailed.md</a>
           <a class="chip" href="RISKS-AND-GAPS.md">RISKS-AND-GAPS.md Risk 1, Risk 4</a>
@@ -1216,7 +1659,7 @@ $ python3 migration/converted-code/python/demo_app.py serve     # dashboard + pa
       <div class="qa">
         <div class="row1"><span class="qid">Q15</span><span class="asker">Margarita</span></div>
         <h4>What constructs require manual remediation?</h4>
-        <p class="answer">Standard COBOL is in scope. Proprietary extensions and missing copybooks (DATECONV-WS/PD here) require SME confirmation.</p>
+        <p class="answer">Standard COBOL is in scope. Proprietary extensions and <del>missing copybooks (DATECONV-WS/PD here)</del> <span class="resolved-inline">missing copybooks (none currently — DATECONV-WS/PD supplied 2026-05-21)</span> require SME confirmation.</p>
         <div class="evidence">
           <a class="chip" href="ASSUMPTIONS-AND-PLACEHOLDERS.md">ASSUMPTIONS-AND-PLACEHOLDERS.md</a>
           <a class="chip" href="RISKS-AND-GAPS.md">RISKS-AND-GAPS.md Risk 1</a>
@@ -1297,7 +1740,7 @@ $ python3 migration/converted-code/python/demo_app.py serve     # dashboard + pa
     </p>
     <ol>
       <li>SME review of the 10-item review queue (<a href="docs/conversion-efficiency.md">conversion-efficiency.md §4</a>).</li>
-      <li>Drop-in the real <code>DATECONV-PD</code> logic in <code>labd20_loader.check_cymd_dt</code>.</li>
+      <li><del>Drop-in the real <code>DATECONV-PD</code> logic in <code>labd20_loader.check_cymd_dt</code>.</del> <span class="resolved-inline">— Resolved 2026-05-21: faithful port at <code>migration/converted-code/python/dateconv.py</code>; GnuCOBOL runtime parity verified.</span></li>
       <li>Switch JV-NUMBER read/write to <code>struct.unpack/pack('&gt;I', …)</code> against a real Oracle.</li>
       <li>Wire the dispatcher to a managed-secrets-store-backed <code>oracledb</code> connection.</li>
       <li>Stand up the orchestrator (Airflow / CronJob / Step Functions) and migrate the Perl wrapper env-vars.</li>

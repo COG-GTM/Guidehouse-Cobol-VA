@@ -10,7 +10,7 @@
 
 This effort takes the supplied legacy Journal Voucher (JV) batch programs — `LABA05.cbl` (fiscal-year reset) and `LABD20.pco` (daily JV comment ingestion) — and produces:
 
-1. **Structured business requirements** with source citations and confidence ratings, separating what is *confirmed from source* from what is *inferred* from what is *unresolvable without missing copybooks*.
+1. **Structured business requirements** with source citations and confidence ratings, separating what is *confirmed from source* from what is *inferred* from ~~what is *unresolvable without missing copybooks*~~ — **Resolved 2026-05-21:** previously-missing `DATECONV-WS` / `DATECONV-PD` copybooks supplied; all `BR-LABD20-006` items now HIGH confidence.
 2. **Field-level data lineage** from the fixed-width `TST123-COMMENT-REC` input through working storage, validation, and Oracle table columns, including binary↔display conversion in the `JV-CONTROL-REC` control record.
 3. **Dependency graph** spanning programs, copybooks, Perl wrappers, external files, Oracle tables, dynamic dispatch through `DBIO`, and the SQLCODE-to-DMS error translation layer.
 4. **Embedded SQL catalog** extracted from `LABD20.pco` and `CONTROL-RECORD-TABLE-IO.pco`, including the dynamically constructed SELECT.
@@ -37,7 +37,7 @@ This effort takes the supplied legacy Journal Voucher (JV) batch programs — `L
 | Customer source — Pro*COBOL | `source/procobol/DBIO.pco` (407 lines) | Generic Oracle dispatcher + SQLCODE↔DMS translation |
 | Customer source — Pro*COBOL | `source/procobol/CONTROL-RECORD-TABLE-IO.pco` (406 lines) | CRUD for `CONTROL_RECORD_TABLE`, dynamic SELECT |
 | Copybooks | `source/copybooks/` | `COMCON`, `DBVAR`, `DMCA`, `DMCAERR`, `JV-CONTROL-REC`, `CONTROL-RECORD-TABLE`, `RDMS-ERR-WS`, `RDMS-ERR-RTN` |
-| **Missing copybooks (referenced but NOT supplied)** | — | `DATECONV-WS` (referenced `LABD20.pco:182`), `DATECONV-PD` (date validation procedure) |
+| ~~**Missing copybooks (referenced but NOT supplied)**~~ **Resolved 2026-05-21 — supplied** | `source/copybooks/DATECONV-WS.cpy`, `source/copybooks/DATECONV-PD.cpy`, `source/cobol/DATECONV.cbl`, + 4 JDN helpers | ~~`DATECONV-WS` (referenced `LABD20.pco:182`), `DATECONV-PD` (date validation procedure)~~ Customer follow-up shipment closed Risk 1 / A-1; `BR-LABD20-006` LOW → HIGH. |
 | Database descriptions | `database/descriptions/` | `CONTROL_RECORD_TABLE`, `JC_SUBMITTED_COMMENT_TBL`, `JC_REJECTED_COMMENT_TBL`, `JC_APPLIED_COMMENT_TBL`, `JC_COUNT_TBL` |
 | Perl wrappers | `source/perl/LABA05.pl`, `source/perl/LABD20-JV.pl` | Runtime orchestration; environment variable + `rtsora` dependent |
 | Existing analysis | `analysis/dependency-map.md` | High-level dependency map (baseline; superseded by `migration/analysis/dependency-map-detailed.md`) |

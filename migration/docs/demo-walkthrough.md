@@ -16,7 +16,9 @@ Open the PR. Show the file tree under `migration/`.
 
 Open [`migration/ASSUMPTIONS-AND-PLACEHOLDERS.md`](../ASSUMPTIONS-AND-PLACEHOLDERS.md).
 
-> "Every assumption gets a confidence level. Every placeholder is also inline in the code as a `# PLACEHOLDER` marker. The two big ones are the missing DATECONV copybooks and the binary-vs-display conversion of JV-NUMBER. We'll flag those again as they come up."
+> ~~"Every assumption gets a confidence level. Every placeholder is also inline in the code as a `# PLACEHOLDER` marker. The two big ones are the missing DATECONV copybooks and the binary-vs-display conversion of JV-NUMBER. We'll flag those again as they come up."~~
+>
+> **Resolved 2026-05-21 (customer follow-up shipment):** the `DATECONV-WS` / `DATECONV-PD` copybooks were supplied; the date-conversion placeholder is retired (`A-1` RETIRED). Updated talk track: "Every assumption gets a confidence level. Devin flagged the missing DATECONV copybooks _before_ the customer's follow-up. When the artifacts arrived 2026-05-21, the dependency closed automatically and `BR-LABD20-006` went LOW → HIGH. The remaining placeholder is the binary-vs-display conversion of JV-NUMBER."
 
 ---
 
@@ -40,7 +42,9 @@ Open `source/cobol/LABA05.cbl`.
 
 Open [`migration/analysis/dependency-map-detailed.md`](../analysis/dependency-map-detailed.md).
 
-> "System-wide graph. Perl wrappers, COBOL programs, the DBIO dispatcher, the table-IO modules, the Oracle tables. Notice the two dashed orange nodes — those are the missing copybooks Devin couldn't find. We're not pretending they're there."
+> ~~"System-wide graph. Perl wrappers, COBOL programs, the DBIO dispatcher, the table-IO modules, the Oracle tables. Notice the two dashed orange nodes — those are the missing copybooks Devin couldn't find. We're not pretending they're there."~~
+>
+> **Resolved 2026-05-21:** updated talk track: "System-wide graph. Notice the dashed orange nodes were `DATECONV-WS` / `DATECONV-PD` — Devin caught them as missing before the customer's follow-up shipment. The customer supplied them 2026-05-21 and the graph now closes end-to-end (green) — see the before/after diagrams in the executive report."
 
 Scroll to §5 — DBIO dispatch table.
 
@@ -52,7 +56,9 @@ Open [`migration/analysis/field-lineage.md`](../analysis/field-lineage.md).
 
 Open [`migration/business-requirements/requirements-with-citations.md`](../business-requirements/requirements-with-citations.md).
 
-> "Charles also asked about confidence. Every requirement carries a HIGH/MEDIUM/LOW tag and a citation. The ones marked LOW are the ones tied to the missing DATECONV copybooks."
+> ~~"Charles also asked about confidence. Every requirement carries a HIGH/MEDIUM/LOW tag and a citation. The ones marked LOW are the ones tied to the missing DATECONV copybooks."~~
+>
+> **Resolved 2026-05-21:** every requirement still carries a HIGH/MEDIUM/LOW tag and citation; `BR-LABD20-006` was LOW (DATECONV missing) and is now HIGH (DATECONV supplied 2026-05-21).
 
 ---
 
@@ -64,7 +70,9 @@ Open [`migration/converted-code/python/labd20_loader.py`](../converted-code/pyth
 
 Scroll to `check_cymd_dt`.
 
-> "This is the stub for the missing date copybook. Standard Gregorian calendar check. The marker explicitly says `# PLACEHOLDER: replace with legacy DATECONV-PD logic once provided`. It is not pretending to be the real thing."
+> ~~"This is the stub for the missing date copybook. Standard Gregorian calendar check. The marker explicitly says `# PLACEHOLDER: replace with legacy DATECONV-PD logic once provided`. It is not pretending to be the real thing."~~
+>
+> **Resolved 2026-05-21:** the stub was replaced by a faithful port at `migration/converted-code/python/dateconv.py`, with byte-for-byte GnuCOBOL runtime parity verified across ~50 vectors (see `migration/test-results/cobol-parity-report.html`).
 
 Scroll to `_insert`.
 

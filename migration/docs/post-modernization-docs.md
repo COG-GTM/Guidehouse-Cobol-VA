@@ -73,7 +73,7 @@ DB connection, which simplifies secrets handling and transaction control.
 | `parse_comment_record(raw)` | top-level | Parse a single 300-byte record. |
 | `iter_records(path)` | generator | Yield `CommentRecord` objects from a fixed-width file. |
 | `read_process_date(path)` | top-level | Read the card file (MM/DD/CCYY → YYYYMMDD). |
-| `check_cymd_dt(yyyymmdd)` | top-level | Gregorian-calendar stub. **`# PLACEHOLDER` for `DATECONV-PD`.** |
+| `check_cymd_dt(yyyymmdd)` | top-level | ~~Gregorian-calendar stub. **`# PLACEHOLDER` for `DATECONV-PD`.**~~ **Resolved 2026-05-21:** delegates to faithful port at `migration/converted-code/python/dateconv.py`; GnuCOBOL byte-for-byte parity verified. |
 | `determine_disposition(record)` | top-level | Apply LABD20 validation rules; returns `(is_valid, reasons)`. |
 | `LABD20Loader(dispatcher)` | class | Bundle dispatcher + run lifecycle. |
 | `LABD20Loader.run(config)` | method | End-to-end: read card → iterate records → validate → dedupe → insert → post-process → commit → stats. |
@@ -137,7 +137,7 @@ for the full SME-review queue. The items most relevant to post-deployment are:
 
 | # | Item | Action owner |
 |---|------|--------------|
-| 1 | DATECONV-PD semantics → replace `check_cymd_dt` | COBOL SME + dev |
+| ~~1~~ **Resolved 2026-05-21** | ~~DATECONV-PD semantics → replace `check_cymd_dt`~~ DATECONV-PD supplied; `check_cymd_dt` now delegates to `migration/converted-code/python/dateconv.py`. | ~~COBOL SME + dev~~ Closed |
 | 2 | JV-NUMBER binary form → replace placeholder with `struct.unpack('>I', …)` | COBOL SME + dev |
 | 3 | `WS-JV-COUNTERS` origin | COBOL SME |
 | 4 | JC_COUNT_TBL column name reconciliation | DBA + COBOL SME |

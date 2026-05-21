@@ -11,7 +11,9 @@ with explicit source citations and confidence levels. Each requirement is keyed
 
 - **Confirmed (HIGH)** — directly visible in source.
 - **Inferred (MEDIUM)** — strongly implied by source + database descriptions.
-- **Unresolvable without supplied artifact (LOW)** — depends on missing copybooks (DATECONV-WS/DATECONV-PD) or runtime/environment artifacts that were not supplied.
+- ~~**Unresolvable without supplied artifact (LOW)** — depends on missing copybooks (DATECONV-WS/DATECONV-PD) or runtime/environment artifacts that were not supplied.~~
+
+> **Resolved 2026-05-21 (customer follow-up shipment):** `DATECONV-WS`, `DATECONV-PD`, `DATECONV.cbl`, and 4 JDN helpers were supplied. `BR-LABD20-006` LOW → HIGH. Risk 1 CLOSED, A-1 RETIRED. Faithful Python port at `migration/converted-code/python/dateconv.py`; GnuCOBOL parity at `migration/test-results/cobol-parity-report.html`.
 
 ---
 
@@ -47,7 +49,7 @@ with explicit source citations and confidence levels. Each requirement is keyed
 |----|-------------|-----------------|----------------|------------|
 | BR-LABD20-004 | Reject any record that is all spaces. | LABD20.pco:261-263 | Confirmed | HIGH |
 | BR-LABD20-005 | Reject any record where `TST123-COMMENT-DT` is not numeric. | LABD20.pco:265, 272-274 | Confirmed | HIGH |
-| BR-LABD20-006 | Reject any record where `TST123-COMMENT-DT` is numeric but `CHECK-CYMD-DT` (from `DATECONV-PD`) flags it as invalid. | LABD20.pco:266-274 — references `DATECONV-PD` which was **not** supplied. | Inferred / partly unresolvable | LOW (we use a Gregorian-calendar stub — see ASSUMPTIONS A-5) |
+| BR-LABD20-006 | Reject any record where `TST123-COMMENT-DT` is numeric but `CHECK-CYMD-DT` (from `DATECONV-PD`) flags it as invalid. | LABD20.pco:266-274 — ~~references `DATECONV-PD` which was **not** supplied~~ **Resolved 2026-05-21: `DATECONV-PD` supplied; faithful port at `migration/converted-code/python/dateconv.py`.** | ~~Inferred / partly unresolvable~~ Confirmed (faithful port + GnuCOBOL parity) | ~~LOW (we use a Gregorian-calendar stub — see ASSUMPTIONS A-5)~~ HIGH (resolved 2026-05-21) |
 | BR-LABD20-007 | Reject any record where `TST123-JV-NUMBER` is non-numeric or ≤ 0. | LABD20.pco:276-281 | Confirmed | HIGH |
 | BR-LABD20-008 | Reject any record where `TST123-SECTION-ID` is non-numeric. | LABD20.pco:283-287 | Confirmed | HIGH |
 | BR-LABD20-009 | Reject any record where `TST123-LOAN-NUMBER` is non-numeric. | LABD20.pco:289-293 | Confirmed | HIGH |
@@ -81,8 +83,8 @@ with explicit source citations and confidence levels. Each requirement is keyed
 
 | ID | Item | Why unresolvable | Mitigation |
 |----|------|------------------|------------|
-| BR-LABD20-UR-001 | Exact behavior of `CHECK-CYMD-DT` (incl. any business-calendar gates such as fiscal-year cutoffs). | `DATECONV-PD` copybook not supplied. | Gregorian-calendar stub in `labd20_loader.check_cymd_dt`; explicit `# PLACEHOLDER` marker; SME confirmation required. |
-| BR-LABD20-UR-002 | Legacy date-conversion working-storage layout that may be required for FROM-CYMD-DT / WS-PROCESS-DATE-* fields. | `DATECONV-WS` copybook not supplied. | Modernized code uses Python `datetime` objects; no internal layout reproduction. |
+| ~~BR-LABD20-UR-001~~ **Resolved 2026-05-21** | Exact behavior of `CHECK-CYMD-DT` (incl. any business-calendar gates such as fiscal-year cutoffs). | ~~`DATECONV-PD` copybook not supplied.~~ Supplied 2026-05-21. | ~~Gregorian-calendar stub in `labd20_loader.check_cymd_dt`; explicit `# PLACEHOLDER` marker; SME confirmation required.~~ Faithful port at `migration/converted-code/python/dateconv.py`; GnuCOBOL byte-for-byte parity verified. |
+| ~~BR-LABD20-UR-002~~ **Resolved 2026-05-21** | Legacy date-conversion working-storage layout that may be required for FROM-CYMD-DT / WS-PROCESS-DATE-* fields. | ~~`DATECONV-WS` copybook not supplied.~~ Supplied 2026-05-21. | ~~Modernized code uses Python `datetime` objects; no internal layout reproduction.~~ DATECONV-WS layout fully ported; see `migration/converted-code/python/dateconv.py`. |
 | BR-LABD20-UR-003 | Source of `WS-JV-COUNTERS` threshold variable. | Not declared in the supplied LABD20 source; may live in a copybook not provided. | Modernized code reads current `JC_COUNT_NUM` for section 'MA' as the inferred threshold. |
 | BR-LABD20-UR-004 | Origin of records in `JC_REJECTED_COMMENT_TBL` / `JC_APPLIED_COMMENT_TBL`. | Only `COUNT(*)` references appear in supplied source. | Flag for SME confirmation; ensure the upstream/downstream programs are part of the modernization scope. |
 
