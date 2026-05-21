@@ -1,0 +1,530 @@
+{
+  "totals": {
+    "oracle_columns": 40,
+    "demo_columns": 17,
+    "matched": 15,
+    "intentionally_omitted": 24,
+    "known_issues": 3,
+    "drift": 0
+  },
+  "tables": {
+    "CONTROL_RECORD_TABLE": {
+      "table": "CONTROL_RECORD_TABLE",
+      "oracle_columns": 5,
+      "demo_columns": 3,
+      "matched": 3,
+      "intentionally_omitted": 2,
+      "known_issues": 0,
+      "drift": 0,
+      "findings": [
+        {
+          "table": "CONTROL_RECORD_TABLE",
+          "column": "CONTROL_RECORD_NAME",
+          "status": "matched",
+          "detail": "column present in demo DDL",
+          "oracle_type": "CHAR",
+          "oracle_width": 30
+        },
+        {
+          "table": "CONTROL_RECORD_TABLE",
+          "column": "CONTROL_RECORD_NUMBER",
+          "status": "matched",
+          "detail": "column present in demo DDL",
+          "oracle_type": "NUMBER",
+          "oracle_width": null
+        },
+        {
+          "table": "CONTROL_RECORD_TABLE",
+          "column": "CONTROL_RECORD_DATA",
+          "status": "matched",
+          "detail": "column present in demo DDL",
+          "oracle_type": "CHAR",
+          "oracle_width": 400
+        },
+        {
+          "table": "CONTROL_RECORD_TABLE",
+          "column": "CREATE_TIMESTAMP",
+          "status": "intentionally-omitted",
+          "detail": "demo DDL skips Oracle timestamp columns; sqlite has no equivalent and the demo runtime never reads them",
+          "oracle_type": "TIMESTAMP",
+          "oracle_width": null
+        },
+        {
+          "table": "CONTROL_RECORD_TABLE",
+          "column": "LAST_UPDATE_TIMESTAMP",
+          "status": "intentionally-omitted",
+          "detail": "demo DDL skips Oracle timestamp columns; sqlite has no equivalent and the demo runtime never reads them",
+          "oracle_type": "TIMESTAMP",
+          "oracle_width": null
+        }
+      ]
+    },
+    "JC_APPLIED_COMMENT_TBL": {
+      "table": "JC_APPLIED_COMMENT_TBL",
+      "oracle_columns": 12,
+      "demo_columns": 1,
+      "matched": 1,
+      "intentionally_omitted": 11,
+      "known_issues": 0,
+      "drift": 0,
+      "findings": [
+        {
+          "table": "JC_APPLIED_COMMENT_TBL",
+          "column": "JC_APPLIED",
+          "status": "matched",
+          "detail": "column present in demo DDL",
+          "oracle_type": "CHAR",
+          "oracle_width": 26
+        },
+        {
+          "table": "JC_APPLIED_COMMENT_TBL",
+          "column": "JC_APPLIED_NUMBER",
+          "status": "intentionally-omitted",
+          "detail": "demo placeholder: LABD20 never INSERTs into this table; only `count_rows` reads it via SELECT COUNT(*) (LABD20.pco:441-444). The Oracle column is documented but unused on the demo path.",
+          "oracle_type": "NUMBER",
+          "oracle_width": null
+        },
+        {
+          "table": "JC_APPLIED_COMMENT_TBL",
+          "column": "JC_APPLICATION_DATE",
+          "status": "intentionally-omitted",
+          "detail": "demo placeholder: LABD20 never INSERTs into this table; only `count_rows` reads it via SELECT COUNT(*) (LABD20.pco:441-444). The Oracle column is documented but unused on the demo path.",
+          "oracle_type": "DATE",
+          "oracle_width": null
+        },
+        {
+          "table": "JC_APPLIED_COMMENT_TBL",
+          "column": "JC_APPLIED_SCHED_DOC_NO",
+          "status": "intentionally-omitted",
+          "detail": "demo placeholder: LABD20 never INSERTs into this table; only `count_rows` reads it via SELECT COUNT(*) (LABD20.pco:441-444). The Oracle column is documented but unused on the demo path.",
+          "oracle_type": "CHAR",
+          "oracle_width": 10
+        },
+        {
+          "table": "JC_APPLIED_COMMENT_TBL",
+          "column": "JC_APPLIED_COMMENT_HIST",
+          "status": "intentionally-omitted",
+          "detail": "demo placeholder: LABD20 never INSERTs into this table; only `count_rows` reads it via SELECT COUNT(*) (LABD20.pco:441-444). The Oracle column is documented but unused on the demo path.",
+          "oracle_type": "CHAR",
+          "oracle_width": 240
+        },
+        {
+          "table": "JC_APPLIED_COMMENT_TBL",
+          "column": "JC_APPLIED_COMMENT_REQUESTOR",
+          "status": "intentionally-omitted",
+          "detail": "demo placeholder: LABD20 never INSERTs into this table; only `count_rows` reads it via SELECT COUNT(*) (LABD20.pco:441-444). The Oracle column is documented but unused on the demo path.",
+          "oracle_type": "CHAR",
+          "oracle_width": 20
+        },
+        {
+          "table": "JC_APPLIED_COMMENT_TBL",
+          "column": "JC_APPLIED_COMMENT_APPROVER",
+          "status": "intentionally-omitted",
+          "detail": "demo placeholder: LABD20 never INSERTs into this table; only `count_rows` reads it via SELECT COUNT(*) (LABD20.pco:441-444). The Oracle column is documented but unused on the demo path.",
+          "oracle_type": "CHAR",
+          "oracle_width": 20
+        },
+        {
+          "table": "JC_APPLIED_COMMENT_TBL",
+          "column": "JC_APPLIED_CONTROL_NUM",
+          "status": "intentionally-omitted",
+          "detail": "demo placeholder: LABD20 never INSERTs into this table; only `count_rows` reads it via SELECT COUNT(*) (LABD20.pco:441-444). The Oracle column is documented but unused on the demo path.",
+          "oracle_type": "CHAR",
+          "oracle_width": 8
+        },
+        {
+          "table": "JC_APPLIED_COMMENT_TBL",
+          "column": "JC_APPLIED_UPDT_PROG_ID",
+          "status": "intentionally-omitted",
+          "detail": "demo placeholder: LABD20 never INSERTs into this table; only `count_rows` reads it via SELECT COUNT(*) (LABD20.pco:441-444). The Oracle column is documented but unused on the demo path.",
+          "oracle_type": "CHAR",
+          "oracle_width": 6
+        },
+        {
+          "table": "JC_APPLIED_COMMENT_TBL",
+          "column": "JC_APPLIED_UPDT_PROG_DT",
+          "status": "intentionally-omitted",
+          "detail": "demo placeholder: LABD20 never INSERTs into this table; only `count_rows` reads it via SELECT COUNT(*) (LABD20.pco:441-444). The Oracle column is documented but unused on the demo path.",
+          "oracle_type": "DATE",
+          "oracle_width": null
+        },
+        {
+          "table": "JC_APPLIED_COMMENT_TBL",
+          "column": "CREATE_TIMESTAMP",
+          "status": "intentionally-omitted",
+          "detail": "demo DDL skips Oracle timestamp columns; sqlite has no equivalent and the demo runtime never reads them",
+          "oracle_type": "TIMESTAMP",
+          "oracle_width": null
+        },
+        {
+          "table": "JC_APPLIED_COMMENT_TBL",
+          "column": "LAST_UPDATE_TIMESTAMP",
+          "status": "intentionally-omitted",
+          "detail": "demo DDL skips Oracle timestamp columns; sqlite has no equivalent and the demo runtime never reads them",
+          "oracle_type": "TIMESTAMP",
+          "oracle_width": null
+        }
+      ]
+    },
+    "JC_COUNT_TBL": {
+      "table": "JC_COUNT_TBL",
+      "oracle_columns": 4,
+      "demo_columns": 2,
+      "matched": 1,
+      "intentionally_omitted": 2,
+      "known_issues": 2,
+      "drift": 0,
+      "findings": [
+        {
+          "table": "JC_COUNT_TBL",
+          "column": "JC_SECTION",
+          "status": "matched",
+          "detail": "column present in demo DDL",
+          "oracle_type": "CHAR",
+          "oracle_width": 2
+        },
+        {
+          "table": "JC_COUNT_TBL",
+          "column": "JC_SECTION_COUNT",
+          "status": "known-issue",
+          "detail": "A-6 / column-name drift: COBOL LABD20.pco:399 uses JC_SECTION_COUNT, demo DDL uses JC_COUNT_NUM",
+          "oracle_type": "NUMBER",
+          "oracle_width": null
+        },
+        {
+          "table": "JC_COUNT_TBL",
+          "column": "CREATE_TIMESTAMP",
+          "status": "intentionally-omitted",
+          "detail": "demo DDL skips Oracle timestamp columns; sqlite has no equivalent and the demo runtime never reads them",
+          "oracle_type": "TIMESTAMP",
+          "oracle_width": null
+        },
+        {
+          "table": "JC_COUNT_TBL",
+          "column": "LAST_UPDATE_TIMESTAMP",
+          "status": "intentionally-omitted",
+          "detail": "demo DDL skips Oracle timestamp columns; sqlite has no equivalent and the demo runtime never reads them",
+          "oracle_type": "TIMESTAMP",
+          "oracle_width": null
+        },
+        {
+          "table": "JC_COUNT_TBL",
+          "column": "JC_COUNT_NUM",
+          "status": "known-issue",
+          "detail": "A-6 column-name drift: demo DDL uses JC_COUNT_NUM while Oracle and COBOL both call this JC_SECTION_COUNT",
+          "oracle_type": null,
+          "oracle_width": null
+        }
+      ]
+    },
+    "JC_REJECTED_COMMENT_TBL": {
+      "table": "JC_REJECTED_COMMENT_TBL",
+      "oracle_columns": 8,
+      "demo_columns": 2,
+      "matched": 1,
+      "intentionally_omitted": 7,
+      "known_issues": 1,
+      "drift": 0,
+      "findings": [
+        {
+          "table": "JC_REJECTED_COMMENT_TBL",
+          "column": "JC_REJECTED",
+          "status": "matched",
+          "detail": "column present in demo DDL",
+          "oracle_type": "CHAR",
+          "oracle_width": 26
+        },
+        {
+          "table": "JC_REJECTED_COMMENT_TBL",
+          "column": "JC_REJECT_NUMBER",
+          "status": "intentionally-omitted",
+          "detail": "demo placeholder: LABD20 never INSERTs into this table; only `count_rows` reads it via SELECT COUNT(*) (LABD20.pco:432-435). The Oracle column is documented but unused on the demo path.",
+          "oracle_type": "NUMBER",
+          "oracle_width": null
+        },
+        {
+          "table": "JC_REJECTED_COMMENT_TBL",
+          "column": "JC_REJECTION_DATE",
+          "status": "intentionally-omitted",
+          "detail": "demo placeholder: LABD20 never INSERTs into this table; only `count_rows` reads it via SELECT COUNT(*) (LABD20.pco:432-435). The Oracle column is documented but unused on the demo path.",
+          "oracle_type": "DATE",
+          "oracle_width": null
+        },
+        {
+          "table": "JC_REJECTED_COMMENT_TBL",
+          "column": "JC_REJECTED_CONTROL_NUM",
+          "status": "intentionally-omitted",
+          "detail": "demo placeholder: LABD20 never INSERTs into this table; only `count_rows` reads it via SELECT COUNT(*) (LABD20.pco:432-435). The Oracle column is documented but unused on the demo path.",
+          "oracle_type": "CHAR",
+          "oracle_width": 8
+        },
+        {
+          "table": "JC_REJECTED_COMMENT_TBL",
+          "column": "JC_REJECTED_UPDT_PROG_ID",
+          "status": "intentionally-omitted",
+          "detail": "demo placeholder: LABD20 never INSERTs into this table; only `count_rows` reads it via SELECT COUNT(*) (LABD20.pco:432-435). The Oracle column is documented but unused on the demo path.",
+          "oracle_type": "CHAR",
+          "oracle_width": 6
+        },
+        {
+          "table": "JC_REJECTED_COMMENT_TBL",
+          "column": "JC_REJECTED_UPDT_PROG_DT",
+          "status": "intentionally-omitted",
+          "detail": "demo placeholder: LABD20 never INSERTs into this table; only `count_rows` reads it via SELECT COUNT(*) (LABD20.pco:432-435). The Oracle column is documented but unused on the demo path.",
+          "oracle_type": "DATE",
+          "oracle_width": null
+        },
+        {
+          "table": "JC_REJECTED_COMMENT_TBL",
+          "column": "CREATE_TIMESTAMP",
+          "status": "intentionally-omitted",
+          "detail": "demo DDL skips Oracle timestamp columns; sqlite has no equivalent and the demo runtime never reads them",
+          "oracle_type": "TIMESTAMP",
+          "oracle_width": null
+        },
+        {
+          "table": "JC_REJECTED_COMMENT_TBL",
+          "column": "LAST_UPDATE_TIMESTAMP",
+          "status": "intentionally-omitted",
+          "detail": "demo DDL skips Oracle timestamp columns; sqlite has no equivalent and the demo runtime never reads them",
+          "oracle_type": "TIMESTAMP",
+          "oracle_width": null
+        },
+        {
+          "table": "JC_REJECTED_COMMENT_TBL",
+          "column": "JC_REJECTED_REASON",
+          "status": "known-issue",
+          "detail": "demo placeholder: JC_REJECTED_REASON is a demo-only column; LABD20 never INSERTs into JC_REJECTED_COMMENT_TBL \u2014 see RISKS-AND-GAPS Risk 4",
+          "oracle_type": null,
+          "oracle_width": null
+        }
+      ]
+    },
+    "JC_SUBMITTED_COMMENT_TBL": {
+      "table": "JC_SUBMITTED_COMMENT_TBL",
+      "oracle_columns": 11,
+      "demo_columns": 9,
+      "matched": 9,
+      "intentionally_omitted": 2,
+      "known_issues": 0,
+      "drift": 0,
+      "findings": [
+        {
+          "table": "JC_SUBMITTED_COMMENT_TBL",
+          "column": "JC_SUBMITTED",
+          "status": "matched",
+          "detail": "column present in demo DDL",
+          "oracle_type": "CHAR",
+          "oracle_width": 26
+        },
+        {
+          "table": "JC_SUBMITTED_COMMENT_TBL",
+          "column": "JC_SUBMITTED_NUMBER",
+          "status": "matched",
+          "detail": "column present in demo DDL",
+          "oracle_type": "NUMBER",
+          "oracle_width": null
+        },
+        {
+          "table": "JC_SUBMITTED_COMMENT_TBL",
+          "column": "JC_SUBMITTED_SCHED_DOC_NO",
+          "status": "matched",
+          "detail": "column present in demo DDL",
+          "oracle_type": "CHAR",
+          "oracle_width": 10
+        },
+        {
+          "table": "JC_SUBMITTED_COMMENT_TBL",
+          "column": "JC_SUBMITTED_COMMENT_HIST",
+          "status": "matched",
+          "detail": "column present in demo DDL",
+          "oracle_type": "CHAR",
+          "oracle_width": 240
+        },
+        {
+          "table": "JC_SUBMITTED_COMMENT_TBL",
+          "column": "JC_SUBMITTED_COMMENT_REQUESTOR",
+          "status": "matched",
+          "detail": "column present in demo DDL",
+          "oracle_type": "CHAR",
+          "oracle_width": 20
+        },
+        {
+          "table": "JC_SUBMITTED_COMMENT_TBL",
+          "column": "JC_SUBMITTED_COMMENT_APPROVER",
+          "status": "matched",
+          "detail": "column present in demo DDL",
+          "oracle_type": "CHAR",
+          "oracle_width": 20
+        },
+        {
+          "table": "JC_SUBMITTED_COMMENT_TBL",
+          "column": "JC_SUBMITTED_CONTROL_NUM",
+          "status": "matched",
+          "detail": "column present in demo DDL",
+          "oracle_type": "CHAR",
+          "oracle_width": 8
+        },
+        {
+          "table": "JC_SUBMITTED_COMMENT_TBL",
+          "column": "JC_SUBMITTED_UPDT_PROG_ID",
+          "status": "matched",
+          "detail": "column present in demo DDL",
+          "oracle_type": "CHAR",
+          "oracle_width": 6
+        },
+        {
+          "table": "JC_SUBMITTED_COMMENT_TBL",
+          "column": "JC_SUBMITTED_UPDT_PROG_DT",
+          "status": "matched",
+          "detail": "column present in demo DDL",
+          "oracle_type": "DATE",
+          "oracle_width": null
+        },
+        {
+          "table": "JC_SUBMITTED_COMMENT_TBL",
+          "column": "CREATE_TIMESTAMP",
+          "status": "intentionally-omitted",
+          "detail": "demo DDL skips Oracle timestamp columns; sqlite has no equivalent and the demo runtime never reads them",
+          "oracle_type": "TIMESTAMP",
+          "oracle_width": null
+        },
+        {
+          "table": "JC_SUBMITTED_COMMENT_TBL",
+          "column": "LAST_UPDATE_TIMESTAMP",
+          "status": "intentionally-omitted",
+          "detail": "demo DDL skips Oracle timestamp columns; sqlite has no equivalent and the demo runtime never reads them",
+          "oracle_type": "TIMESTAMP",
+          "oracle_width": null
+        }
+      ]
+    }
+  },
+  "known_issue_notes": [
+    {
+      "key": [
+        "JC_COUNT_TBL",
+        "JC_SECTION_COUNT"
+      ],
+      "note": "A-6 / column-name drift: COBOL LABD20.pco:399 uses JC_SECTION_COUNT, demo DDL uses JC_COUNT_NUM"
+    },
+    {
+      "key": [
+        "JC_COUNT_TBL",
+        "__PK_TYPO__"
+      ],
+      "note": "A-6 / U-6: describe file claims PK=JC_SUBMITTED, but that column does not exist on this table; PK is treated as JC_SECTION"
+    },
+    {
+      "key": [
+        "JC_SUBMITTED_COMMENT_TBL",
+        "JC_SUBMITTED_COMMENT_APPROVER"
+      ],
+      "note": "U-5: APPROVER input slice is 14 bytes (LABD20.pco line 55) but Oracle column is CHAR(20); modernized loader right-pads to 20"
+    }
+  ],
+  "insert_shape": {
+    "expected_populated_columns": 9,
+    "actual_populated_columns": 9,
+    "per_column_widths": [
+      {
+        "column": "JC_SUBMITTED",
+        "oracle_width": 26,
+        "actual_length": 26,
+        "within_oracle_width": true
+      },
+      {
+        "column": "JC_SUBMITTED_SCHED_DOC_NO",
+        "oracle_width": 10,
+        "actual_length": 10,
+        "within_oracle_width": true
+      },
+      {
+        "column": "JC_SUBMITTED_COMMENT_HIST",
+        "oracle_width": 240,
+        "actual_length": 240,
+        "within_oracle_width": true
+      },
+      {
+        "column": "JC_SUBMITTED_COMMENT_REQUESTOR",
+        "oracle_width": 20,
+        "actual_length": 20,
+        "within_oracle_width": true
+      },
+      {
+        "column": "JC_SUBMITTED_COMMENT_APPROVER",
+        "oracle_width": 20,
+        "actual_length": 14,
+        "within_oracle_width": true
+      },
+      {
+        "column": "JC_SUBMITTED_CONTROL_NUM",
+        "oracle_width": 8,
+        "actual_length": 8,
+        "within_oracle_width": true
+      },
+      {
+        "column": "JC_SUBMITTED_UPDT_PROG_ID",
+        "oracle_width": 6,
+        "actual_length": 6,
+        "within_oracle_width": true
+      }
+    ]
+  },
+  "control_record_layout": {
+    "total_length": 400,
+    "jv_number_slice_offsets": [
+      24,
+      30
+    ],
+    "jv_number_value": "000042",
+    "jv_number_is_numeric": true,
+    "matches_field_lineage_md_lines_89_102": true
+  },
+  "byte_width_parity": {
+    "JC_SUBMITTED_composite": {
+      "python_composite_width": 26,
+      "oracle_width": 26,
+      "matches": true,
+      "components": [
+        {
+          "slice": "COMMENT_DT_SLICE",
+          "width": 8
+        },
+        {
+          "slice": "JV_NUMBER_SLICE",
+          "width": 6
+        },
+        {
+          "slice": "SECTION_ID_SLICE",
+          "width": 2
+        },
+        {
+          "slice": "LOAN_NUMBER_SLICE",
+          "width": 10
+        }
+      ]
+    },
+    "JC_SUBMITTED_SCHED_DOC_NO": {
+      "python_width": 10,
+      "oracle_width": 10,
+      "matches": true
+    },
+    "JC_SUBMITTED_COMMENT_HIST": {
+      "python_width": 240,
+      "oracle_width": 240,
+      "matches": true
+    },
+    "JC_SUBMITTED_COMMENT_REQUESTOR": {
+      "python_width": 20,
+      "oracle_width": 20,
+      "matches": true
+    },
+    "JC_SUBMITTED_COMMENT_APPROVER": {
+      "python_width": 14,
+      "oracle_width": 20,
+      "matches": false,
+      "known_issue": "U-5: APPROVER input slice is 14 bytes (LABD20.pco line 55) but Oracle column is CHAR(20); modernized loader right-pads to 20"
+    }
+  }
+}

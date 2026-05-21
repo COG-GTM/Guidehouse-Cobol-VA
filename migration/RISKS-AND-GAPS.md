@@ -20,6 +20,7 @@
 | 9 | Empty / missing real test data | **MEDIUM** | Synthetic 20+ record fixture generated | `test-data/TST.JVCMTS.dat` (empty) |
 | 10 | Perl wrapper environment dependencies | **MEDIUM** | Documented; modern orchestration equivalent proposed | `source/perl/LABA05.pl`, `source/perl/LABD20-JV.pl` |
 | 11 | `PERFORM PERFORM` typo | **LOW** | Documented for SME review | `LABD20.pco:213` |
+| 12 | Schema drift between modernized Python output and Oracle table descriptions | **MEDIUM** | Automated parity test compares `DEMO_SCHEMA_DDL`, the live loader INSERT, the 400-byte `CONTROL_RECORD_DATA` blob, and the 300-byte input slices against `database/descriptions/describe *.txt`. See `migration/converted-code/python/tests/test_schema_parity.py` (16 tests) and the per-table JSON breakdown at `migration/test-results/schema-parity-report.json`. The known `APPROVER` 14↔20 width mismatch (`U-5`), the `JC_COUNT_TBL` PK typo (`A-6`/`U-6`), and the `JC_COUNT_NUM` vs `JC_SECTION_COUNT` column-name drift are tolerated as annotated known-issues; any new drift fails the suite. | `database/descriptions/describe *.txt`, `migration/converted-code/python/db_dispatcher.py:330-416`, `migration/converted-code/python/labd20_loader.py:91-105` |
 
 ---
 
