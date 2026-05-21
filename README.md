@@ -44,9 +44,15 @@ The supplied assets center on a VA JV comment-processing workflow:
 - `DBIO` dispatches database operations to table-specific modules.
 - `CONTROL-RECORD-TABLE-IO` maps legacy control-record access to Oracle `CONTROL_RECORD_TABLE` CRUD operations.
 
-## Known Gaps In Supplied Source
+## Repository Layout — Before / After Separation
 
-`LABD20.pco` references `COPY DATECONV-WS` and `COPY DATECONV-PD`, but those copybooks were not present in the provided zip. Any compile/run reproduction will need either the missing copybooks or a stub of their date-validation routines.
+Customer-supplied artifacts (the "before" / frozen legacy state) live under `source/`, `database/`, and `test-data/`. Modernized derivatives (the "after" state) live under `migration/converted-code/`. Analytical artifacts (dependency maps, lineage, requirements, risk register, executive report) live under `analysis/`, `business-requirements/`, `docs/`, and `migration/`. The two trees are never mixed — `source/` is treated as immutable customer source.
+
+## Closed Gaps (originally flagged as missing)
+
+> ~~`LABD20.pco` references `COPY DATECONV-WS` and `COPY DATECONV-PD`, but those copybooks were not present in the provided zip. Any compile/run reproduction will need either the missing copybooks or a stub of their date-validation routines.~~
+>
+> **Resolved 2026-05-21 (customer follow-up shipment).** Guidehouse supplied the full date-conversion subsystem closure — 2 copybook wrappers (`DATECONV-WS`, `DATECONV-PD`), the subprogram itself (`source/cobol/DATECONV.cbl`, 1,159 lines, `PROGRAM-ID. DATECONV`), and 4 internal JDN helpers (`JDN-CONSTANTS-WS`, `JDN-PACKET-WS`, `JDN-RECORD-WS`, `JDN-RECORD-ACCESS`). Every `COPY` and `CALL` originating from `LABD20.pco` now resolves end-to-end. The IAI-2012 migration markers (`MIGRTN`) embedded in `DATECONV.cbl` are preserved verbatim as legacy evidence. See [`analysis/dateconv-function-inventory.md`](./analysis/dateconv-function-inventory.md) for the 42-function inventory and [`migration/executive-report.html`](./migration/executive-report.html) for the demo-cycle timeline. Risk 1 (HIGH) → CLOSED, Assumption A-1 → retired, BR-LABD20-006 → LOW → HIGH confidence.
 
 ## Security Notes
 

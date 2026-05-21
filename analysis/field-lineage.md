@@ -21,8 +21,7 @@ Each row carries an explicit **confidence level**:
 - **High** — derived directly from the supplied source and table descriptions.
 - **Medium** — derived from supplied source but with a noted ambiguity
   (typically resolved by SME confirmation).
-- **Low / Unknown** — depends on missing artifacts (e.g. `DATECONV-WS`,
-  `DATECONV-PD`) or contradictory documentation; flagged for confirmation.
+- **Low / Unknown** — ~~depends on missing artifacts (e.g. `DATECONV-WS`, `DATECONV-PD`)~~ depends on contradictory documentation or unresolved SME questions; flagged for confirmation. **Update 2026-05-21:** the `DATECONV` closure has been supplied (DATECONV-WS, DATECONV-PD, DATECONV.cbl + 4 JDN helpers), so date-validation lineage previously rated **Low** is upgraded to **High**. See [`dateconv-function-inventory.md`](./dateconv-function-inventory.md).
 
 ## 2. File & Table Dependencies (LABD20 Scope)
 
@@ -34,8 +33,10 @@ Each row carries an explicit **confidence level**:
 | `JC_COUNT_TBL` | Oracle table | Per-section running count; updated when this run advances the section counter | `source/procobol/LABD20.pco:398–401`; `database/descriptions/describe JC_COUNT_TBL.txt` |
 | `JC_REJECTED_COMMENT_TBL` | Oracle table | **Read-only** in LABD20 (EOJ count only); inserts performed elsewhere | `source/procobol/LABD20.pco:431–433`; `database/descriptions/describe JC_REJECTED_COMMENT_TBL.txt` |
 | `JC_APPLIED_COMMENT_TBL` | Oracle table | **Read-only** in LABD20 (EOJ count only); LABD21 populates it | `source/procobol/LABD20.pco:14–17, 441–443`; `database/descriptions/describe JC_APPLIED_COMMENT_TBL.txt` |
-| `DATECONV-WS.cpy` | Copybook | Defines `FROM-CYMD-DT`, `DATE-IS-VALID`, etc. **Missing.** | `source/procobol/LABD20.pco:182` |
-| `DATECONV-PD.cpy` | Copybook | Defines `CHECK-CYMD-DT` paragraph. **Missing.** | `source/procobol/LABD20.pco:531` |
+| ~~`DATECONV-WS.cpy`~~ `DATECONV-WS.cpy` | Copybook | ~~Defines `FROM-CYMD-DT`, `DATE-IS-VALID`, etc. **Missing.**~~ Defines `CONV-DATES` (parameter group), `DATESUB-FUNC`, `FROM-CYMD-DT`, `DATE-IS-VALID`. **Supplied 2026-05-21.** | `source/procobol/LABD20.pco:182`; `source/copybooks/DATECONV-WS.cpy` |
+| ~~`DATECONV-PD.cpy`~~ `DATECONV-PD.cpy` | Copybook | ~~Defines `CHECK-CYMD-DT` paragraph. **Missing.**~~ Defines 42 entry paragraphs (`CHECK-CYMD-DT`, `CHECK-MDY-DT`, `YMD-TO-JUL`, …). Each sets `DATESUB-FUNC` and `CALL 'DATECONV'`. **Supplied 2026-05-21.** | `source/procobol/LABD20.pco:531`; `source/copybooks/DATECONV-PD.cpy` |
+| `DATECONV.cbl` | COBOL subprogram | `PROGRAM-ID. DATECONV`. Dispatches on `DATESUB-FUNC` to internal paragraphs that delegate to JDN helpers using COBOL-85 intrinsic functions (`INTEGER-OF-DATE`, `DAY-OF-INTEGER`, `INTEGER-OF-DAY`, `DATE-OF-INTEGER`). Customer's IAI-2012 migration markers (`MIGRTN`) preserved verbatim. **Supplied 2026-05-21.** | `source/cobol/DATECONV.cbl` |
+| `JDN-CONSTANTS-WS.cpy` / `JDN-PACKET-WS.cpy` / `JDN-RECORD-WS.cpy` / `JDN-RECORD-ACCESS.cpy` | Copybooks | DATECONV-internal JDN data structures and intrinsic-function access section. **Supplied 2026-05-21.** | `source/copybooks/JDN-*.cpy` |
 
 ## 3. `TST123-COMMENT-REC` → `JC_SUBMITTED_COMMENT_TBL` Field Lineage
 

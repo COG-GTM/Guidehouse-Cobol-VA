@@ -7,6 +7,8 @@
 
 Source list of questions: [`docs/guidehouse-open-questions.md`](../../docs/guidehouse-open-questions.md).
 
+> **Resolved 2026-05-21 (customer follow-up shipment):** the `DATECONV-WS` / `DATECONV-PD` copybooks (plus `source/cobol/DATECONV.cbl` + 4 JDN helpers) were supplied by Guidehouse. Risk 1 CLOSED, A-1 RETIRED, `BR-LABD20-006` LOW → HIGH. Faithful Python port at `migration/converted-code/python/dateconv.py`; byte-for-byte GnuCOBOL parity at `migration/test-results/cobol-parity-report.html`. References below that mention `DATECONV` as "missing" or as a `# PLACEHOLDER` are preserved for the audit trail with strikethrough + resolution annotations.
+
 ---
 
 ## Q1 (Jill) — Can the tools create *new* documentation after the modernization?
@@ -88,7 +90,7 @@ Source list of questions: [`docs/guidehouse-open-questions.md`](../../docs/guide
 
 **Evidence:**
 - Resolved dependencies: full Mermaid graph in [`analysis/dependency-map-detailed.md` §1-2](../analysis/dependency-map-detailed.md).
-- Missing nodes (explicit): [§6 Missing-node summary](../analysis/dependency-map-detailed.md#6-missing-node-summary) — `DATECONV-WS`, `DATECONV-PD`, two `*-IO` dispatch targets.
+- ~~Missing nodes (explicit): [§6 Missing-node summary](../analysis/dependency-map-detailed.md#6-missing-node-summary) — `DATECONV-WS`, `DATECONV-PD`, two `*-IO` dispatch targets.~~ **Resolved 2026-05-21:** `DATECONV-WS` / `DATECONV-PD` supplied; only the two `*-IO` dispatch targets remain in the missing-node summary.
 - Dynamic dispatch: [`RISKS-AND-GAPS.md` Risk 4](../RISKS-AND-GAPS.md).
 
 ---
@@ -148,7 +150,7 @@ Source list of questions: [`docs/guidehouse-open-questions.md`](../../docs/guide
 
 **Short answer:** Enumerated, with severity + mitigation, in the risk register.
 
-**Evidence:** [`RISKS-AND-GAPS.md`](../RISKS-AND-GAPS.md) — 11 named risks (missing DATECONV copybooks, binary/display conversion, credential files, dynamic dispatch, fixed-width byte precision, SQLCODE→DMS translation, transaction rollback paths, EXTERNAL shared data, empty test data, Perl env deps, PERFORM PERFORM typo).
+**Evidence:** [`RISKS-AND-GAPS.md`](../RISKS-AND-GAPS.md) — 11 named risks (~~missing DATECONV copybooks~~ **Risk 1 CLOSED 2026-05-21**, binary/display conversion, credential files, dynamic dispatch, fixed-width byte precision, SQLCODE→DMS translation, transaction rollback paths, EXTERNAL shared data, empty test data, Perl env deps, PERFORM PERFORM typo).
 
 ---
 

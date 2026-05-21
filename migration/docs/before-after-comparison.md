@@ -38,7 +38,7 @@ For the full requirement definitions, see
 |----|--------------|----------------|-----------------|
 | BR-LABD20-004 | LABD20.pco:261-263 (blank record) | `labd20_loader.determine_disposition` (blank check) | `test_labd20_loader.TestValidationRules.test_blank_record_rejected` |
 | BR-LABD20-005 | LABD20.pco:265, 272-274 (non-numeric date) | `determine_disposition` (`isdigit`) | `TestValidationRules.test_non_numeric_date_rejected` |
-| BR-LABD20-006 | LABD20.pco:266-274 (PERFORM CHECK-CYMD-DT, **uses missing DATECONV-PD**) | `labd20_loader.check_cymd_dt` (**# PLACEHOLDER for DATECONV-PD**) | `TestCheckCYMD.test_valid_date`, `test_invalid_month`, `test_invalid_day`, `test_leap_day_valid`, `test_non_leap_feb29_invalid`, `TestValidationRules.test_invalid_calendar_date_rejected` |
+| BR-LABD20-006 | LABD20.pco:266-274 (PERFORM CHECK-CYMD-DT, ~~**uses missing DATECONV-PD**~~ **resolved 2026-05-21: DATECONV-PD supplied**) | ~~`labd20_loader.check_cymd_dt` (**# PLACEHOLDER for DATECONV-PD**)~~ **Faithful port at `migration/converted-code/python/dateconv.py`** | `TestCheckCYMD.test_valid_date`, `test_invalid_month`, `test_invalid_day`, `test_leap_day_valid`, `test_non_leap_feb29_invalid`, `TestValidationRules.test_invalid_calendar_date_rejected` + ~50-vector GnuCOBOL parity vectors |
 | BR-LABD20-007 | LABD20.pco:276-281 (JV non-numeric or zero) | `determine_disposition` (`isdigit` + `int > 0`) | `TestValidationRules.test_jv_number_zero_rejected`, `test_jv_number_non_numeric_rejected` |
 | BR-LABD20-008 | LABD20.pco:283-287 (section non-numeric) | `determine_disposition` | `TestValidationRules.test_non_numeric_section_rejected` |
 | BR-LABD20-009 | LABD20.pco:289-293 (loan non-numeric) | `determine_disposition` | `TestValidationRules.test_non_numeric_loan_rejected` |
@@ -80,7 +80,7 @@ For the full requirement definitions, see
 
 | Item | Legacy behavior | Modernized behavior | Reason |
 |------|------------------|----------------------|--------|
-| Date validation precision | `CHECK-CYMD-DT` from `DATECONV-PD` (missing) — may include business-calendar gates beyond pure Gregorian. | Pure Gregorian-calendar check. | `DATECONV-PD` not supplied. Marked `# PLACEHOLDER` + Risk 1. |
+| ~~Date validation precision~~ **Resolved 2026-05-21** | ~~`CHECK-CYMD-DT` from `DATECONV-PD` (missing) — may include business-calendar gates beyond pure Gregorian.~~ `CHECK-CYMD-DT` from `DATECONV-PD` (supplied 2026-05-21). | ~~Pure Gregorian-calendar check.~~ Faithful port at `migration/converted-code/python/dateconv.py`. | ~~`DATECONV-PD` not supplied. Marked `# PLACEHOLDER` + Risk 1.~~ Risk 1 CLOSED, A-1 RETIRED. GnuCOBOL byte-for-byte parity. |
 | JV-NUMBER storage form | `USAGE BINARY` (6-byte binary) in production. | Display digits in demo. | Demo uses an in-memory mock; binary form re-introducible via `struct.unpack('>I', …)`. Marked `# PLACEHOLDER` + Risk 2. |
 | Credentials | `/tst/.oralogin` + `/tst/.orapasswd` files. | `JV_DB_*` env vars resolved via managed secrets. | Risk 3 / federal security baseline. |
 | DBIO dispatch | Runtime string concatenation. | Typed `DBDispatcher` class with named methods. | Risk 4 / static safety. |

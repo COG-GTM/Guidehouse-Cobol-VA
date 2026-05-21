@@ -82,9 +82,9 @@ Open `analysis/dependency-map.md` — show the Mermaid graph.
   is a resolved dependency. (Answers Q11, Q14.)
 - Copybook resolution: 6 of 8 copybooks resolved (`COMCON`, `DBVAR`,
   `DMCA`, `DMCAERR`, `JV-CONTROL-REC`, `CONTROL-RECORD-TABLE`,
-  `RDMS-ERR-WS`, `RDMS-ERR-RTN`). **2 copybooks are missing:**
+  `RDMS-ERR-WS`, `RDMS-ERR-RTN`). ~~**2 copybooks are missing:**
   `DATECONV-WS` and `DATECONV-PD`, referenced at
-  `source/procobol/LABD20.pco:182, 531`. (Answers Q9, Q15, Q16.)
+  `source/procobol/LABD20.pco:182, 531`.~~ **Resolved 2026-05-21:** `DATECONV-WS` and `DATECONV-PD` supplied in customer follow-up shipment (along with `DATECONV.cbl` + 4 JDN helpers). Devin caught the gap before the shipment arrived; dependency graph now closes end-to-end. (Answers Q9, Q15, Q16.)
 - Dynamic call: `CALL 'DBIO' USING ...` is statically dispatched here
   (the literal `'DBIO'` is in source), but Devin also models heuristics
   for variable program-name calls; flagged with explicit confidence
@@ -107,8 +107,8 @@ Open `business-requirements/requirements-with-citations.md`.
 2. **LABD20 section (§2).** Show 35 requirements grouped into
    housekeeping, read loop & per-record validation, duplicate detection,
    insert, count update, commit + EOJ stats + reporting, and rollback.
-3. **Confidence & Risk (§3).** Show the explicit "missing copybook" risk
-   block, the `TST123-COMMENT-APPROVER` width discrepancy, the
+3. **Confidence & Risk (§3).** ~~Show the explicit "missing copybook" risk
+   block,~~ **Show the closed "missing copybook" risk block (Risk 1 CLOSED 2026-05-21; DATECONV-WS/PD supplied)** along with the `TST123-COMMENT-APPROVER` width discrepancy, the
    `JC_COUNT_TBL` PK ambiguity, and the modernization note that
    `DBIO.pco` reads Oracle credentials from a file (`USRID`, `PASSWD`)
    that must be replaced by managed secrets. (Answers Q19.)
@@ -134,9 +134,9 @@ Open `analysis/field-lineage.md`.
    (`WS-JV-COUNTER > WS-JV-COUNTERS`) maps to a single guarded `UPDATE`
    in the modernized SQL.
 4. **Section 6 — validation-rule lineage.** Each reject reason is cited
-   back to a `source/procobol/LABD20.pco` line range, and the
+   back to a `source/procobol/LABD20.pco` line range, and ~~the
    calendar-date rule is flagged **Low** confidence because of the
-   missing `DATECONV-*` copybooks.
+   missing `DATECONV-*` copybooks.~~ **the calendar-date rule was flagged Low confidence pre-2026-05-21; it is now HIGH confidence after the customer follow-up shipment supplied `DATECONV-*` copybooks (faithful port + GnuCOBOL parity verified).**
 5. **Section 8 — Confidence Summary.** A one-glance table for the
    reviewer: "submitted-table insert High, calendar-date Low, EOJ begin
    counts Medium." (Answers Q15.)
@@ -212,9 +212,9 @@ Open `converted-code/sql/labd20_extracted_operations.sql`.
   2. **Citation-backed reviews** — SMEs review against source line
      ranges, not free-text claims; review cycle time drops sharply.
   3. **Confidence-tagged outputs** — high-confidence rows can be
-     auto-approved; only Medium/Low rows demand SME time. The current
+     auto-approved; only Medium/Low rows demand SME time. ~~The current
      `LABD20` deck has 1 Low-confidence area (calendar-date validation
-     because of missing copybooks) and 3 Medium-confidence rows.
+     because of missing copybooks) and 3 Medium-confidence rows.~~ **Updated 2026-05-21:** The previously-Low calendar-date validation is now HIGH (`DATECONV-*` copybooks supplied; faithful port + GnuCOBOL parity); only 3 Medium-confidence rows remain.
 - Mention that "% of program auto-converted vs. needing review" is the
   customer-facing efficiency metric we expose post-conversion.
 
@@ -285,8 +285,8 @@ For each question, point at the demo artifact that directly answers it.
 
 #### Margarita
 
-- **Q16 — unsupported constructs.** Missing copybooks
-  (`DATECONV-*`) flagged. Other typical "needs review" items: dynamic
+- **Q16 — unsupported constructs.** ~~Missing copybooks
+  (`DATECONV-*`) flagged.~~ **Resolved 2026-05-21: `DATECONV-*` copybooks supplied; Risk 1 CLOSED.** Other typical "needs review" items: dynamic
   table-name construction, IMS DBs (not in this corpus), proprietary
   vendor extensions.
 - **Q17 — reverse-engineered tests.** Show §7 of this script.
@@ -312,8 +312,8 @@ For each question, point at the demo artifact that directly answers it.
 
 ## 12. Known Caveats To Disclose Up Front (1 min)
 
-- `DATECONV-WS.cpy` and `DATECONV-PD.cpy` are not in the supplied zip;
-  calendar-date validation fidelity is Low until they are provided.
+- ~~`DATECONV-WS.cpy` and `DATECONV-PD.cpy` are not in the supplied zip;
+  calendar-date validation fidelity is Low until they are provided.~~ **Resolved 2026-05-21:** `DATECONV-WS.cpy`, `DATECONV-PD.cpy`, `DATECONV.cbl`, and 4 JDN helpers supplied in customer follow-up shipment. Calendar-date validation fidelity is now HIGH (faithful port + byte-for-byte GnuCOBOL runtime parity).
 - `test-data/TST.JVCMTS.dat` is empty; any "run the loader live" demo
   uses synthetic data.
 - `JC_COUNT_TBL` description text contains a copy/paste artifact about
@@ -340,8 +340,8 @@ emitted a confidence-tagged risk surface — all in this repo's `analysis/`,
    `prompts/python-conversion-demo.md`.
 2. Generate `converted-code/sql/control_record_table_io.sql` from
    `CONTROL-RECORD-TABLE-IO.pco` using `prompts/sql-extraction-demo.md`.
-3. Resolve `DATECONV-WS` / `DATECONV-PD` (or codify the replacement
+3. ~~Resolve `DATECONV-WS` / `DATECONV-PD` (or codify the replacement
    validator with a Guidehouse SME) and re-run the requirements +
-   lineage refresh.
+   lineage refresh.~~ **Resolved 2026-05-21 (customer follow-up shipment):** `DATECONV-WS` / `DATECONV-PD` (+ `DATECONV.cbl` + 4 JDN helpers) supplied. Requirements + lineage refreshed; Risk 1 CLOSED, A-1 RETIRED, `BR-LABD20-006` LOW → HIGH. See `migration/converted-code/python/dateconv.py` + `migration/test-results/cobol-parity-report.html`.
 4. Generate the full test plan from the cited requirements and run it
    against synthetic data.

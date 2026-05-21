@@ -1,0 +1,46 @@
+{
+  "vectors": 80,
+  "matched": 79,
+  "modernization_improvements": 1,
+  "unresolved_mismatches": 0,
+  "mismatched": 1,
+  "gnucobol_version": "cobc (GnuCOBOL) 3.1.2.0",
+  "cobol_seconds": 0.005,
+  "python_seconds": 0.0019,
+  "mismatches": [
+    {
+      "line": 49,
+      "vector": "N|01|0|0|19000229|0|0|0|0|0|0|0|0|0|0",
+      "classification": "modernization_improvement",
+      "first_diff_field": "DATE_ERR_IND",
+      "cobol": [
+        "01",
+        "0000000000",
+        "00000",
+        "00000000",
+        "000000",
+        "00000000",
+        "000000",
+        "     0",
+        "00000",
+        "N",
+        "00",
+        "OK"
+      ],
+      "python": [
+        "01",
+        "0000000000",
+        "00000",
+        "00000000",
+        "000000",
+        "00000000",
+        "000000",
+        "     0",
+        "00000",
+        "Y",
+        "07",
+        "OK"
+      ]
+    }
+  ]
+}

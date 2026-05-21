@@ -9,6 +9,8 @@ wrappers, and database objects. It complements
 [`analysis/dependency-map.md`](../../analysis/dependency-map.md) (the
 baseline) with explicit per-edge citations and a "missing nodes" view.
 
+> **Resolved 2026-05-21 (customer follow-up shipment):** the previously-missing `DATECONV-WS` / `DATECONV-PD` copybooks were supplied (along with `source/cobol/DATECONV.cbl` and 4 JDN helpers). Every edge below that flagged a missing node is now resolved end-to-end. Risk 1 CLOSED, A-1 RETIRED. Faithful Python port at `migration/converted-code/python/dateconv.py`; GnuCOBOL parity at `migration/test-results/cobol-parity-report.html`. The pre-shipment Mermaid graphs below preserve the original "missing" framing for the audit trail.
+
 ---
 
 ## 1. Program-level dependency graph
@@ -27,9 +29,9 @@ flowchart LR
         CRT_IO["CONTROL-RECORD-TABLE-IO.pco<br/>(table CRUD)"]
     end
 
-    subgraph missing["Missing copybooks (NOT supplied)"]
-        DC_WS["DATECONV-WS"]
-        DC_PD["DATECONV-PD"]
+    subgraph missing["Missing copybooks (NOT supplied) — RESOLVED 2026-05-21"]
+        DC_WS["DATECONV-WS<br/>(supplied 2026-05-21)"]
+        DC_PD["DATECONV-PD<br/>(supplied 2026-05-21)"]
     end
 
     subgraph files["External files"]
@@ -80,8 +82,8 @@ flowchart LR
 |------|----------|
 | `labd20.pl → LABD20` | `source/perl/` directory wrapper; sets 6+ env vars and calls `rtsora`. See RISKS Risk 10. |
 | `LABD20 → DBIO` | LABD20.pco lines that call `'DBIO'` (e.g. `CALL 'DBIO' USING DB-COMMON-AREA`). |
-| `LABD20 → DATECONV-WS` | `COPY DATECONV-WS.` at LABD20.pco:182. **Missing.** |
-| `LABD20 → DATECONV-PD` | `PERFORM CHECK-CYMD-DT` at LABD20.pco:267 (DATECONV-PD defines CHECK-CYMD-DT). **Missing.** |
+| `LABD20 → DATECONV-WS` | `COPY DATECONV-WS.` at LABD20.pco:182. ~~**Missing.**~~ **Resolved 2026-05-21:** supplied at `source/copybooks/DATECONV-WS.cpy`. |
+| `LABD20 → DATECONV-PD` | `PERFORM CHECK-CYMD-DT` at LABD20.pco:267 (DATECONV-PD defines CHECK-CYMD-DT). ~~**Missing.**~~ **Resolved 2026-05-21:** supplied at `source/copybooks/DATECONV-PD.cpy`. |
 | `DBIO → CRT_IO` | DBIO.pco:228-260 dynamic dispatch (`STRING DB-TABLE-NAME DELIMITED BY SPACE '-IO'`). For JV-CONTROL-REC: explicit override at DBIO.pco:267-276 → routes to `CONTROL-RECORD-TABLE-IO`. |
 | `DBIO → /tst/.oralogin` | DBIO.pco:33-38 file assignment. RISKS Risk 3 — never reproduce. |
 | `LABD20 → COMMENT-FILE` | LABD20.pco:239 (`OPEN INPUT COMMENT-FILE`), :247-253 (READ loop), :215-218 (truncate). |
@@ -107,9 +109,9 @@ flowchart TB
         JV_TRAN["JV-TRAN-REC.cpy"]
         DB_COMM["DB-COMMON-AREA.cpy"]
     end
-    subgraph missing["Missing"]
-        DC_WS["DATECONV-WS"]
-        DC_PD["DATECONV-PD"]
+    subgraph missing["Missing — RESOLVED 2026-05-21"]
+        DC_WS["DATECONV-WS<br/>(supplied)"]
+        DC_PD["DATECONV-PD<br/>(supplied)"]
     end
 
     LABD20 --> SQLCA
@@ -214,8 +216,8 @@ indicate the following resolution table:
 
 | Missing node | Referenced by | Severity | Mitigation |
 |--------------|---------------|----------|------------|
-| `DATECONV-WS` (copybook) | LABD20.pco:182 (COPY) | HIGH — affects date validation correctness | Stub in `labd20_loader.check_cymd_dt` with Gregorian-calendar check; `# PLACEHOLDER` marker. |
-| `DATECONV-PD` (copybook) | LABD20.pco:267 (PERFORM CHECK-CYMD-DT) | HIGH | Same as above. |
+| ~~`DATECONV-WS` (copybook)~~ **Resolved 2026-05-21** | LABD20.pco:182 (COPY) | ~~HIGH~~ Closed — supplied at `source/copybooks/DATECONV-WS.cpy` | ~~Stub in `labd20_loader.check_cymd_dt` with Gregorian-calendar check; `# PLACEHOLDER` marker.~~ Faithful port at `migration/converted-code/python/dateconv.py`. |
+| ~~`DATECONV-PD` (copybook)~~ **Resolved 2026-05-21** | LABD20.pco:267 (PERFORM CHECK-CYMD-DT) | ~~HIGH~~ Closed — supplied at `source/copybooks/DATECONV-PD.cpy` | Same as above. GnuCOBOL byte-for-byte parity at `migration/test-results/cobol-parity-report.html`. |
 | `JV-COMMENT-REC-IO` (module) | DBIO.pco:367 | MEDIUM — out of scope for current programs | Not exercised by LABD20/LABA05 paths; flag for SME confirmation. |
 | `JV-TRAN-REC-IO` (module) | DBIO.pco:369 | MEDIUM | Same. |
 | Source of `WS-JV-COUNTERS` | LABD20.pco:393 | MEDIUM | Inferred = current `JC_COUNT_NUM` for section 'MA'. |

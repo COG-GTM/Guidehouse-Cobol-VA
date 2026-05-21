@@ -6,6 +6,8 @@
 This document traces every meaningful field from input file → working storage
 → Oracle column, for the two programs in scope (`LABD20`, `LABA05`).
 
+> **Resolved 2026-05-21 (customer follow-up shipment):** `DATECONV-WS` / `DATECONV-PD` copybooks were supplied; layouts below referencing them as "missing" are now fully ported in `migration/converted-code/python/dateconv.py`. Risk 1 CLOSED, A-1 RETIRED, `BR-LABD20-006` LOW → HIGH.
+
 ---
 
 ## 1. Input file → working storage → Oracle column (LABD20)
@@ -20,7 +22,7 @@ in modern Unix views).
 | Bytes (1-based) | Bytes (0-based slice) | Field | PIC clause | Notes |
 |-----------------|------------------------|-------|------------|-------|
 | 1-26 | `[0:26]` | `TST123-LOAN-DT-NR` (composite — REDEFINES) | `PIC X(026)` | Concatenated key (date + JV + section + loan). Becomes `JC_SUBMITTED`. |
-| 1-8 | `[0:8]`  | └ `TST123-COMMENT-DT` | `PIC 9(008)` | YYYYMMDD; validated by DATECONV (missing copybook). |
+| 1-8 | `[0:8]`  | └ `TST123-COMMENT-DT` | `PIC 9(008)` | YYYYMMDD; validated by DATECONV ~~(missing copybook)~~ **(resolved 2026-05-21: faithful port via `dateconv.py`)**. |
 | 9-14 | `[8:14]` | └ `TST123-JV-NUMBER` | `PIC 9(006)` | Must be numeric AND > 0. |
 | 15-16 | `[14:16]` | └ `TST123-SECTION-ID` | `PIC 9(002)` | Must be numeric. |
 | 17-26 | `[16:26]` | └ `TST123-LOAN-NUMBER` | `PIC 9(010)` | Must be numeric. |
@@ -156,7 +158,7 @@ upstream/downstream code was not supplied:
 |----------|-------------|-----------|
 | Input → `JC_REJECTED_COMMENT_TBL` | LABD20 only reads `COUNT(*)` from this table (LABD20.pco:431-433); no INSERT visible. | Rejected-record persistence likely lives in another program; in scope for SME confirmation. |
 | Input → `JC_APPLIED_COMMENT_TBL` | Same — only `COUNT(*)` (LABD20.pco:441-443). | Applied-record persistence likely lives in another program; in scope for SME confirmation. |
-| `DATECONV-WS` / `DATECONV-PD` internal layouts | Copybooks not supplied. | Modernized stub uses `datetime`; exact byte layout not reproduced. |
+| ~~`DATECONV-WS` / `DATECONV-PD` internal layouts~~ **Resolved 2026-05-21** | ~~Copybooks not supplied.~~ Supplied at `source/copybooks/DATECONV-WS.cpy`, `source/copybooks/DATECONV-PD.cpy`. | ~~Modernized stub uses `datetime`; exact byte layout not reproduced.~~ Faithful port at `migration/converted-code/python/dateconv.py`; GnuCOBOL byte-for-byte parity. |
 
 See [`migration/analysis/dependency-map-detailed.md`](dependency-map-detailed.md)
 for the full module-level dependency graph.

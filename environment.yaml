@@ -28,6 +28,7 @@ knowledge:
   - name: demo_constraints
     contents: |
       Preserve customer-supplied source files unless explicitly asked to transform them.
-      DATECONV-WS and DATECONV-PD are referenced by LABD20 but missing from the supplied zip; call this out in analysis.
+      DATECONV closure (2026-05-21 customer follow-up shipment): DATECONV-WS, DATECONV-PD, DATECONV.cbl, and JDN helpers (JDN-CONSTANTS-WS, JDN-PACKET-WS, JDN-RECORD-WS, JDN-RECORD-ACCESS) are now under source/copybooks/ and source/cobol/. Risk 1 CLOSED, Assumption A-1 retired, BR-LABD20-006 LOW->HIGH. See analysis/dateconv-function-inventory.md.
+      Customer artifacts under source/ are the frozen "before" state; modernized port lives under migration/converted-code/. Do not edit source/ copybooks.
       Treat generated conversion output as demo code until reviewed by a COBOL/VA SME.
       Use parameterized SQL and managed secrets in any modernization examples.

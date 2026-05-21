@@ -16,9 +16,11 @@ This document refines the initial derived requirements for the two VA Journal-Vo
 The requirements cover input handling, validation, duplicate detection, inserts,
 count updates, commit / rollback behavior, and end-of-job reporting.
 
-A confidence/risk section at the end calls out the **missing `DATECONV-WS` and
+A confidence/risk section at the end calls out the ~~**missing `DATECONV-WS` and
 `DATECONV-PD` copybooks**, which limit the fidelity of legacy date-validation
-behavior that the modernized system must preserve.
+behavior that the modernized system must preserve.~~
+
+> **Resolved 2026-05-21 (customer follow-up shipment):** `DATECONV-WS`, `DATECONV-PD`, `DATECONV.cbl`, and the 4 JDN helpers were supplied. Risk 1 CLOSED, Assumption A-1 RETIRED, `BR-LABD20-006` confidence LOW → HIGH. Faithful Python port at `migration/converted-code/python/dateconv.py`; byte-for-byte GnuCOBOL parity at `migration/test-results/cobol-parity-report.html`.
 
 ## Citation Convention
 
@@ -178,13 +180,15 @@ Offsets are 1-indexed within a 330-byte record:
 
 ## 3. Confidence & Risk Items
 
-### 3.1 Missing Copybooks: `DATECONV-WS` and `DATECONV-PD`
+### 3.1 ~~Missing~~ Copybooks: `DATECONV-WS` and `DATECONV-PD`
 
-`LABD20.pco` references the date-conversion working-storage and procedure
-copybooks that are **not present in the supplied zip**:
+> **Resolved 2026-05-21 (customer follow-up shipment):** All copybooks listed below were supplied and ingested. The legacy date-validation behavior is now reproduced precisely via a faithful Python port (`migration/converted-code/python/dateconv.py`) with byte-for-byte GnuCOBOL runtime parity. Risk 1 CLOSED, Assumption A-1 RETIRED, `BR-LABD20-006` confidence LOW → HIGH. The pre-shipment claims below are preserved for the audit trail.
 
-- `COPY DATECONV-WS.` — `source/procobol/LABD20.pco:182`
-- `COPY DATECONV-PD.` — `source/procobol/LABD20.pco:531`
+~~`LABD20.pco` references the date-conversion working-storage and procedure
+copybooks that are **not present in the supplied zip**:~~
+
+- ~~`COPY DATECONV-WS.` — `source/procobol/LABD20.pco:182`~~ — supplied 2026-05-21 (`source/copybooks/DATECONV-WS.cpy`)
+- ~~`COPY DATECONV-PD.` — `source/procobol/LABD20.pco:531`~~ — supplied 2026-05-21 (`source/copybooks/DATECONV-PD.cpy`)
 
 These copybooks define:
 
@@ -195,32 +199,38 @@ These copybooks define:
 - `DATE-IS-VALID` — the level-88 / condition that the validation paragraph sets
   (`source/procobol/LABD20.pco:268`).
 
-**Risk:** Without these copybooks, the exact legacy date-validation behavior
-cannot be reproduced precisely. In particular:
+~~**Risk:** Without these copybooks, the exact legacy date-validation behavior
+cannot be reproduced precisely. In particular:~~
 
-- Leap-year rules, valid month/day ranges, and any century-window assumptions
-  used by `CHECK-CYMD-DT` are unknown.
-- Whether the legacy routine rejects `00000000`, `99999999`, or sentinel dates
-  is unknown.
-- Whether the legacy routine treats years outside a specific range (e.g.
-  `1900–2099`) as invalid is unknown.
+- ~~Leap-year rules, valid month/day ranges, and any century-window assumptions
+  used by `CHECK-CYMD-DT` are unknown.~~
+- ~~Whether the legacy routine rejects `00000000`, `99999999`, or sentinel dates
+  is unknown.~~
+- ~~Whether the legacy routine treats years outside a specific range (e.g.
+  `1900–2099`) as invalid is unknown.~~
 
-**Confidence rating:** All other requirements above are **High confidence** —
+> **Resolved 2026-05-21:** Leap-year rules, valid month/day ranges, century-window assumptions, sentinel-date handling, and year bounds are now fully specified in `source/copybooks/DATECONV-PD.cpy` and reproduced faithfully in `migration/converted-code/python/dateconv.py`. GnuCOBOL parity verifies byte-for-byte agreement across ~50 vectors.
+
+~~**Confidence rating:** All other requirements above are **High confidence** —
 they are derived directly from the supplied source. Date-validation behavior
 (BR-LABD20-007) is **Medium confidence** until either the missing copybooks are
 provided or a substitute calendar-date validator (e.g. `EXTRACT` /
 `TO_DATE` round-trip in Oracle, or `datetime.date` in Python) is approved by a
-Guidehouse / VA SME.
+Guidehouse / VA SME.~~
 
-**Recommended next steps:**
+> **Resolved 2026-05-21:** All requirements are now **High confidence**. The pre-shipment Medium-confidence rating on date validation no longer applies.
 
-1. Request `DATECONV-WS.cpy` and `DATECONV-PD.cpy` from Guidehouse, or any
-   equivalent date-validation source from the legacy environment.
-2. If unavailable, codify the validator behavior with the SME and document it
+~~**Recommended next steps:**~~
+
+1. ~~Request `DATECONV-WS.cpy` and `DATECONV-PD.cpy` from Guidehouse, or any
+   equivalent date-validation source from the legacy environment.~~
+2. ~~If unavailable, codify the validator behavior with the SME and document it
    alongside the modernized implementation as a "Reconstructed Legacy
-   Behavior" appendix in the test plan.
-3. Until then, treat any per-record reject reason of "invalid date" as
-   needing manual review during equivalence testing.
+   Behavior" appendix in the test plan.~~
+3. ~~Until then, treat any per-record reject reason of "invalid date" as
+   needing manual review during equivalence testing.~~
+
+> **Resolved 2026-05-21:** All three next-steps items closed by the customer follow-up shipment.
 
 ### 3.2 Other Confidence Notes
 

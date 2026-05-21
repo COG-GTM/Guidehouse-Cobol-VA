@@ -78,6 +78,22 @@
   .notes { background:#fff7e6; border-left:3px solid #f0c674;
              color:#5a3e00; padding:8px 12px; margin-top:10px;
              font-size:12px; border-radius:0 6px 6px 0; }
+  .resolved-banner {
+    background:#dcfce7; border:1px solid #15803d; color:#14532d;
+    padding:14px 18px; border-radius:10px; margin:0 0 18px;
+    font-size:13px; line-height:1.55;
+  }
+  .resolved-banner strong { color:#14532d; }
+  .resolved-note {
+    background:#dcfce7; border-left:3px solid #15803d;
+    color:#14532d; padding:8px 12px; margin-top:10px;
+    font-size:12px; border-radius:0 6px 6px 0;
+  }
+  .resolved-note strong { color:#14532d; }
+  del { color:#888; }
+  del code { color:#888; }
+  .resolved-inline { color:#14532d; font-weight:500; }
+  .pill.conf-resolved { background:#dcfce7; color:#14532d; }
   footer { color:#666; font-size:12px; padding:24px; text-align:center; }
 </style>
 </head>
@@ -106,6 +122,19 @@
     switch and the expected column becomes a live mainframe execution against
     the same synthetic input, producing the byte-for-byte diff that SBA
     question 2 / 14 describes.
+  </div>
+
+  <div class="resolved-banner">
+    <strong>Resolved 2026-05-21 (customer follow-up shipment):</strong>
+    The <code>DATECONV-WS</code> / <code>DATECONV-PD</code> copybooks plus
+    <code>DATECONV.cbl</code> and the 4 JDN helpers were supplied. The
+    <code>BR-LABD20-006</code> row below preserves its pre-shipment
+    LOW-confidence framing for the audit trail —
+    <span class="resolved-inline">but its actual closure is now HIGH: faithful Python port at
+    <code>migration/converted-code/python/dateconv.py</code> and byte-for-byte
+    GnuCOBOL runtime parity at
+    <a href="cobol-parity-report.html">cobol-parity-report.html</a>. Risk 1
+    CLOSED, A-1 RETIRED.</span>
   </div>
 
   <div class="stat-row">
@@ -815,17 +844,25 @@
 <details>
   <summary>
     <span class="br-id">BR-LABD20-006</span>
-    <span class="label">Reject invalid calendar date (DATECONV-PD)</span>
+    <span class="label"><del>Reject invalid calendar date (DATECONV-PD)</del> &nbsp; Reject invalid calendar date — faithful DATECONV port (resolved 2026-05-21)</span>
     <span class="pills">
       <span class="pill pass">PASS</span>
-      <span class="pill conf-low">LOW</span>
+      <span class="pill conf-low"><del>LOW</del></span>
+      <span class="pill conf-resolved">HIGH 2026-05-21</span>
     </span>
   </summary>
   <div class="body">
     <div class="meta">
       <strong>Asked by:</strong> Jill ·
-      <strong>Classification:</strong> Inferred / partly unresolvable ·
+      <strong>Classification:</strong> <del>Inferred / partly unresolvable</del> <span class="resolved-inline">— Confirmed (faithful port + GnuCOBOL parity, 2026-05-21)</span> ·
       <strong>Input:</strong> Synthetic record: 20251345000123010000001000DOC1234567synthetic comment text...
+    </div>
+    <div class="resolved-note">
+      <strong>Resolved 2026-05-21 (customer follow-up shipment):</strong>
+      The Python source quoted below (<code>labd20_loader.check_cymd_dt</code> stub) is preserved verbatim for the audit trail. The runtime path has since been promoted to a faithful port at <code>migration/converted-code/python/dateconv.py</code>. Confidence LOW → HIGH. See
+      <a href="../RISKS-AND-GAPS.md">RISKS-AND-GAPS.md Risk 1 CLOSED</a>,
+      <a href="../ASSUMPTIONS-AND-PLACEHOLDERS.md">ASSUMPTIONS-AND-PLACEHOLDERS.md A-1 RETIRED</a>,
+      <a href="cobol-parity-report.html">cobol-parity-report.html</a>.
     </div>
     <div class="grid3">
       <div class="col">
@@ -864,7 +901,8 @@
       </div>
     </div>
     <div style="margin-top:12px;"><div class="diff"><div><h4>expected — derived from COBOL source</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div><div><h4>actual — live Python output</h4><div class="kv"><div class="key">accepted</div><div class="val equal">False</div><div class="key">has_expected_reason</div><div class="val equal">True</div></div></div></div></div>
-    <div class="notes"><strong>Note.</strong> DATECONV-PD copybook not supplied; using Gregorian-calendar stub (ASSUMPTIONS A-5). Real CHECK-CYMD-DT may apply business-calendar gates that change this output.</div>
+    <div class="notes"><del><strong>Note.</strong> DATECONV-PD copybook not supplied; using Gregorian-calendar stub (ASSUMPTIONS A-5). Real CHECK-CYMD-DT may apply business-calendar gates that change this output.</del></div>
+    <div class="resolved-note"><strong>Resolved 2026-05-21 (customer follow-up shipment):</strong> DATECONV-PD supplied; <code>CHECK-CYMD-DT</code> is now a faithful port. Byte-for-byte GnuCOBOL parity verified across ~50 vectors covering all <code>DATESUB-FUNC</code> codes, leap years, century rollover, invalid dates, and year bounds.</div>
   </div>
 </details>
 

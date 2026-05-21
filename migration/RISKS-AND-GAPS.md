@@ -9,7 +9,7 @@
 
 | # | Risk | Severity | Status | Where it materializes |
 | --- | --- | --- | --- | --- |
-| 1 | Missing `DATECONV-WS` / `DATECONV-PD` copybooks | **HIGH** | Mitigated with stub; flagged for SME | `LABD20.pco:182, 267` |
+| 1 | ~~Missing~~ `DATECONV-WS` / `DATECONV-PD` copybooks **+ DATECONV.cbl + 4 JDN helpers** | ~~**HIGH**~~ **CLOSED** | ~~Mitigated with stub; flagged for SME~~ **Resolved 2026-05-21** — full date-conversion closure supplied by customer; stub replaced by faithful Python port; `BR-LABD20-006` LOW → HIGH | `LABD20.pco:182, 267`; `source/copybooks/DATECONV-*.cpy`; `source/cobol/DATECONV.cbl`; `source/copybooks/JDN-*.cpy` |
 | 2 | Binary↔display `JV-NUMBER` conversion | **HIGH** | Modeled explicitly in Python | `CONTROL-RECORD-TABLE-IO.pco:21-28, 257-266`; `JV-CONTROL-REC.cpy:6` |
 | 3 | Credential files `/tst/.oralogin`, `/tst/.orapasswd` | **HIGH** | Replaced with env-var / config | `DBIO.pco:33-38, 41-45` |
 | 4 | Dynamic subroutine dispatch in DBIO | **MEDIUM** | Static paths documented; runtime-only paths flagged | `DBIO.pco:228-260` |
@@ -25,20 +25,44 @@
 
 ## Detailed risk entries
 
-### Risk 1 — Missing `DATECONV-WS` and `DATECONV-PD` copybooks
+### Risk 1 — ~~Missing `DATECONV-WS` and `DATECONV-PD` copybooks~~ CLOSED 2026-05-21
 
-**Severity:** HIGH. Date validation logic for `TST123-COMMENT-DT` cannot be reproduced exactly without these copybooks.
+**Status:** ~~HIGH~~ **CLOSED**. Customer supplied the full date-conversion subsystem closure in the 2026-05-21 follow-up shipment.
 
-**Evidence:**
-- `LABD20.pco:182` — `COPY DATECONV-WS.`
-- `LABD20.pco:266-267` — `MOVE TST123-COMMENT-DT TO FROM-CYMD-DT` then `PERFORM CHECK-CYMD-DT`. `FROM-CYMD-DT`, `CHECK-CYMD-DT`, and `DATE-IS-VALID` are all defined inside the missing copybooks.
+**Original framing (preserved for audit trail):**
 
-**Mitigation:**
-- Python loader implements a stub `check_cymd_dt(yyyymmdd: str) -> bool` that validates: 8 numeric digits, year ≥ 1900, valid calendar month and day (including Feb 29 leap-year). This is **almost certainly a superset** of what the legacy copybook does, but exact behavior cannot be confirmed.
-- Code marks the stub with `# PLACEHOLDER (Risk 1):` and `# SME-REVIEW:` comments.
-- Logged separately in `ASSUMPTIONS-AND-PLACEHOLDERS.md` as Assumption A-1.
+> ~~**Severity:** HIGH. Date validation logic for `TST123-COMMENT-DT` cannot be reproduced exactly without these copybooks.~~
+>
+> ~~**Evidence:**~~
+> ~~- `LABD20.pco:182` — `COPY DATECONV-WS.`~~
+> ~~- `LABD20.pco:266-267` — `MOVE TST123-COMMENT-DT TO FROM-CYMD-DT` then `PERFORM CHECK-CYMD-DT`. `FROM-CYMD-DT`, `CHECK-CYMD-DT`, and `DATE-IS-VALID` are all defined inside the missing copybooks.~~
+>
+> ~~**Mitigation:**~~
+> ~~- Python loader implements a stub `check_cymd_dt(yyyymmdd: str) -> bool` that validates: 8 numeric digits, year ≥ 1900, valid calendar month and day (including Feb 29 leap-year). This is **almost certainly a superset** of what the legacy copybook does, but exact behavior cannot be confirmed.~~
+> ~~- Code marks the stub with `# PLACEHOLDER (Risk 1):` and `# SME-REVIEW:` comments.~~
+> ~~- Logged separately in `ASSUMPTIONS-AND-PLACEHOLDERS.md` as Assumption A-1.~~
+>
+> ~~**Action required of customer SME:** Provide `DATECONV-WS` and `DATECONV-PD` copybooks, or confirm the standard YYYYMMDD calendar check is acceptable.~~
 
-**Action required of customer SME:** Provide `DATECONV-WS` and `DATECONV-PD` copybooks, or confirm the standard YYYYMMDD calendar check is acceptable.
+**Resolution 2026-05-21:** customer follow-up shipment supplied:
+
+- `source/copybooks/DATECONV-WS.cpy` — caller-side data contract (`CONV-DATES`, `DATESUB-FUNC`, `FROM-CYMD-DT`, `DATE-IS-VALID`, …).
+- `source/copybooks/DATECONV-PD.cpy` — caller-side procedure-division wrappers (42 entry paragraphs that set `DATESUB-FUNC` and `CALL 'DATECONV'`).
+- `source/cobol/DATECONV.cbl` — the subprogram itself (`PROGRAM-ID. DATECONV`, 1,159 lines). Dispatches on `DATESUB-FUNC` to internal paragraphs. IAI-2012 `MIGRTN` migration markers preserved verbatim.
+- `source/copybooks/JDN-CONSTANTS-WS.cpy`, `JDN-PACKET-WS.cpy`, `JDN-RECORD-WS.cpy`, `JDN-RECORD-ACCESS.cpy` — internal JDN constants, packet, record layout, and intrinsic-function-based access section.
+
+**Effect:**
+- `LABD20.pco:182` `COPY DATECONV-WS` — resolved.
+- `LABD20.pco:531` `COPY DATECONV-PD` — resolved.
+- `LABD20.pco:266-267` call into `CHECK-CYMD-DT` — fully traceable.
+- `migration/converted-code/python/labd20_loader.py` `check_cymd_dt` stub — replaced by faithful port (`migration/converted-code/python/dateconv.py`).
+- `BR-LABD20-006` parity row — confidence LOW → HIGH.
+- [Assumption A-1](./ASSUMPTIONS-AND-PLACEHOLDERS.md#a-1--calendar-date-validation-stub-for-the-missing-dateconv-ws--dateconv-pd-copybooks) — retired.
+- COBOL runtime parity harness (`migration/test-results/cobol-parity-report.html`) compiles `DATECONV.cbl` under GnuCOBOL 3.1.2 verbatim and diffs 52 test vectors against the Python port byte-for-byte. **52 vectors, 51 matched, 1 documented modernization improvement, 0 unresolved mismatches.**
+
+**Verification-loop finding (2026-05-21):** the harness caught **13 Python-port defects** before merge that all 77 unit tests passed cleanly. `TO-INT-DT` leaking the intermediate JDN in DIF operations, alias `TO-*` fields not propagated through `JUL-TO-CYMD` / `ADD-CYMD` / `ADD-MONTHS-END-JUL` / `DIF-FY`, 30-day-month DIF counting Day-31 separately, and over-strict `BETWEEN` validation in `RANGE-MDY`. All 13 patched in the same commit as the harness landed. The single remaining diff is `9950-VALIDATE-YYYY` accepting 02/29/1900 (legacy Julian leap rule); the Python port correctly rejects it (Gregorian) and the harness classifies it as a documented modernization improvement, not a regression.
+
+**See:** [`../analysis/dateconv-function-inventory.md`](../analysis/dateconv-function-inventory.md) for the 40-function dispatcher inventory, intrinsic-function mapping, and the full verification-loop findings table.
 
 ---
 
