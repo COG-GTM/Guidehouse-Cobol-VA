@@ -88,15 +88,23 @@ def _build_dispatcher_with_seed(seed_jv: int = 99) -> DBDispatcher:
     return dispatcher
 
 
+# Tables surfaced in the demo's post-run summary. The strings are hard-coded
+# module-level literals — there is no path by which untrusted input reaches
+# the f-string below, so the SELECT * FROM {table} interpolation is safe.
+# Keeping the list explicit here (rather than reusing db_dispatcher's broader
+# _ALLOWED_TABLES) documents exactly what the demo summary surfaces.
+_DISPLAY_TABLES: tuple[str, ...] = (
+    "CONTROL_RECORD_TABLE",
+    "JC_SUBMITTED_COMMENT_TBL",
+    "JC_COUNT_TBL",
+)
+
+
 def _table_state(dispatcher: DBDispatcher) -> dict[str, list[dict[str, Any]]]:
     cur = dispatcher._conn.cursor()  # type: ignore[attr-defined]
     state: dict[str, list[dict[str, Any]]] = {}
-    for table in (
-        "CONTROL_RECORD_TABLE",
-        "JC_SUBMITTED_COMMENT_TBL",
-        "JC_COUNT_TBL",
-    ):
-        cur.execute(f"SELECT * FROM {table}")
+    for table in _DISPLAY_TABLES:
+        cur.execute(f"SELECT * FROM {table}")  # noqa: S608 - static literal table names
         rows = [dict(r) for r in cur.fetchall()]
         if table == "CONTROL_RECORD_TABLE":
             for r in rows:

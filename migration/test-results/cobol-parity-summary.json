@@ -5,8 +5,8 @@
   "unresolved_mismatches": 0,
   "mismatched": 1,
   "gnucobol_version": "cobc (GnuCOBOL) 3.1.2.0",
-  "cobol_seconds": 0.005,
-  "python_seconds": 0.0019,
+  "cobol_seconds": 0.0052,
+  "python_seconds": 0.0017,
   "mismatches": [
     {
       "line": 49,

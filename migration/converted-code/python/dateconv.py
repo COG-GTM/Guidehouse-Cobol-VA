@@ -129,16 +129,19 @@ def _cc_inferred_jdn(yy: int) -> int:
     return 19 if yy > 72 else 20
 
 
-def _split_cymd(cymd: int) -> Tuple[int, int, int]:
-    return cymd // 10000, (cymd // 100) % 100, cymd % 100
+def _split_date_int(v: int) -> Tuple[int, int, int]:
+    """Split an 8-digit CCYYMMDD or 6-digit YYMMDD/MMDDYY value into 3 fields.
+
+    The CYMD / YMD / MDY layouts all encode three two-digit components in the
+    same bit-arithmetic positions, so a single splitter serves all three
+    callers. The aliases below preserve the original call sites.
+    """
+    return v // 10000, (v // 100) % 100, v % 100
 
 
-def _split_ymd(ymd: int) -> Tuple[int, int, int]:
-    return ymd // 10000, (ymd // 100) % 100, ymd % 100
-
-
-def _split_mdy(mdy: int) -> Tuple[int, int, int]:
-    return mdy // 10000, (mdy // 100) % 100, mdy % 100
+_split_cymd = _split_date_int
+_split_ymd = _split_date_int
+_split_mdy = _split_date_int
 
 
 def _split_jul(jul: int) -> Tuple[int, int]:
@@ -245,14 +248,15 @@ class DateConv:
     def _run02_ymd_to_jul(self, cd: ConvDates) -> None:
         # DATECONV.cbl:231-245 (200-YMD-TO-JUL). PERFORM JDN-ACC-INT-OF-DATE
         # with JDN-CC=0 → century from JDN-Acc-CC-Inferred (> 72).
-        status, _ = _int_of_date(_ymd_to_cymd(cd.from_ymd_dt, via_jdn=True))
+        cymd = _ymd_to_cymd(cd.from_ymd_dt, via_jdn=True)
+        status, _ = _int_of_date(cymd)
         if status != STATUS_OK:
             cd.to_jul_dt = 0
             _apply_status(cd, status)
             return
-        yyyy, _, _ = _split_cymd(_ymd_to_cymd(cd.from_ymd_dt, via_jdn=True))
+        yyyy, _, _ = _split_cymd(cymd)
         d = date(yyyy, (cd.from_ymd_dt // 100) % 100, cd.from_ymd_dt % 100)
-        ddd = d.timetuple().tm_yday
+        ddd = (d - date(d.year, 1, 1)).days + 1
         cd.from_int_dt = d.toordinal() - _EPOCH_ORDINAL
         cd.to_jul_dt = (yyyy % 100) * 1000 + ddd
         cd.date_err_ind = "N"
@@ -273,15 +277,16 @@ class DateConv:
     def _run10_mdy_to_jul(self, cd: ConvDates) -> None:
         # DATECONV.cbl:378-394 (1000-MDY-TO-JUL). The conversion PERFORMs
         # JDN-ACC-INT-OF-DATE with JDN-CC=0 (line 383) → JDN threshold (> 72).
-        status, _ = _int_of_date(_mdy_to_cymd(cd.from_mdy_dt, via_jdn=True))
+        cymd = _mdy_to_cymd(cd.from_mdy_dt, via_jdn=True)
+        status, _ = _int_of_date(cymd)
         if status != STATUS_OK:
             cd.to_jul_dt = 0
             _apply_status(cd, status)
             return
-        yyyy, mm, dd = _split_cymd(_mdy_to_cymd(cd.from_mdy_dt, via_jdn=True))
+        yyyy, mm, dd = _split_cymd(cymd)
         d = date(yyyy, mm, dd)
         cd.from_int_dt = d.toordinal() - _EPOCH_ORDINAL
-        cd.to_jul_dt = (yyyy % 100) * 1000 + d.timetuple().tm_yday
+        cd.to_jul_dt = (yyyy % 100) * 1000 + (d - date(d.year, 1, 1)).days + 1
         cd.date_err_ind = "N"
 
     def _run11_jul_to_mdy(self, cd: ConvDates) -> None:
@@ -358,7 +363,8 @@ class DateConv:
             return
         cd.from_int_dt = jdn
         yyyy, mm, dd = _split_cymd(cd.from_cymd_dt)
-        cd.to_jul_dt = (yyyy % 100) * 1000 + date(yyyy, mm, dd).timetuple().tm_yday
+        d_to_jul = date(yyyy, mm, dd)
+        cd.to_jul_dt = (yyyy % 100) * 1000 + (d_to_jul - date(yyyy, 1, 1)).days + 1
         cd.date_err_ind = "N"
 
     # -- CYMD ↔ INT (codes 25, 26) -------------------------------------
@@ -402,7 +408,7 @@ class DateConv:
             cd.date_err_ind = "Y"
             cd.date_err_reason = 11
             return
-        cd.to_jul_dt = (d.year % 100) * 1000 + d.timetuple().tm_yday
+        cd.to_jul_dt = (d.year % 100) * 1000 + (d - date(d.year, 1, 1)).days + 1
         cd.date_err_ind = "N"
 
     def _run33_ymd_to_int(self, cd: ConvDates) -> None:
@@ -516,7 +522,8 @@ class DateConv:
         if s2 == STATUS_OK:
             yyyy, mm, dd = _split_cymd(cd.to_cymd_dt)
             try:
-                cd.to_jul_dt = (yyyy % 100) * 1000 + date(yyyy, mm, dd).timetuple().tm_yday
+                d_to_jul = date(yyyy, mm, dd)
+                cd.to_jul_dt = (yyyy % 100) * 1000 + (d_to_jul - date(yyyy, 1, 1)).days + 1
             except ValueError:
                 cd.to_jul_dt = 0
 
@@ -533,14 +540,15 @@ class DateConv:
         # The paragraph PERFORMs 1000-MDY-TO-JUL twice (lines 484, 490) — the
         # cascade routes through JDN-ACC with JDN-CC=0, so the CYMD that
         # backs the 30-day math uses the JDN threshold (> 72).
+        cymd_to = _mdy_to_cymd(cd.to_mdy_dt, via_jdn=True)
         s1, a = _dif_cymd_30_int(_mdy_to_cymd(cd.from_mdy_dt, via_jdn=True))
-        s2, b = _dif_cymd_30_int(_mdy_to_cymd(cd.to_mdy_dt, via_jdn=True))
+        s2, b = _dif_cymd_30_int(cymd_to)
         _set_dif(cd, s1, s2, a, b)
         if s2 == STATUS_OK:
-            cymd_to = _mdy_to_cymd(cd.to_mdy_dt, via_jdn=True)
             yyyy, mm, dd = _split_cymd(cymd_to)
             try:
-                cd.to_jul_dt = (yyyy % 100) * 1000 + date(yyyy, mm, dd).timetuple().tm_yday
+                d_to_jul = date(yyyy, mm, dd)
+                cd.to_jul_dt = (yyyy % 100) * 1000 + (d_to_jul - date(yyyy, 1, 1)).days + 1
             except ValueError:
                 cd.to_jul_dt = 0
 
@@ -558,7 +566,7 @@ class DateConv:
             cd.to_jul_dt = 0
             _apply_status(cd, s2)
             return
-        cd.to_jul_dt = (d.year % 100) * 1000 + d.timetuple().tm_yday
+        cd.to_jul_dt = (d.year % 100) * 1000 + (d - date(d.year, 1, 1)).days + 1
         cd.date_err_ind = "N"
 
     def _run08_add_ymd(self, cd: ConvDates) -> None:
@@ -680,20 +688,17 @@ class DateConv:
             _apply_status(cd, status)
             return
         dt2 = date(y, m, dd)
-        cd.to_jul_dt = (y % 100) * 1000 + dt2.timetuple().tm_yday
+        cd.to_jul_dt = (y % 100) * 1000 + (dt2 - date(y, 1, 1)).days + 1
         cd.date_err_ind = "N"
 
     # -- RANGE family (codes 38, 39, 40) --------------------------------
     def _run38_range_jul(self, cd: ConvDates) -> None:
         # DATECONV.cbl:861-899 (4100-RANGE-JUL).
+        r_from = _int_of_day(cd.from_jul_dt)
+        r_to = _int_of_day(cd.to_jul_dt)
+        r_between = _int_of_day(cd.between_jul_dt)
         _range_check(
-            cd,
-            _int_of_day(cd.from_jul_dt)[1],
-            _int_of_day(cd.to_jul_dt)[1],
-            _int_of_day(cd.between_jul_dt)[1],
-            _int_of_day(cd.from_jul_dt)[0],
-            _int_of_day(cd.to_jul_dt)[0],
-            _int_of_day(cd.between_jul_dt)[0],
+            cd, r_from[1], r_to[1], r_between[1], r_from[0], r_to[0], r_between[0]
         )
 
     def _run39_range_ymd(self, cd: ConvDates) -> None:
@@ -774,6 +779,10 @@ _REASON = {
     STATUS_STRANGE: 12,
 }
 
+# Reverse lookup populated once at import time so _status() is O(1) rather
+# than an O(n) linear scan of _REASON.items() on every dispatch.
+_REASON_REV = {v: k for k, v in _REASON.items()}
+
 
 def _apply_status(cd: ConvDates, status: str) -> None:
     if status == STATUS_OK:
@@ -850,14 +859,15 @@ def _no_check_int_of_day(jul_yyddd: int) -> int:
     # COBOL DATECONV.cbl:690-707 / 714-731 routes the conversion through
     # JDN-ACC-INT-OF-DAY with JDN-CC=0, so the JDN (> 72) threshold applies,
     # NOT the 9920 (> 52) threshold used by the validation prelude.
+    #
+    # The two legacy branches (ddd<=365 and ddd>365 overflow) collapse to the
+    # same arithmetic: date(yyyy,1,1) + (ddd - 1) days. The overflow branch
+    # used (365 - 1) + (ddd - 365) which equals (ddd - 1).
     yy, ddd = _split_jul(jul_yyddd)
     yyyy = _cc_inferred_jdn(yy) * 100 + yy
     if jul_yyddd == 0:
         return 0
-    if ddd <= 365:
-        return date(yyyy, 1, 1).toordinal() + ddd - 1 - _EPOCH_ORDINAL
-    overflow = ddd - 365
-    return date(yyyy, 1, 1).toordinal() + 365 - 1 + overflow - _EPOCH_ORDINAL
+    return date(yyyy, 1, 1).toordinal() + ddd - 1 - _EPOCH_ORDINAL
 
 
 def _dif_cymd_30_int(cymd: int) -> Tuple[str, int]:
@@ -909,11 +919,12 @@ def _is_leap(y: int) -> bool:
     return (y % 4 == 0 and y % 100 != 0) or (y % 400 == 0)
 
 
+_CUMDAYS_COMMON: Tuple[int, ...] = (0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365)
+_CUMDAYS_LEAP: Tuple[int, ...] = (0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366)
+
+
 def _cumulative_days(yyyy: int) -> Tuple[int, ...]:
-    base = (0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365)
-    if _is_leap(yyyy):
-        return (0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366)
-    return base
+    return _CUMDAYS_LEAP if _is_leap(yyyy) else _CUMDAYS_COMMON
 
 
 # ---------------------------------------------------------------------------
@@ -941,10 +952,7 @@ def _dispatch_one(func: int, **kw) -> ConvDates:
 def _status(cd: ConvDates) -> str:
     if cd.date_err_ind == "N":
         return STATUS_OK
-    for k, v in _REASON.items():
-        if v == cd.date_err_reason:
-            return k
-    return STATUS_STRANGE
+    return _REASON_REV.get(cd.date_err_reason, STATUS_STRANGE)
 
 
 def check_cymd_dt(yyyymmdd) -> Tuple[str, bool]:

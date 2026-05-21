@@ -47,6 +47,26 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
+# Allowlist of table identifiers that callers may pass to count_rows().
+#
+# Oracle and the SQL standard do not allow table identifiers to be bound as
+# parameters, so count_rows() interpolates `table` directly into the SQL
+# string. Restricting the input to a known-safe set of business tables means
+# a future caller passing untrusted input cannot turn count_rows() into a SQL
+# injection vector. The set covers every table currently exercised by
+# LABD20/LABA05 and the parity engine; extend deliberately when a new
+# legitimate counting target is added.
+# ---------------------------------------------------------------------------
+_ALLOWED_TABLES = frozenset({
+    "JC_SUBMITTED_COMMENT_TBL",
+    "JC_REJECTED_COMMENT_TBL",
+    "JC_APPLIED_COMMENT_TBL",
+    "JC_COUNT_TBL",
+    "CONTROL_RECORD_TABLE",
+})
+
+
+# ---------------------------------------------------------------------------
 # DMS return-code constants — mirrors DBIO.pco:374-398 (5300-TRANSLATE-SQLCODE)
 # ---------------------------------------------------------------------------
 # Legacy callers (LABA05, LABD20) check this 4-character DMS code (aliased
@@ -216,11 +236,16 @@ class DBDispatcher:
 
         Note: `table` is a literal here, not a bind parameter, because Oracle
         and SQL standards do not allow tables to be bound. Callers must pass a
-        known table identifier — never user input.
+        known table identifier — never user input. The `_ALLOWED_TABLES` set
+        enforces this at runtime so the previously-assumed whitelist is now
+        a hard guard (see RISKS-AND-GAPS.md Risk 4 mitigation).
         """
-        # ASSUMPTION: identifier whitelisting (the only legal callers pass
-        # static names) — see RISKS-AND-GAPS.md Risk 4 mitigation.
-        sql = f"SELECT COUNT(*) FROM {table} WHERE {where}"  # noqa: S608 - whitelisted
+        if table not in _ALLOWED_TABLES:
+            raise ValueError(
+                f"count_rows: table {table!r} is not in the allowlist; "
+                f"add it to _ALLOWED_TABLES if it is a legitimate target."
+            )
+        sql = f"SELECT COUNT(*) FROM {table} WHERE {where}"  # noqa: S608 - allowlisted
         cur = self._conn.cursor()
         cur.execute(sql, params)
         row = cur.fetchone()
