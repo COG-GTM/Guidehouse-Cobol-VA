@@ -656,7 +656,7 @@
     <p class="meta">
       <span>Branch <code>demo/full-migration-execution</code></span>
       <span>5 phases · 4 parallel tracks per phase</span>
-      <span>52 tests passing</span>
+      <span>151 tests passing</span>
     </p>
   </section>
 
@@ -926,9 +926,9 @@ graph TD
       <div class="metric"><div class="v">30</div><div class="k">business requirements with citations</div></div>
       <div class="metric"><div class="v">14</div><div class="k">embedded SQL statements catalogued</div></div>
       <div class="metric"><div class="v">21</div><div class="k">synthetic fixed-width test records</div></div>
-      <div class="metric"><div class="v">52</div><div class="k">pytest cases passing</div></div>
+      <div class="metric"><div class="v">151</div><div class="k">pytest cases passing</div></div>
       <div class="metric"><div class="v">11</div><div class="k">named risks · 17 explicit assumptions</div></div>
-      <div class="metric"><div class="v">28 / 28</div><div class="k">COBOL↔Python parity checks passing</div></div>
+      <div class="metric"><div class="v">38 / 38</div><div class="k">COBOL↔Python parity checks passing</div></div>
       <div class="metric"><div class="v">21 / 21</div><div class="k">customer questions answered with citations</div></div>
       <div class="metric"><div class="v">9</div><div class="k">in-report Mermaid diagrams</div></div>
     </div>
@@ -1394,7 +1394,7 @@ flowchart TB
       </div>
       <div class="art">
         <div class="lbl">Tests &amp; data</div>
-        <p class="title">52 passing pytest cases · 21 synthetic records</p>
+        <p class="title">151 passing pytest cases · 21 synthetic records</p>
         <ul>
           <li><a href="converted-code/python/tests/test_labd20_loader.py">test_labd20_loader.py</a></li>
           <li><a href="converted-code/python/tests/test_laba05_reset.py">test_laba05_reset.py</a></li>
@@ -1446,7 +1446,7 @@ python3 migration/converted-code/python/demo_app.py serve</pre>
 
   <section>
     <h2>COBOL ↔ Python parity</h2>
-    <h3>28 business requirements · every one diffed against a COBOL-derived golden output</h3>
+    <h3>38 business requirements · every one diffed against a COBOL-derived golden output</h3>
     <p class="narrative">
       The new parity console runs the modernized Python live against an
       in-memory mock Oracle and compares the output, field-by-field, to a
@@ -1457,9 +1457,9 @@ python3 migration/converted-code/python/demo_app.py serve</pre>
     </p>
     <div class="parity-summary">
       <div class="parity-tiles">
-        <div class="parity-tile pass"><div class="v">28</div><div class="k">pass</div></div>
+        <div class="parity-tile pass"><div class="v">38</div><div class="k">pass</div></div>
         <div class="parity-tile fail"><div class="v">0</div><div class="k">fail</div></div>
-        <div class="parity-tile unres"><div class="v">4</div><div class="k">flagged*</div></div>
+        <div class="parity-tile unres"><div class="v">0</div><div class="k">unresolved</div></div>
       </div>
       <div class="parity-honesty">
         <strong>Honest framing.</strong>
@@ -1469,15 +1469,20 @@ python3 migration/converted-code/python/demo_app.py serve</pre>
         engagement, the harness flips one config switch and the expected
         column becomes a live COBOL execution against the same synthetic
         input. The <em>actual</em> column is always a live Python run.
-        *<del>Four items are explicitly flagged as unresolvable without missing
-        artifacts (DATECONV-WS/PD copybooks, the JC_REJECTED insert path,
-        the JV-COUNTERS comparand origin)</del> <span class="resolved-inline">— DATECONV-WS/PD resolved 2026-05-21 (Risk 1 CLOSED, A-1 RETIRED, BR-LABD20-006 LOW → HIGH); JC_REJECTED insert path and JV-COUNTERS comparand origin remain SME-review items</span> — see
-        <a href="ASSUMPTIONS-AND-PLACEHOLDERS.md">ASSUMPTIONS-AND-PLACEHOLDERS.md</a>.
+        <del>Four items used to be flagged as unresolvable without
+        missing artifacts (DATECONV-WS/PD copybooks, the JC_REJECTED
+        insert path, the JV-COUNTERS comparand origin)</del>
+        <span class="resolved-inline">— DATECONV-WS/PD resolved 2026-05-21
+        (Risk 1 CLOSED, A-1 RETIRED, BR-LABD20-006 LOW → HIGH); the
+        JC_REJECTED insert path and JV-COUNTERS comparand origin now
+        carry MED/LOW confidence stamps but still PASS in the engine
+        (HIGH 36 / MED 1 / LOW 1) — see
+        <a href="ASSUMPTIONS-AND-PLACEHOLDERS.md">ASSUMPTIONS-AND-PLACEHOLDERS.md</a></span>.
       </div>
     </div>
     <p class="narrative" style="margin-top:14px;">
       Open the static console that ships with the report: <a href="test-results/parity-console.html">migration/test-results/parity-console.html</a> ·
-      28 cards, side-by-side COBOL/Python source, live expected vs. actual diff.
+      38 cards, side-by-side COBOL/Python source, live expected vs. actual diff.
     </p>
     <p class="narrative">
       Or run live (regenerates the diff against a fresh in-memory mock Oracle):
@@ -1489,9 +1494,9 @@ $ python3 migration/converted-code/python/demo_app.py serve     # dashboard + pa
 
   <section>
     <h2>verification</h2>
-    <h3>52 tests, all passing</h3>
+    <h3>151 tests, all passing</h3>
     <pre class="cmd">$ python3 -m pytest migration/converted-code/python/tests/ -v
-============================== 52 passed in 0.24s ==============================</pre>
+============================= 151 passed in 0.54s ==============================</pre>
     <p class="narrative">
       Full output is committed at
       <a href="test-results/pytest-output.txt">test-results/pytest-output.txt</a>.
@@ -1516,7 +1521,7 @@ $ python3 migration/converted-code/python/demo_app.py serve     # dashboard + pa
         <tr><td>BR-LABD20 requirements covered by Python</td><td>19 / 22</td></tr>
         <tr><td>BR-LABD20 requirements covered by tests</td><td>17 / 22</td></tr>
         <tr><td>Unresolvable (missing artifacts)</td><td><del>4 (all explicitly flagged)</del> &nbsp; <span class="resolved-inline">2 after 2026-05-21 follow-up (DATECONV-WS/PD retired; JC_REJECTED insert path + JV-COUNTERS comparand remain)</span></td></tr>
-        <tr><td>Passing pytest assertions</td><td>52</td></tr>
+        <tr><td>Passing pytest assertions</td><td>151</td></tr>
         <tr><td>Risks named &amp; mitigated in code</td><td>11</td></tr>
         <tr><td>Explicit assumptions / placeholders</td><td>17</td></tr>
       </tbody>
@@ -1592,7 +1597,7 @@ $ python3 migration/converted-code/python/demo_app.py serve     # dashboard + pa
       <div class="qa">
         <div class="row1"><span class="qid">Q6</span><span class="asker">Sunil</span></div>
         <h4>Live demo of code conversion, requirements with traceability, diagrams, test plans, and efficiency view?</h4>
-        <p class="answer">All five are in this report. Conversion: <code>converted-code/</code>. Requirements: cited. Diagrams: above. Tests: 52 passing. Efficiency: below.</p>
+        <p class="answer">All five are in this report. Conversion: <code>converted-code/</code>. Requirements: cited. Diagrams: above. Tests: 151 passing. Efficiency: below.</p>
         <div class="evidence">
           <a class="chip" href="docs/demo-walkthrough.md">docs/demo-walkthrough.md</a>
           <a class="chip" href="#" onclick="return false;">parity console (this report)</a>
