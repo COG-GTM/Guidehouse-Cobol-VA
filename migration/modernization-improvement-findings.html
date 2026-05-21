@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Modernization improvement findings — DATECONV leap-year validator</title>
+<style>
+  :root { color-scheme: light; }
+  body { font: 14px/1.55 'Inter Tight', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+         margin: 0; padding: 0; background: #f7f7f8; color: #111; }
+  header { background: linear-gradient(135deg, #0b3d91 0%, #1f7ae0 100%);
+            color: #fff; padding: 28px 40px; }
+  header .wordmark { font-size: 13px; letter-spacing: 0.6px; opacity: 0.85; margin-bottom: 8px; text-transform: uppercase; }
+  header h1 { margin: 0; font-size: 26px; font-weight: 600; }
+  header p.lead { margin: 8px 0 0; opacity: 0.94; font-size: 14px; max-width: 760px; }
+  main { padding: 28px 40px; max-width: 1200px; margin: 0 auto; }
+  section { background: #fff; border: 1px solid #e1e4e8; border-radius: 8px;
+             padding: 22px 26px; margin-bottom: 20px;
+             box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+  section h2 { margin: 0 0 12px; font-size: 17px; color: #0b3d91; font-weight: 600; }
+  section h3 { margin: 18px 0 8px; font-size: 14px; color: #111; font-weight: 600; }
+  section p, section li { font-size: 14px; }
+  .stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 4px; }
+  .stat { flex: 1 1 220px; padding: 16px 20px; border-radius: 6px;
+           background: #f0f3f8; border: 1px solid #d6dee8; }
+  .stat .num { font-size: 26px; font-weight: 600; color: #0b3d91; }
+  .stat .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #555; margin-top: 2px; }
+  .stat.hero { background: linear-gradient(180deg, #f0f6ff 0%, #e0ebff 100%); border-color: #b3c9eb; }
+  .stat.hero .num { color: #073764; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  th, td { border: 1px solid #e1e4e8; padding: 10px 12px; text-align: left; vertical-align: top; }
+  th { background: #f0f3f8; font-weight: 600; }
+  td.legacy { background: #fff7e6; }
+  td.modern { background: #e7f5ea; }
+  td.wrong { color: #8a1a1a; font-weight: 600; }
+  td.right { color: #2a6f3b; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px;
+           font-size: 11px; font-weight: 600; letter-spacing: 0.2px; }
+  .pill.legacy { background: #fde7c5; color: #7a4a00; }
+  .pill.modern { background: #d6f5dd; color: #14532d; }
+  .pill.warn { background: #fbe9e9; color: #8a1a1a; }
+  .callout { margin-top: 16px; padding: 14px 18px; background: #fff7e6;
+              border-left: 4px solid #f0c674; border-radius: 4px; color: #5a3e00; }
+  .callout strong { color: #7a4a00; }
+  .decision { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+  .decision .opt { padding: 16px 18px; border-radius: 6px; border: 1px solid #d6dee8; background: #fafbfc; }
+  .decision .opt.recommended { background: #e7f5ea; border-color: #b7dec1; }
+  .decision .opt h4 { margin: 0 0 6px; font-size: 13px; font-weight: 600; }
+  .decision .opt .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #555; margin-bottom: 6px; }
+  .decision .opt.recommended .label { color: #14532d; }
+  .crossref { font-size: 12px; color: #555; margin-top: 6px; }
+  .crossref code { background: #f0f3f8; padding: 1px 5px; border-radius: 3px;
+                    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  footer { padding: 20px 40px; font-size: 12px; color: #666; max-width: 1200px; margin: 0 auto; }
+  footer a { color: #0b3d91; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wordmark">Cognition · Guidehouse / VA — JV COBOL modernization</div>
+  <h1>Modernization improvement findings — leap-year validator</h1>
+  <p class="lead">The COBOL ⇔ Python runtime parity loop exposed exactly one byte-for-byte divergence. It is not a regression — it is a corrected, 126-year-old calendar bug in the legacy code. This page is the SME-facing record of the divergence, classified and put in front of you for a yes/no decision.</p>
+</header>
+<main>
+
+<section>
+  <div class="stats">
+    <div class="stat hero">
+      <div class="num">1</div>
+      <div class="lbl">documented modernization improvement</div>
+    </div>
+    <div class="stat">
+      <div class="num">79 / 80</div>
+      <div class="lbl">vectors byte-for-byte identical</div>
+    </div>
+    <div class="stat">
+      <div class="num">0</div>
+      <div class="lbl">unresolved mismatches</div>
+    </div>
+    <div class="stat">
+      <div class="num">126 yrs</div>
+      <div class="lbl">age of the legacy bug</div>
+    </div>
+  </div>
+  <p class="crossref" style="margin-top: 14px;">Cross-references: <a href="test-results/cobol-parity-report.html">parity report</a> · <a href="executive-report.html">executive board (T6)</a> · <code>analysis/dateconv-function-inventory.md</code></p>
+</section>
+
+<section>
+  <h2>What we found</h2>
+  <p>The legacy COBOL date-validation routine (<code>DATECONV.cbl</code>, paragraph <code>9950-VALIDATE-YYYY</code>) uses the old <strong>Julian leap-year rule</strong>: every year divisible by 4 is a leap year, no exceptions. The modernized Python port uses the standard <strong>proleptic Gregorian rule</strong>:</p>
+  <p style="background:#f0f3f8; padding:14px 18px; border-radius:6px; margin: 12px 0;">A year is a leap year if divisible by 4, <strong>except</strong> centuries are not leap years <strong>unless</strong> also divisible by 400.</p>
+  <p>The two rules agree on every year except century years not divisible by 400 (1700, 1800, 1900, 2100, 2200, 2300, …). For all other years in scope of this system the two implementations are byte-for-byte identical, which is why <strong>79 of 80</strong> test vectors match.</p>
+
+  <h3>Behavior comparison — February 29 across the century-year edge</h3>
+  <table>
+    <thead>
+      <tr><th>Date</th><th>Real-world truth</th><th class="legacy">Legacy COBOL (Julian rule)</th><th class="modern">Modernized Python (Gregorian rule)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>02/29/1900</strong></td><td>did not exist</td><td class="legacy wrong">accepts as valid</td><td class="modern right">rejects (correct)</td></tr>
+      <tr><td>02/29/2000</td><td>real date</td><td class="legacy right">accepts (correct)</td><td class="modern right">accepts (correct)</td></tr>
+      <tr><td>02/29/2024</td><td>real date</td><td class="legacy right">accepts (correct)</td><td class="modern right">accepts (correct)</td></tr>
+      <tr><td><strong>02/29/2100</strong></td><td>will not exist</td><td class="legacy wrong">accepts (wrong)</td><td class="modern right">rejects (correct)</td></tr>
+      <tr><td><strong>02/29/2200</strong></td><td>will not exist</td><td class="legacy wrong">accepts (wrong)</td><td class="modern right">rejects (correct)</td></tr>
+      <tr><td><strong>02/29/2300</strong></td><td>will not exist</td><td class="legacy wrong">accepts (wrong)</td><td class="modern right">rejects (correct)</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">
+    <strong>Future-hazard note.</strong> 1900 is the historical case visible in the parity test today, but the same defect causes the legacy validator to <strong>accept three more invalid dates this century and beyond — 02/29/2100, 02/29/2200, 02/29/2300.</strong> Any downstream system that uses this validator past 2099 would silently admit a date that does not exist on the Gregorian calendar.
+  </div>
+</section>
+
+<section>
+  <h2>Why we flagged it instead of silently mirroring the legacy</h2>
+  <p>A naive port that prioritizes byte-for-byte legacy fidelity above all else would have been instructed to backport the Julian rule into the Python validator so the parity diff comes out clean. We deliberately did not do that. Two reasons:</p>
+  <ul>
+    <li><strong>Mathematically incorrect dates should not enter the modernized system.</strong> The legacy was wrong; quietly carrying the bug forward into the modernized stack inherits a known, future-impacting defect.</li>
+    <li><strong>Silent mirrors are unauditable.</strong> If we had just copied the legacy behavior with no callout, the SME would have no way to know we made a calendar-correctness trade-off on their behalf. Surfacing it explicitly — with the exact COBOL paragraph cited, the test vector visible, and a classification of <code>modernization_improvement</code> rather than <code>unresolved_mismatch</code> — preserves their right to decide.</li>
+  </ul>
+  <p>This is the answer to the "are you sure you're not silently regressing the legacy?" question that federal acquisition always asks. We caught the divergence, we classified it correctly, and we put it in front of you.</p>
+</section>
+
+<section>
+  <h2>SME decision</h2>
+  <p>The modernized stack ships today with Option A. Switching to Option B is a one-line change in <code>migration/converted-code/python/dateconv.py</code>; the parity diff would then go to 80/80 byte-for-byte but the modernized system would re-inherit the 1900 / 2100 / 2200 / 2300 bug.</p>
+  <div class="decision">
+    <div class="opt recommended">
+      <div class="label">Recommended · default · shipped</div>
+      <h4>Option A — Keep the modernization fix</h4>
+      <p>The Python port uses proleptic Gregorian. 02/29/1900 is rejected. Future century-year edges (2100/2200/2300) are also rejected. Parity diff stays at 79/80 with the 1 mismatch classified as a documented improvement.</p>
+      <p style="margin-top: 10px;"><span class="pill modern">Forward-correct</span> <span class="pill modern">Audited</span></p>
+    </div>
+    <div class="opt">
+      <div class="label">Available · backport</div>
+      <h4>Option B — Backport the COBOL Julian rule for strict legacy fidelity</h4>
+      <p>The Python port is changed to accept any year divisible by 4 as a leap year. 02/29/1900 is accepted. The 1900 / 2100 / 2200 / 2300 bug is re-introduced into the modernized stack. Parity diff goes to 80/80 byte-for-byte.</p>
+      <p style="margin-top: 10px;"><span class="pill warn">Known future defect</span> <span class="pill legacy">Strict legacy</span></p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>How to verify this finding live</h2>
+  <ol>
+    <li>Open <a href="test-results/cobol-parity-report.html">the parity report</a>; scroll to the <em>Documented modernization improvements</em> table. Vector <code>N|01|0|0|19000229|0|0|0|0|0|0|0|0|0|0</code> on line 49.</li>
+    <li>Re-run the harness locally: <code style="font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;">bash migration/test-results/build/run-parity.sh</code>. Final line: <em>79/80 matched; 1 documented modernization improvement(s); 0 unresolved mismatch(es)</em>; exit 0.</li>
+    <li>The single mismatch in <code>migration/test-results/cobol-parity-summary.json</code> shows <code>classification: "modernization_improvement"</code>, <code>first_diff_field: "DATE_ERR_IND"</code> — the field where the modernized validator says "this date is invalid" and the legacy says "ok."</li>
+    <li>Cross-check in <code>analysis/dateconv-function-inventory.md</code> under <em>Documented modernization improvements</em>.</li>
+  </ol>
+</section>
+
+</main>
+<footer>
+  Cognition · Demo output pending SME review · Generated 2026-05-21 alongside <code>migration/test-results/cobol-parity-report.html</code>.
+</footer>
+</body>
+</html>
