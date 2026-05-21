@@ -247,7 +247,7 @@ To compress to 15 minutes, drop Beat 3 (the live Python dashboard). The story st
 - [ ] `cobc --version` returns `cobc (GnuCOBOL) 3.1.2.0`.
 - [ ] `bash migration/test-results/build/run-parity.sh` exits 0 with `79/80 matched; 1 documented modernization improvement(s); 0 unresolved mismatch(es)`.
 - [ ] `python3 migration/converted-code/python/demo_app.py serve` is running, `http://127.0.0.1:8765/` returns 200.
-- [ ] All seven browser tabs are pre-opened in the order in **Pre-demo setup**.
+- [ ] All five browser tabs (plus the terminal) are pre-opened in the order in **Pre-demo setup**.
 - [ ] You have screen-share permission. Buyers should see your terminal AND your browser.
 - [ ] You have read the "Devin caught it upfront" callout in `executive-report.html` once aloud before the demo so it doesn't trip you on stage.
 
