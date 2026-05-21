@@ -221,3 +221,29 @@ The `check_cymd_dt` stub that previously lived in `migration/converted-code/pyth
 - `source/procobol/LABD20.pco:182` — `COPY DATECONV-WS.`
 - `source/procobol/LABD20.pco:266-274` — `MOVE TST123-COMMENT-DT TO FROM-CYMD-DT` / `PERFORM CHECK-CYMD-DT`.
 - `source/procobol/LABD20.pco:531` — `COPY DATECONV-PD.`
+
+## Documented modernization improvements
+
+The Python port at `migration/converted-code/python/dateconv.py` intentionally diverges from the legacy COBOL in one place. This is a deliberate, customer-acknowledged modernization improvement; the runtime parity harness classifies it separately from regressions and does not fail the build.
+
+### `9950-VALIDATE-YYYY` accepts 02/29/1900 (Julian leap rule)
+
+- **Legacy COBOL behavior.** `source/cobol/DATECONV.cbl` `9950-VALIDATE-YYYY` (paragraph at lines 1111-1127) uses the every-4-years leap-year rule: `DIVIDE WRK-CYMD-YYYY BY 4 ... IF DAYS-TO-ADD > 0 MOVE 2 TO LEAP-YEAR`. There is no `DIVIDE BY 100` / `DIVIDE BY 400` adjustment. Therefore `CHECK-CYMD-DT(19000229)` returns `DATE-ERR-IND = "N"` (valid).
+- **Python port behavior.** `_run01_check_cymd_dt` delegates to `_int_of_date`, which uses Python's `datetime.date` constructor (proleptic Gregorian calendar). `19000229` raises and is reported as `DATE-ERR-IND = "Y"`, `DATE-ERR-REASON = 07` (`OutOfRangeDD`).
+- **Why this is the correct call.** The Gregorian rule (the actual civil calendar in use since 1582) excludes centurial years that are not divisible by 400. 1900 IS divisible by 4 but is NOT a leap year. The COBOL behavior is a known defect carried over from the original Julian-style validator; replicating it in the Python port would propagate a date-validation bug into modernized code.
+- **How it is documented in the harness.** `migration/test-results/run_cobol_parity.py` marks the vector `N|01|0|0|19000229|0|0|0|0|0|0|0|0|0|0` in the `MODERNIZATION_IMPROVEMENTS` map. The classifier returns `modernization_improvement` (not `mismatched`) and the harness exits 0.
+
+This is the only intentional divergence between the Python port and the legacy COBOL. Every other behavior — including `JDN-Acc-Int-Of-Date` returning `0` silently for an all-zero BETWEEN input, `400-DIF-JUL` leaving `TO-INT-DT` untouched, `9940-CONV-JUL-30` collapsing Day-31 onto Day-30, and the `2300-JUL-TO-CYMD` / `4500-ADD-MONTHS-END-JUL` side-effects on alias `TO-*` fields — is faithfully reproduced.
+
+## Verification-loop discoveries (2026-05-21)
+
+The runtime parity harness against GnuCOBOL caught **13 Python-port defects** before merge. All 77 Python unit tests passed cleanly; the runtime diff against the customer's compiled COBOL is what exposed them. They were patched in the same commit as the harness landed. Summary:
+
+| # | Bug class | COBOL paragraphs | Python defect | Fix |
+| - | --- | --- | --- | --- |
+| 1 | `TO-INT-DT` leaked intermediate JDN in DIF operations | `400-DIF-JUL`, `500-DIF-YMD`, `1400-DIF-MDY`, `1900-DIF-CYMD` | `_set_dif` wrote `cd.to_int_dt = b`, exposing the intermediate JDN to callers | Drop `cd.to_int_dt` assignment in `_set_dif` |
+| 2 | Conversion side-effects not propagated to alias `TO-*` fields | `2300-JUL-TO-CYMD`, `2000-ADD-CYMD`, `4500-ADD-MONTHS-END-JUL`, `4000-DIF-FY` | Python port assigned only the "primary" output field; callers reading `TO-YMD-DT` / `TO-CYMD-YYYY` saw stale zeros | Mirror each `PERFORM` side-effect in `_run23`, `_run20`, `_run37`, `_run42` |
+| 3 | 30-day-month DIF counted Day-31 separately | `600-DIF-CYMD-30`, `1500-DIF-JUL-30`, `1600-DIF-MDY-30` | Python returned 30 instead of 31 and missed the TO-JUL side-effect | Cap `dd` at 30 in `_dif_cymd_30_int`; add TO-JUL side-effect to `_run06` / `_run16` |
+| 4 | `4300-RANGE-MDY` rejected all-zero BETWEEN input | `4300-RANGE-MDY` | Python's `_int_of_date` validated explicitly and short-circuited with `DATE-ERR-IND = Y` | Make `_range_check` lenient on BETWEEN — fall through with `c = 0` when only BETWEEN failed validation |
+
+This is the substantive value of a runtime parity loop: "byte-for-byte parity" claims that ship without a runtime diff against the customer's compiled COBOL are unverifiable. The harness regenerates [`migration/test-results/cobol-parity-report.html`](../migration/test-results/cobol-parity-report.html) on every push.

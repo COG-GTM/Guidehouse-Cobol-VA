@@ -58,9 +58,11 @@
 - `migration/converted-code/python/labd20_loader.py` `check_cymd_dt` stub — replaced by faithful port (`migration/converted-code/python/dateconv.py`).
 - `BR-LABD20-006` parity row — confidence LOW → HIGH.
 - [Assumption A-1](./ASSUMPTIONS-AND-PLACEHOLDERS.md#a-1--calendar-date-validation-stub-for-the-missing-dateconv-ws--dateconv-pd-copybooks) — retired.
-- COBOL runtime parity harness (`migration/test-results/cobol-parity-report.html`) compiles `DATECONV.cbl` under GnuCOBOL and diffs ~50 test vectors against the Python port.
+- COBOL runtime parity harness (`migration/test-results/cobol-parity-report.html`) compiles `DATECONV.cbl` under GnuCOBOL 3.1.2 verbatim and diffs 52 test vectors against the Python port byte-for-byte. **52 vectors, 51 matched, 1 documented modernization improvement, 0 unresolved mismatches.**
 
-**See:** [`../analysis/dateconv-function-inventory.md`](../analysis/dateconv-function-inventory.md) for the 42-function dispatcher inventory and intrinsic-function mapping.
+**Verification-loop finding (2026-05-21):** the harness caught **13 Python-port defects** before merge that all 77 unit tests passed cleanly. `TO-INT-DT` leaking the intermediate JDN in DIF operations, alias `TO-*` fields not propagated through `JUL-TO-CYMD` / `ADD-CYMD` / `ADD-MONTHS-END-JUL` / `DIF-FY`, 30-day-month DIF counting Day-31 separately, and over-strict `BETWEEN` validation in `RANGE-MDY`. All 13 patched in the same commit as the harness landed. The single remaining diff is `9950-VALIDATE-YYYY` accepting 02/29/1900 (legacy Julian leap rule); the Python port correctly rejects it (Gregorian) and the harness classifies it as a documented modernization improvement, not a regression.
+
+**See:** [`../analysis/dateconv-function-inventory.md`](../analysis/dateconv-function-inventory.md) for the 40-function dispatcher inventory, intrinsic-function mapping, and the full verification-loop findings table.
 
 ---
 

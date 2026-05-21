@@ -295,15 +295,18 @@ class DateConv:
 
     # -- Julian ↔ CYMD (codes 23, 24) ----------------------------------
     def _run23_jul_to_cymd(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:602-617 (2300-JUL-TO-CYMD).
+        # DATECONV.cbl:602-617 (2300-JUL-TO-CYMD). Also writes TO-YMD-DT as a
+        # side-effect of the embedded PERFORM 3400-INT-TO-YMD (line 611).
         status, jdn, _ = _int_of_day(cd.from_jul_dt)
         if status != STATUS_OK:
             cd.to_cymd_dt = 0
+            cd.to_ymd_dt = 0
             _apply_status(cd, status)
             return
         cd.from_int_dt = jdn
         d = date.fromordinal(jdn + _EPOCH_ORDINAL)
         cd.to_cymd_dt = d.year * 10000 + d.month * 100 + d.day
+        cd.to_ymd_dt = (d.year % 100) * 10000 + d.month * 100 + d.day
         cd.date_err_ind = "N"
 
     def _run24_cymd_to_jul(self, cd: ConvDates) -> None:
@@ -426,7 +429,8 @@ class DateConv:
         _set_dif(cd, s1, s2, a, b)
 
     def _run19_dif_cymd(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:535-557 (1900-DIF-CYMD).
+        # DATECONV.cbl:535-557 (1900-DIF-CYMD). Like 400/500/1400, COBOL writes
+        # FROM-INT-DT only — TO-INT-DT is never assigned.
         s1, a = _int_of_date(cd.from_cymd_dt)
         s2, b = _int_of_date(cd.to_cymd_dt)
         _set_dif(cd, s1, s2, a, b)
@@ -444,33 +448,56 @@ class DateConv:
 
     def _run37_dif_fy(self, cd: ConvDates) -> None:
         # DATECONV.cbl:847-859 (4000-DIF-FY). Reads YY only from FROM-YMD-DT
-        # and TO-YMD-DT, infers century, returns YYYY-diff.
+        # and TO-YMD-DT, infers century, returns YYYY-diff. COBOL writes
+        # WRK-CYMD-YYYY into the YYYY half of TO-CYMD-YYYY (REDEFINES of the
+        # high 4 bytes of TO-CYMD-DT); MMDD stay zero — hence YYYY * 10000.
         from_yy = cd.from_ymd_dt // 10000
         to_yy = cd.to_ymd_dt // 10000
         from_yyyy = _cc_inferred(from_yy) * 100 + from_yy
         to_yyyy = _cc_inferred(to_yy) * 100 + to_yy
+        cd.from_cymd_dt = from_yyyy * 10000
+        cd.to_cymd_dt = to_yyyy * 10000
         cd.days_dif = to_yyyy - from_yyyy
         cd.date_err_ind = "N"
         cd.date_err_reason = 0
 
     # -- 30-day-month DIF (codes 6, 15, 16) -----------------------------
     def _run06_dif_cymd_30(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:315-335 (600-DIF-CYMD-30). 30-day-month accounting.
+        # DATECONV.cbl:315-335 (600-DIF-CYMD-30). 30-day-month accounting. The
+        # paragraph internally PERFORMs 2400-CYMD-TO-JUL twice; the second call
+        # converts TO-CYMD-DT and leaves TO-JUL-DT populated as a side-effect.
         s1, a = _dif_cymd_30_int(cd.from_cymd_dt)
         s2, b = _dif_cymd_30_int(cd.to_cymd_dt)
         _set_dif(cd, s1, s2, a, b)
+        if s2 == STATUS_OK:
+            yyyy, mm, dd = _split_cymd(cd.to_cymd_dt)
+            try:
+                cd.to_jul_dt = (yyyy % 100) * 1000 + date(yyyy, mm, dd).timetuple().tm_yday
+            except ValueError:
+                cd.to_jul_dt = 0
 
     def _run15_dif_jul_30(self, cd: ConvDates) -> None:
         # DATECONV.cbl:458-481 (1500-DIF-JUL-30). 30-day-month over Julian inputs.
+        # Unlike 600/1600, this paragraph operates on WRK-CJUL-* fields only and
+        # does not produce TO-JUL/TO-MDY side-effects.
         s1, a = _dif_jul_30_int(cd.from_jul_dt)
         s2, b = _dif_jul_30_int(cd.to_jul_dt)
         _set_dif(cd, s1, s2, a, b)
 
     def _run16_dif_mdy_30(self, cd: ConvDates) -> None:
         # DATECONV.cbl:483-503 (1600-DIF-MDY-30). 30-day-month over MDY inputs.
+        # The paragraph internally PERFORMs 1000-MDY-TO-JUL twice; the second
+        # call converts TO-MDY-DT and leaves TO-JUL-DT populated.
         s1, a = _dif_cymd_30_int(_mdy_to_cymd(cd.from_mdy_dt))
         s2, b = _dif_cymd_30_int(_mdy_to_cymd(cd.to_mdy_dt))
         _set_dif(cd, s1, s2, a, b)
+        if s2 == STATUS_OK:
+            cymd_to = _mdy_to_cymd(cd.to_mdy_dt)
+            yyyy, mm, dd = _split_cymd(cymd_to)
+            try:
+                cd.to_jul_dt = (yyyy % 100) * 1000 + date(yyyy, mm, dd).timetuple().tm_yday
+            except ValueError:
+                cd.to_jul_dt = 0
 
     # -- ADD family (codes 7, 8, 17, 20) --------------------------------
     def _run07_add_jul(self, cd: ConvDates) -> None:
@@ -524,19 +551,24 @@ class DateConv:
         cd.date_err_ind = "N"
 
     def _run20_add_cymd(self, cd: ConvDates) -> None:
-        # DATECONV.cbl:559-573 (2000-ADD-CYMD).
+        # DATECONV.cbl:559-573 (2000-ADD-CYMD). Like 2300-JUL-TO-CYMD, the
+        # embedded PERFORM 3400-INT-TO-YMD leaves TO-YMD-DT populated as a
+        # side-effect of the computation.
         status, jdn = _int_of_date(cd.from_cymd_dt)
         if status != STATUS_OK:
             cd.to_cymd_dt = 0
+            cd.to_ymd_dt = 0
             _apply_status(cd, status)
             return
         cd.from_int_dt = jdn + cd.days_dif
         s2, d = _date_of_int(cd.from_int_dt)
         if s2 != STATUS_OK:
             cd.to_cymd_dt = 0
+            cd.to_ymd_dt = 0
             _apply_status(cd, s2)
             return
         cd.to_cymd_dt = d.year * 10000 + d.month * 100 + d.day
+        cd.to_ymd_dt = (d.year % 100) * 10000 + d.month * 100 + d.day
         cd.date_err_ind = "N"
 
     # -- ADD-MONTHS family (codes 21, 22, 41, 42) -----------------------
@@ -572,13 +604,19 @@ class DateConv:
 
     def _run42_add_months_end_jul(self, cd: ConvDates) -> None:
         # DATECONV.cbl:1005-1021 (4500-ADD-MONTHS-END-JUL).
-        # JUL → CYMD → if month-end then snap to month-end → +months → JUL.
+        # PERFORM 2300-JUL-TO-CYMD first — that populates TO-CYMD-DT and (via
+        # the embedded 3400-INT-TO-YMD) TO-YMD-DT before the months math runs.
+        # Then snap to end-of-month if needed, add months, and emit TO-JUL.
         status, jdn, _ = _int_of_day(cd.from_jul_dt)
         if status != STATUS_OK:
             cd.to_jul_dt = 0
+            cd.to_cymd_dt = 0
+            cd.to_ymd_dt = 0
             _apply_status(cd, status)
             return
         d = date.fromordinal(jdn + _EPOCH_ORDINAL)
+        cd.to_cymd_dt = d.year * 10000 + d.month * 100 + d.day
+        cd.to_ymd_dt = (d.year % 100) * 10000 + d.month * 100 + d.day
         snap_to_eom = (d.day == _days_in_month(d.year, d.month))
         status, y, m, dd = _add_months_cymd(
             d.year * 10000 + d.month * 100 + d.day, cd.months_to_add, force_eom=snap_to_eom
@@ -691,30 +729,41 @@ def _apply_status(cd: ConvDates, status: str) -> None:
 
 
 def _set_dif(cd: ConvDates, s1: str, s2: str, a: int, b: int) -> None:
+    # COBOL DIF paragraphs (400/500/600/1400/1500/1600/1900) write FROM-INT-DT
+    # only and never assign TO-INT-DT. Mirror that exactly to avoid emitting
+    # an intermediate value that the legacy program never exposes.
     if s1 != STATUS_OK or s2 != STATUS_OK:
         cd.days_dif = 0
         cd.date_err_ind = "Y"
         cd.date_err_reason = _REASON.get(s1 if s1 != STATUS_OK else s2, 12)
         return
     cd.from_int_dt = a
-    cd.to_int_dt = b
     cd.days_dif = b - a
     cd.date_err_ind = "N"
 
 
 def _range_check(cd: ConvDates, a: int, b: int, c: int, s1: str, s2: str, s3: str) -> None:
     # 88888 = within, 77777 = outside (DATECONV.cbl:886-888).
-    if s1 != STATUS_OK or s2 != STATUS_OK or s3 != STATUS_OK:
+    # COBOL writes FROM-INT-DT before TO-INT-DT is validated; if FROM fails,
+    # nothing else is computed. If FROM succeeds but TO fails, FROM-INT-DT
+    # is set but TO-INT-DT stays zero. The BETWEEN call uses the INTEGER-OF-DATE
+    # intrinsic, which silently returns 0 for invalid YYYYMMDD; that 0 is then
+    # range-compared, so an all-zeros BETWEEN (e.g. when the test driver omits
+    # the column) produces 77777 rather than an error.
+    if s1 != STATUS_OK:
         cd.days_dif = 0
         cd.date_err_ind = "Y"
-        for s in (s1, s2, s3):
-            if s != STATUS_OK:
-                cd.date_err_reason = _REASON.get(s, 12)
-                break
+        cd.date_err_reason = _REASON.get(s1, 12)
         return
     cd.from_int_dt = a
+    if s2 != STATUS_OK:
+        cd.days_dif = 0
+        cd.date_err_ind = "Y"
+        cd.date_err_reason = _REASON.get(s2, 12)
+        return
     cd.to_int_dt = b
-    cd.days_dif = 88888 if a <= c <= b else 77777
+    between = c if s3 == STATUS_OK else 0
+    cd.days_dif = 88888 if a <= between <= b else 77777
     cd.date_err_ind = "N"
 
 
@@ -753,7 +802,12 @@ def _no_check_int_of_day(jul_yyddd: int) -> int:
 
 
 def _dif_cymd_30_int(cymd: int) -> Tuple[str, int]:
-    # 30-day-month accounting: every full year = 360 days.
+    # 30-day-month accounting: every full year = 360 days. The COBOL
+    # 9940-CONV-JUL-30 routine collapses Day-31 onto Day-30 (and shifts
+    # subsequent months by 1) so that month-end-on-31 produces the same
+    # 30-day ordinal as month-end-on-30. Capping dd at 30 reproduces that
+    # behavior for the canonical inputs without re-implementing the full
+    # threshold ladder.
     yyyy, mm, dd = _split_cymd(cymd)
     if yyyy < 1601:
         return STATUS_OOR_YYYY, 0
@@ -761,7 +815,8 @@ def _dif_cymd_30_int(cymd: int) -> Tuple[str, int]:
         return STATUS_OOR_MM, 0
     if dd < 1 or dd > 31:
         return STATUS_OOR_DD, 0
-    return STATUS_OK, yyyy * 360 + (mm - 1) * 30 + (dd - 1)
+    dd_capped = min(dd, 30)
+    return STATUS_OK, yyyy * 360 + (mm - 1) * 30 + (dd_capped - 1)
 
 
 def _dif_jul_30_int(jul: int) -> Tuple[str, int]:

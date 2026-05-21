@@ -364,10 +364,10 @@
   }
 
   /* ----- demo-cycle narrative (Phase C 2026-05-21) ----- */
-  /* T0..T4 horizontal timeline strip */
+  /* T0..T5 horizontal timeline strip */
   .dcycle {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 12px;
     margin: 18px 0 8px;
   }
@@ -662,7 +662,7 @@
 
   <!-- ============================================================== -->
   <!-- Phase C 2026-05-21 · demo-cycle narrative                       -->
-  <!-- Timeline (T0..T4) + Devin-caught-it callout + trajectory chart  -->
+  <!-- Timeline (T0..T5) + Devin-caught-it callout + trajectory chart  -->
   <!-- ============================================================== -->
   <section>
     <h2>demo-cycle narrative</h2>
@@ -678,8 +678,8 @@
       from LOW to HIGH confidence with byte-for-byte runtime parity.
     </p>
 
-    <!-- (a) Demo-cycle timeline T0..T4 -->
-    <div class="dcycle" aria-label="Demo-cycle timeline T0 through T4">
+    <!-- (a) Demo-cycle timeline T0..T5 -->
+    <div class="dcycle" aria-label="Demo-cycle timeline T0 through T5">
       <div class="ev">
         <div class="when">T0 · handover</div>
         <div class="stamp">2026-05-18 (initial zip)</div>
@@ -709,7 +709,14 @@
         <div class="when">T4 · runtime parity</div>
         <div class="stamp">2026-05-21</div>
         <h4>GnuCOBOL legacy ⇔ Python port verified</h4>
-        <p>~50 vectors covering all <code>DATESUB-FUNC</code> codes, leap years, century rollover, invalid dates, year bounds. Byte-for-byte diff. See <a href="test-results/cobol-parity-report.html">cobol-parity-report.html</a>.</p>
+        <p>52 vectors across all <code>DATESUB-FUNC</code> codes, leap years, century rollover, invalid dates, year bounds. Customer COBOL compiled <em>verbatim</em> under GnuCOBOL 3.1.2 — no preprocessor. See <a href="test-results/cobol-parity-report.html">cobol-parity-report.html</a>.</p>
+      </div>
+      <div class="ev highlight">
+        <span class="badge">verification loop</span>
+        <div class="when">T5 · 13 port bugs caught</div>
+        <div class="stamp">2026-05-21</div>
+        <h4>Runtime diff exposed 13 Python defects the unit tests passed</h4>
+        <p><code>TO-INT-DT</code> leakage, alias-field omissions in JUL/CYMD/ADD-MONTHS, 30-day-month off-by-one, and over-strict <code>BETWEEN</code> validation — 14/52 → 1/52, fixed before merge. The one remaining diff is a <em>documented modernization improvement</em>: Python correctly rejects 02/29/1900 (Gregorian) where legacy COBOL accepts it (Julian).</p>
       </div>
     </div>
 
@@ -721,6 +728,16 @@
         <span><strong>Speaker:</strong> Devin → Jake</span>
         <span><strong>Order:</strong> chat turn immediately preceding the 2026-05-21 follow-up shipment</span>
         <span><strong>Source:</strong> <a href="https://app.devin.ai/sessions/a871fc494b57416aa993d2a536a96796">parent session</a></span>
+      </div>
+    </aside>
+
+    <!-- (b.2) Verification-loop callout — what the runtime parity diff caught -->
+    <aside class="caught" aria-label="GnuCOBOL verification loop caught 13 port bugs">
+      <p class="frame">The same verification loop federal acquisition asks for — and what it caught on the first run.</p>
+      <blockquote>The Python port of <code>DATECONV</code> passed all 77 of its unit tests. Then we compiled the customer's <code>source/cobol/DATECONV.cbl</code> verbatim under GnuCOBOL 3.1.2 and diffed it byte-for-byte across 52 vectors. 14 mismatched. 13 of those were Python-side defects the tests never covered — <code>TO-INT-DT</code> leaking the intermediate JDN, alias <code>TO-*</code> fields not propagated, 30-day-month off-by-one, over-strict <code>BETWEEN</code> validation. All 13 patched before merge. The remaining 1 is the legacy <code>9950-VALIDATE-YYYY</code> accepting 02/29/1900 (Julian leap rule) — documented as a deliberate modernization improvement, not a bug carried forward.</blockquote>
+      <div class="attrib">
+        <span><strong>What this proves:</strong> "byte-for-byte parity" claims that ship without a runtime diff are unverifiable. The runtime parity loop is the verification.</span>
+        <span><strong>Source:</strong> <a href="test-results/cobol-parity-report.html">GnuCOBOL parity report</a> · <a href="../migration/converted-code/python/dateconv.py">dateconv.py</a></span>
       </div>
     </aside>
 

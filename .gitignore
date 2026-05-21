@@ -13,3 +13,8 @@
 __pycache__/
 .pytest_cache/
 .venv/
+
+# Parity-engine and GnuCOBOL harness scratch artifacts
+migration/test-results/parity/
+migration/test-results/build/dateconv-driver
+migration/test-results/cobol-driver-output.txt
