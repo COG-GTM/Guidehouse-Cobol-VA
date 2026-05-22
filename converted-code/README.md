@@ -1,12 +1,5 @@
-# Converted Code Workspace
+# Converted Code
 
-Use this area for generated modernization outputs during the demo.
+> **This directory is a legacy placeholder.** The complete, reviewed converted code lives under [`migration/converted-code/`](../migration/converted-code/).
 
-Suggested first targets:
-
-1. `converted-code/python/labd20_loader.py` - Python fixed-width parser, validator, duplicate check, insert/update transaction.
-2. `converted-code/sql/labd20_operations.sql` - Parameterized SQL statements extracted from `LABD20.pco`.
-3. `converted-code/python/laba05_reset.py` - Python equivalent for resetting the JV control number.
-4. Test scaffolding generated from `business-requirements/initial-requirements.md`.
-
-Keep generated code clearly labeled as demo output until reviewed against missing copybooks and Guidehouse acceptance criteria.
+The initial scaffold file `sql/labd20_extracted_operations.sql` in this directory has been superseded by the full migration output.
