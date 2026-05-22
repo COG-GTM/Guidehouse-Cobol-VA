@@ -33,7 +33,7 @@ Guidehouse requested a targeted demo using the supplied COBOL assets to show tha
 | `docs/` | Demo context, customer questions, source inventory, and execution plan. |
 | `analysis/` | Derived dependency and data-flow analysis artifacts. |
 | `business-requirements/` | Derived functional/business requirements. |
-| `converted-code/` | Placeholder for SQL/Python modernization outputs. |
+| `converted-code/` | Legacy placeholder — see `migration/converted-code/` for the full deliverable. |
 
 ## Source Snapshot
 
