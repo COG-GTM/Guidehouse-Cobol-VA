@@ -1,6 +1,43 @@
-# Guidehouse COBOL Modernization Demo
+# Guidehouse / VA FMBT — modernization + integration & conversion factory
 
-Private working repository for the Guidehouse/VA COBOL modernization follow-up demo.
+Private working repository for the Guidehouse/VA Financial Management Business
+Transformation (FMBT) demo. It now contains **two complementary deliverables**
+that map onto the real program's lanes of work.
+
+## Read this first — the two halves of this repo
+
+VA's FMBT replaces the legacy core financial system with **iFAMS**, built on
+**CGI Momentum®** (the FM QSMO-approved federal financial platform). The work
+splits across three parties, and this repo embodies that split:
+
+| Party | Lane | Where it lives in this repo |
+| --- | --- | --- |
+| **CGI** | The target platform — Momentum SaaS on Azure + its import contracts. | We integrate *to* it (see open questions for ICDs). |
+| **CACI** | Rewriting the legacy COBOL application code. | [`migration/`](migration/) — the COBOL→Python port. **Repositioned as the "upstream given."** |
+| **Guidehouse + Cognition (Devin)** | The **integration & conversion factory** — moving data + 110+ interfaces into Momentum, with reconciliation as the product. | [`factory/`](factory/) — **the net-new scope.** |
+
+- **[`migration/`](migration/) — the upstream given (CACI's lane, as a stand-in).**
+  A faithful COBOL→Python modernization of the JV comment workflow
+  (`LABD20`/`LABA05`/`DATECONV`) with 151 passing tests and 79/80 COBOL-vs-Python
+  parity. In the FMBT story this is **what CACI delivers**, and our proof that
+  Devin can **ingest and verify someone else's modernized code** — not the new
+  work, but the input the factory builds on.
+- **[`factory/`](factory/) — the Integration & Conversion Factory (Guidehouse's
+  net-new layer).** An agent-driven factory that converts legacy VA financial
+  interfaces into Momentum-loadable artifacts **and proves each conversion is
+  correct** (row + dollar control totals, per-document balance, reject ledger,
+  post-load round trip). It includes a **runnable GL/journal reference slice**,
+  the factory design + objective critique of the customer's AIE/A0–A8 schematic,
+  the playbooks/knowledge/skill/prompts to execute it with Devin, and the
+  customer open-questions list. **Start at [`factory/README.md`](factory/README.md).**
+
+> **Engagement posture:** the factory is **designed & documented** here and run
+> after the plan is approved. The executive summary of the proposal is
+> [`migration/executive-report.html`](migration/executive-report.html).
+
+---
+
+## The upstream-given modernization (`migration/`)
 
 > **Generated migration output:** see [`migration/`](migration/) for the full
 > end-to-end deliverable — plan, risk register, business requirements with
@@ -34,6 +71,8 @@ Guidehouse requested a targeted demo using the supplied COBOL assets to show tha
 | `analysis/` | Derived dependency and data-flow analysis artifacts. |
 | `business-requirements/` | Derived functional/business requirements. |
 | `converted-code/` | Legacy placeholder — see `migration/converted-code/` for the full deliverable. |
+| `migration/` | The COBOL→Python modernization — the **upstream given** (CACI's lane, stand-in). |
+| `factory/` | The **Integration & Conversion Factory** — Guidehouse's **net-new** scope (design, runnable GL slice, playbooks, knowledge, prompts). |
 
 ## Source Snapshot
 
