@@ -106,7 +106,7 @@ buildable check.
 
 ```bash
 cd factory/conversion-datasets/gl-journal-extract/python
-python -m pytest -q                              # 18 control tests, all green
+python -m pytest -q                              # 19 control tests, all green
 python convert.py ../data/gl_extract_clean.dat        ; echo exit=$?   # 0, load-ready
 python convert.py ../data/gl_extract_unbalanced.dat   ; echo exit=$?   # 1, gate trips
 ```

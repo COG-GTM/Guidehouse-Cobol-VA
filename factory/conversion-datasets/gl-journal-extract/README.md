@@ -76,7 +76,7 @@ python -m pytest -q
 | `python/reconciliation.py` | Reconciliation engine (the product). |
 | `python/convert.py` | End-to-end driver + Momentum import simulator + CI gate. |
 | `python/make_synthetic_data.py` | Deterministic synthetic-fixture generator. |
-| `python/tests/test_conversion_slice.py` | 18 tests covering parsing, dates, every reject reason, balance, and round-trip. |
+| `python/tests/test_conversion_slice.py` | 19 tests covering parsing, dates, every reject reason, balance, round-trip, and pipe-delimiter safety. |
 | `data/*.dat` | Generated synthetic fixtures (clean / with-rejects / unbalanced). |
 
 ## What is intentionally NOT here

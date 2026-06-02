@@ -80,7 +80,7 @@ Expected reconciliation on the real fixture:
 | `python/mapper.py` | Target-contract mapping + **reused** LABD20 validation + typed reject codes. |
 | `python/reconciliation.py` | Reconciliation engine (the product). |
 | `python/convert.py` | End-to-end driver + Momentum import simulator + CI gate. |
-| `python/tests/test_jv_comment_slice.py` | 12 tests over the real fixture: layout reuse, every reject reason, dedup, key integrity, round-trip. |
+| `python/tests/test_jv_comment_slice.py` | 13 tests over the real fixture: layout reuse, every reject reason, dedup, key integrity, round-trip, and pipe-delimiter safety. |
 
 ## What is intentionally NOT here
 

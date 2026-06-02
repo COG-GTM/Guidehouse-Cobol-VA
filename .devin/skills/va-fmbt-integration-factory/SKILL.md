@@ -42,7 +42,7 @@ worked, runnable example is the GL/journal slice:
 ```bash
 cd factory/conversion-datasets/gl-journal-extract/python
 python make_synthetic_data.py            # regenerate synthetic fixtures
-python -m pytest -q                       # 18 control tests
+python -m pytest -q                       # 19 control tests
 python convert.py ../data/gl_extract_clean.dat            # exit 0, load-ready
 python convert.py ../data/gl_extract_unbalanced.dat       # exit 1, gate trips
 ```

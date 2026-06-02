@@ -85,7 +85,7 @@ provenance trail, …) are in
 ```bash
 cd conversion-datasets/gl-journal-extract/python
 python make_synthetic_data.py                          # synthetic fixtures
-python -m pytest -q                                     # 18 control tests
+python -m pytest -q                                     # 19 control tests
 python convert.py ../data/gl_extract_clean.dat          # exit 0, load-ready
 python convert.py ../data/gl_extract_unbalanced.dat     # exit 1, gate trips
 ```
@@ -102,7 +102,7 @@ something that actually runs and balances, not slideware.
 | `design/TESTING-AS-THE-PRODUCT.md` | Control layers + 11 test angles. |
 | `design/AIE-CRITIQUE.md` | Objective critique of the customer's A0–A8 / AIE design. |
 | `design/INTERFACE-WAVE-MODEL.md` | Interface inventory schema + wave fan-out. |
-| `conversion-datasets/gl-journal-extract/` | The runnable reference slice (code, synthetic data, 18 tests, contract). |
+| `conversion-datasets/gl-journal-extract/` | The runnable reference slice (code, synthetic data, 19 tests, contract). |
 | `playbooks/` | The 3 repeatable procedures (convert one interface / build the test harness / orchestrate a wave). |
 | `knowledge/` | The Knowledge Fabric (USSGL/TAFS/funds, COBOL patterns, reject taxonomy, Momentum contracts). |
 | `prompts/` | Cloud-Devin prompts for the orchestrator and per-interface child sessions. |
