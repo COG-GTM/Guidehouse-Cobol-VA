@@ -42,10 +42,13 @@ def run_slice(comment_path: Path) -> tuple[ReconciliationReport, list[str]]:
     return report, wire_lines
 
 
+def _safe(value: str) -> str:
+    # Free-text legacy fields may contain a pipe; strip it so the delimiter
+    # stays unambiguous and the wire keeps its declared 12-column layout.
+    return value.replace("|", " ")
+
+
 def _to_wire(c: MomentumJvComment) -> str:
-    # Comment text may legitimately contain spaces but never a pipe; guard it so
-    # the delimiter stays unambiguous for the inbound Momentum interface.
-    safe_text = c.comment_text.replace("|", " ")
     return "|".join(
         [
             c.natural_key,
@@ -54,10 +57,10 @@ def _to_wire(c: MomentumJvComment) -> str:
             c.jv_number,
             c.section_id,
             c.loan_number,
-            c.schedule_doc_no,
-            safe_text,
-            c.requestor,
-            c.approver,
+            _safe(c.schedule_doc_no),
+            _safe(c.comment_text),
+            _safe(c.requestor),
+            _safe(c.approver),
             c.control_num,
             c.source_system,
         ]

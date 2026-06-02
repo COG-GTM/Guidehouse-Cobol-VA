@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from convert import run_slice, simulate_momentum_import
+from convert import WIRE_HEADER, _to_wire, run_slice, simulate_momentum_import
 from extract import RECORD_LENGTH, parse_extract
 from mapper import REASON_CODES, MomentumJvComment, RejectedComment, map_row
 from reconciliation import reconcile
@@ -161,3 +161,39 @@ def test_convert_cli_exit_zero_on_real_fixture():
 
     rc = main([str(REAL_FIXTURE)])
     assert rc == 0
+
+
+def test_pipe_in_text_fields_preserves_wire_column_count():
+    """A pipe in any free-text field must not add columns to the wire.
+
+    Free-text legacy fields (schedule_doc_no, comment_text, requestor, approver)
+    can contain a stray '|'. The emitter strips them so the wire keeps the exact
+    12 columns declared in WIRE_HEADER and downstream index-based consumers
+    (including the natural-key idempotency check) stay aligned.
+    """
+    expected_cols = len(WIRE_HEADER.split("|"))
+    assert expected_cols == 12
+
+    comment = MomentumJvComment(
+        natural_key="JV2026SEC01LN0001PORTION01",
+        document_ref="JV-01-000123",
+        comment_date="2026-03-01",
+        jv_number="000123",
+        section_id="01",
+        loan_number="LN0001",
+        schedule_doc_no="SCH|DOC|01",  # pipes in schedule doc no
+        comment_text="PAID | INVOICE | 12",  # pipes in comment text
+        requestor="SMITH|J",  # pipes in requestor
+        approver="DOE|A|B",  # pipes in approver
+        control_num="00012301",
+    )
+
+    wire = _to_wire(comment)
+    cols = wire.split("|")
+    assert len(cols) == expected_cols
+    # The idempotency key (column 0) is unshifted and intact.
+    assert cols[0] == "JV2026SEC01LN0001PORTION01"
+
+    sim = simulate_momentum_import([wire])
+    assert sim["post_load_ok"] is True
+    assert sim["key_collisions_after_load"] == []
