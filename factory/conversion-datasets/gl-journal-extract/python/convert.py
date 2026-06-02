@@ -51,6 +51,12 @@ def run_slice(extract_text: str) -> tuple[ReconciliationReport, list[str]]:
     return report, wire_lines
 
 
+def _safe(value: str) -> str:
+    # Free-text legacy fields may contain a pipe; strip it so the delimiter
+    # stays unambiguous and simulate_momentum_import reads the right columns.
+    return value.replace("|", " ")
+
+
 def _to_wire(line: MomentumJournalLine) -> str:
     return "|".join(
         [
@@ -59,15 +65,15 @@ def _to_wire(line: MomentumJournalLine) -> str:
             str(line.accounting_period),
             str(line.line_number),
             line.posting_date,
-            line.tafs,
+            _safe(line.tafs),
             line.fund,
-            line.cost_center,
+            _safe(line.cost_center),
             line.ussgl_account,
-            line.budget_object_class,
+            _safe(line.budget_object_class),
             f"{line.debit_amount:.2f}",
             f"{line.credit_amount:.2f}",
-            line.vendor_id or "",
-            line.description,
+            _safe(line.vendor_id or ""),
+            _safe(line.description),
             line.source_system,
         ]
     )

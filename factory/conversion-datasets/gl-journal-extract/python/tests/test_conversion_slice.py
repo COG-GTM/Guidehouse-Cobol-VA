@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from convert import run_slice, simulate_momentum_import
+from convert import _to_wire, run_slice, simulate_momentum_import
 from gl_extract import FIELDS, RECORD_LENGTH, parse_extract, parse_record
 from mapper import MomentumJournalLine, RejectedLine, _julian_to_iso, map_line
 
@@ -151,3 +151,50 @@ def test_import_simulator_detects_unbalanced_after_load():
     sim = simulate_momentum_import(wire)
     assert sim["post_load_ok"] is False
     assert sim["unbalanced_after_load"] == ["JV-2026-000300"]
+
+
+def test_pipe_in_text_fields_does_not_shift_balance_columns():
+    """A pipe in any free-text field must not corrupt the wire layout.
+
+    Free-text legacy fields (TAFS, cost center, BOC, vendor, description) can
+    contain a stray '|'. Without sanitization the emitted wire gains extra
+    columns and simulate_momentum_import reads the wrong indices for the debit
+    and credit amounts — silently mis-balancing a journal. The emitter strips
+    pipes, so the column count stays fixed at 15 and the journal still balances.
+    """
+    common = dict(
+        journal_id="JV-2026-000999",
+        fiscal_year=2026,
+        accounting_period=6,
+        posting_date="2026-03-01",
+        tafs="036|2026-0160-000",  # pipe in TAFS
+        fund="0160-OPS",
+        cost_center="CC|123",  # pipe in cost center
+        ussgl_account="610000",
+        budget_object_class="BOC|2520",  # pipe in BOC
+        vendor_id="V|9",  # pipe in vendor id
+    )
+    debit = MomentumJournalLine(
+        line_number=1,
+        debit_amount=Decimal("250.00"),
+        credit_amount=Decimal("0.00"),
+        description="OFFICE | SUPPLIES | MISC",  # pipes in description
+        **common,
+    )
+    credit = MomentumJournalLine(
+        line_number=2,
+        debit_amount=Decimal("0.00"),
+        credit_amount=Decimal("250.00"),
+        description="OFFSET | ENTRY",
+        **common,
+    )
+
+    wire = [_to_wire(debit), _to_wire(credit)]
+    # Fixed 15-column layout regardless of pipes in the source text.
+    assert all(len(w.split("|")) == 15 for w in wire)
+
+    sim = simulate_momentum_import(wire)
+    assert sim["journals_loaded"] == 1
+    assert sim["lines_loaded"] == 2
+    assert sim["unbalanced_after_load"] == []
+    assert sim["post_load_ok"] is True
