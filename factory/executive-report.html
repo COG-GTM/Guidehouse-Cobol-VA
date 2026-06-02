@@ -189,15 +189,16 @@
     <h1>An integration &amp; conversion factory that proves the money survives the trip.</h1>
     <p class="lede">
       Guidehouse and Cognition propose an agent-driven factory that converts legacy VA
-      financial data and 110+ interfaces into CGI Momentum — with reconciliation,
-      not conversion, as the deliverable. This report is the proposal: what we build,
-      how it changes the current plan, what we add that wasn't there, and what we still
-      need from the customer. It is grounded in a reference slice that actually runs.
+      financial data and 110+ interfaces into CGI Momentum &mdash; with reconciliation,
+      not conversion, as the deliverable. This report is the proposal: where we started,
+      what we built, how it changes the current plan, and what we still need from you.
+      It is grounded in two reference slices that actually run &mdash; one built directly
+      on the customer&rsquo;s own LABD20 code.
     </p>
     <div class="meta">
       <span>Target: CGI Momentum&reg; (FM QSMO)</span>
       <span>Scope: net-new conversion factory</span>
-      <span>Reference slice: GL / journal &rarr; Momentum import</span>
+      <span>Slices: real JV-comment (LABD20) + GL/journal &rarr; Momentum</span>
     </div>
   </div>
 </div>
@@ -208,18 +209,70 @@
     <h2>At a glance</h2>
     <h3>The proposal in five numbers</h3>
     <div class="metrics">
-      <div class="metric good"><div class="n">169</div><div class="l">tests passing (151 upstream + 18 factory)</div></div>
-      <div class="metric good"><div class="n">$400,000.00</div><div class="l">control total reconciled to the cent, GL slice</div></div>
+      <div class="metric good"><div class="n">181</div><div class="l">tests passing &mdash; 151 upstream parity + 18 GL + 12 real JV-comment</div></div>
+      <div class="metric good"><div class="n">0</div><div class="l">records silently dropped &mdash; every row loaded or typed-rejected</div></div>
       <div class="metric"><div class="n">8&rarr;1</div><div class="l">stage-agents collapsed into one single-pass pipeline</div></div>
-      <div class="metric"><div class="n">11 + 7</div><div class="l">test angles added &middot; objective AIE critiques</div></div>
+      <div class="metric"><div class="n">110+</div><div class="l">interfaces the same proven unit fans out to</div></div>
     </div>
     <p class="narrative" style="margin-top:28px">
-      The factory is <strong>designed and documented</strong> here, with one
-      <strong>runnable reference slice</strong> (general-ledger / journal-voucher
-      conversion) so the architecture is proven on something that actually executes and
-      balances — not slideware. Per the engagement, the full factory is run after this
-      plan is approved.
+      The factory is <strong>designed, documented, and runnable</strong> here. The
+      headline <strong>JV-comment slice runs on the customer&rsquo;s real LABD20 parser,
+      validator, and dedup</strong> against the actual repo fixture; a second GL/journal
+      slice proves the pattern generalizes to high-stakes financial postings. We also
+      added 11 test angles the prior design missed and 7 objective critiques of the
+      A0&ndash;A8 plan (see <em>The proposal</em>). Per the engagement, the full
+      build-out runs after this plan is approved.
     </p>
+  </div>
+</section>
+
+<!-- PROGRESS STORY -->
+<section>
+  <div class="wrap">
+    <h2>The journey &middot; how we got here</h2>
+    <h3>From Guidehouse copybooks to a conversion factory, in three phases</h3>
+    <p class="narrative">
+      We did not start from a blank page. We started from the customer&rsquo;s own COBOL
+      and added value at each step. Every component below is rooted in real code in this
+      repository &mdash; the same artifacts the demo runs on today.
+    </p>
+    <div class="lanes">
+      <div class="lane">
+        <div class="who">Phase 0 &middot; given</div>
+        <h4>Guidehouse-supplied COBOL</h4>
+        <p>Pro*COBOL, COBOL, and copybooks delivered by the customer: <code>LABD20.pco</code>
+        (daily JV-comment ingestion), <code>LABA05.cbl</code> (fiscal-year reset),
+        <code>DATECONV.cbl</code> + JDN copybooks (date validation), the
+        <code>TST123-COMMENT-REC</code> layout, and the Oracle table descriptions.</p>
+        <span class="tag">customer input</span>
+      </div>
+      <div class="lane">
+        <div class="who">Phase 1 &middot; Devin modernized</div>
+        <h4>COBOL &rarr; Python, with proof</h4>
+        <p>Devin ingested those artifacts, derived business requirements with line-level
+        citations, and ported them to Python (<code>labd20_loader.py</code>,
+        <code>dateconv.py</code>). It proved parity with <strong>151 tests</strong>, traced
+        field-level lineage, and closed the DATECONV date subsystem end-to-end.</p>
+        <span class="tag">demo 1</span>
+      </div>
+      <div class="lane gh">
+        <div class="who">Phase 2 &middot; Devin built the factory</div>
+        <h4>The integration &amp; conversion factory</h4>
+        <p>On that proven base, Devin added the S0&ndash;S7 pipeline,
+        reconciliation-as-the-product, the <strong>real JV-comment slice</strong> (reuses
+        the Phase-1 parser/validator/dedup on the real fixture), a GL financial slice, this
+        architecture, the knowledge fabric, and the open-questions / ICD asks.</p>
+        <span class="tag">this demo</span>
+      </div>
+    </div>
+    <table class="grid" style="margin-top:24px">
+      <thead><tr><th>Step</th><th>Where Devin was integrated</th><th>Value Devin added</th><th>Rooted in (real code)</th></tr></thead>
+      <tbody>
+        <tr><td><strong>0 &rarr; 1</strong></td><td>Ingest copybooks / Pro*COBOL; derive requirements; port to Python.</td><td>Requirements traceability, field-level lineage, byte-exact parity harness (151 tests), DATECONV closure.</td><td><code>LABD20.pco</code>, <code>DATECONV.cbl</code></td></tr>
+        <tr><td><strong>1 &rarr; 2</strong></td><td>Reuse the Phase-1 parser / validator as the factory&rsquo;s first real interface.</td><td>S0&ndash;S7 conversion pipeline, reconciliation engine, typed reject taxonomy, Momentum target contracts.</td><td><code>labd20_loader.py</code>, real fixture</td></tr>
+        <tr><td><strong>2 &rarr; scale</strong></td><td>Orchestrator fans out one child session per interface.</td><td>Horizontal fan-out across 110+ interfaces, Knowledge Fabric compounding each wave.</td><td><code>factory/design/</code>, <code>prompts/</code></td></tr>
+      </tbody>
+    </table>
   </div>
 </section>
 
@@ -256,6 +309,141 @@
   </div>
 </section>
 
+<!-- ARCHITECTURE DIAGRAM -->
+<section>
+  <div class="wrap">
+    <h2>Architecture &middot; technically accurate</h2>
+    <h3>How data leaves the mainframe, what Devin does at each stage, and how it lands in Momentum</h3>
+    <p class="narrative">
+      One interface, one single-pass Devin session. The legacy extract is pulled, parsed
+      against the real copybook, validated with the real edits, mapped to an explicit
+      Momentum import contract, reconciled, emitted, and load-simulated with a post-load
+      round trip. The A0&ndash;A8 multi-agent vision maps onto this as a checklist inside
+      one pass &mdash; not eight hand-off agents.
+    </p>
+    <div style="border:1px solid var(--rule);border-radius:12px;padding:14px;background:#fff;overflow-x:auto">
+    <svg viewBox="0 0 1040 648" width="100%" role="img" aria-label="Architecture: legacy VA mainframe to conversion factory to CGI Momentum, with feedback loops and the A0-A8 to S0-S7 mapping">
+      <defs>
+        <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#1a1a1a"/></marker>
+        <marker id="ahg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#0b7261"/></marker>
+        <marker id="ahm" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#7a4a00"/></marker>
+      </defs>
+
+      <!-- column titles -->
+      <text x="130" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#595959">LEGACY VA &middot; MAINFRAME</text>
+      <text x="520" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#0b7261">CONVERSION FACTORY &middot; ONE DEVIN SESSION / INTERFACE</text>
+      <text x="912" y="22" text-anchor="middle" font-size="12" font-weight="700" fill="#595959">CGI MOMENTUM &middot; iFAMS</text>
+
+      <!-- legacy box -->
+      <rect x="20" y="40" width="220" height="214" rx="10" fill="#f6f5f1" stroke="#e6e6e6"/>
+      <text x="36" y="66" font-size="13" font-weight="700" fill="#000">Batch extracts</text>
+      <text x="36" y="92" font-size="12" fill="#1a1a1a">TST123-COMMENT-REC</text>
+      <text x="36" y="108" font-size="10.5" fill="#595959">300-byte fixed-width</text>
+      <text x="36" y="134" font-size="12" fill="#1a1a1a">Copybooks / DDL</text>
+      <text x="36" y="160" font-size="12" fill="#1a1a1a">Control file</text>
+      <line x1="36" y1="178" x2="224" y2="178" stroke="#e6e6e6"/>
+      <text x="36" y="200" font-size="10.5" fill="#595959">LABD20.pco:43-55</text>
+      <text x="36" y="216" font-size="10.5" fill="#595959">DATECONV.cbl &middot; JDN copybooks</text>
+      <text x="36" y="238" font-size="10" fill="#7a4a00">encoding / transport &rarr; Q-ENV</text>
+
+      <!-- arrow legacy -> factory -->
+      <line x1="240" y1="147" x2="297" y2="147" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#ah)"/>
+      <text x="268" y="139" text-anchor="middle" font-size="10" fill="#595959">pull</text>
+      <text x="268" y="162" text-anchor="middle" font-size="9.5" fill="#595959">SFTP &middot; land zone</text>
+
+      <!-- factory box -->
+      <rect x="300" y="40" width="440" height="438" rx="10" fill="#fff" stroke="#0b7261" stroke-width="1.5"/>
+      <!-- flow rail -->
+      <line x1="307" y1="60" x2="307" y2="460" stroke="#0b7261" stroke-width="1.2" marker-end="url(#ahg)" opacity="0.55"/>
+
+      <!-- S0 -->
+      <rect x="316" y="52" width="416" height="46" rx="8" fill="#f6f5f1" stroke="#e6e6e6"/>
+      <rect x="324" y="62" width="32" height="26" rx="6" fill="#0b7261"/><text x="340" y="79" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">S0</text>
+      <text x="366" y="72" font-size="12.5" font-weight="600" fill="#000">Intake &amp; profile</text>
+      <text x="366" y="88" font-size="10.5" fill="#595959">land file &middot; detect layout vs copybook &middot; profile volumes</text>
+      <!-- S1 -->
+      <rect x="316" y="100" width="416" height="46" rx="8" fill="#f6f5f1" stroke="#e6e6e6"/>
+      <rect x="324" y="110" width="32" height="26" rx="6" fill="#0b7261"/><text x="340" y="127" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">S1</text>
+      <text x="366" y="120" font-size="12.5" font-weight="600" fill="#000">Canonical model</text>
+      <text x="366" y="136" font-size="10.5" fill="#595959">normalize &middot; tag every row to its source byte-offset</text>
+      <!-- S2 -->
+      <rect x="316" y="148" width="416" height="46" rx="8" fill="#f6f5f1" stroke="#e6e6e6"/>
+      <rect x="324" y="158" width="32" height="26" rx="6" fill="#0b7261"/><text x="340" y="175" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">S2</text>
+      <text x="366" y="168" font-size="12.5" font-weight="600" fill="#000">Contract bind</text>
+      <text x="366" y="184" font-size="10.5" fill="#595959">bind the explicit Momentum import contract (ICD)</text>
+      <!-- S3 -->
+      <rect x="316" y="196" width="416" height="46" rx="8" fill="#f6f5f1" stroke="#e6e6e6"/>
+      <rect x="324" y="206" width="32" height="26" rx="6" fill="#0b7261"/><text x="340" y="223" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">S3</text>
+      <text x="366" y="216" font-size="12.5" font-weight="600" fill="#000">Map &amp; transform</text>
+      <text x="366" y="232" font-size="10.5" fill="#595959">field map &middot; crosswalks &middot; date / Decimal scaling</text>
+      <!-- S4 -->
+      <rect x="316" y="244" width="416" height="46" rx="8" fill="#f6f5f1" stroke="#e6e6e6"/>
+      <rect x="324" y="254" width="32" height="26" rx="6" fill="#0b7261"/><text x="340" y="271" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">S4</text>
+      <text x="366" y="264" font-size="12.5" font-weight="600" fill="#000">Validate</text>
+      <text x="366" y="280" font-size="10.5" fill="#595959">real LABD20 edits &middot; typed reject &middot; no silent drop</text>
+      <!-- S5 (product) -->
+      <rect x="316" y="292" width="416" height="46" rx="8" fill="#e7f2ef" stroke="#0b7261"/>
+      <rect x="324" y="302" width="32" height="26" rx="6" fill="#0b7261"/><text x="340" y="319" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">S5</text>
+      <text x="366" y="312" font-size="12.5" font-weight="700" fill="#0b7261">Reconcile &mdash; the product</text>
+      <text x="366" y="328" font-size="10.5" fill="#1a1a1a">row accounting &middot; key integrity &middot; control totals (GL)</text>
+      <!-- S6 -->
+      <rect x="316" y="340" width="416" height="46" rx="8" fill="#f6f5f1" stroke="#e6e6e6"/>
+      <rect x="324" y="350" width="32" height="26" rx="6" fill="#0b7261"/><text x="340" y="367" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">S6</text>
+      <text x="366" y="360" font-size="12.5" font-weight="600" fill="#000">Emit</text>
+      <text x="366" y="376" font-size="10.5" fill="#595959">deterministic Momentum wire artifact (golden-file stable)</text>
+      <!-- S7 -->
+      <rect x="316" y="388" width="416" height="46" rx="8" fill="#f6f5f1" stroke="#e6e6e6"/>
+      <rect x="324" y="398" width="32" height="26" rx="6" fill="#0b7261"/><text x="340" y="415" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">S7</text>
+      <text x="366" y="408" font-size="12.5" font-weight="600" fill="#000">Load-simulate</text>
+      <text x="366" y="424" font-size="10.5" fill="#595959">re-read as Momentum would &middot; post-load round-trip</text>
+      <text x="316" y="456" font-size="10.5" fill="#595959">Reuses the real Phase-1 LABD20 parser / validator / dedup &middot; <tspan fill="#0b7261">extract.py &middot; mapper.py &middot; reconciliation.py &middot; convert.py</tspan></text>
+
+      <!-- Momentum box -->
+      <rect x="800" y="76" width="220" height="180" rx="10" fill="#f6f5f1" stroke="#e6e6e6"/>
+      <text x="816" y="102" font-size="13" font-weight="700" fill="#000">Import contract (ICD)</text>
+      <text x="816" y="120" font-size="10.5" fill="#7a4a00">&larr; Q-MOM-1: we ask for this</text>
+      <line x1="816" y1="134" x2="1004" y2="134" stroke="#e6e6e6"/>
+      <text x="816" y="158" font-size="12" fill="#1a1a1a">Journal / annotation load</text>
+      <text x="816" y="186" font-size="12" fill="#1a1a1a">Post-load counts</text>
+      <text x="816" y="202" font-size="10.5" fill="#595959">round-trip reconciliation</text>
+      <text x="816" y="230" font-size="10.5" fill="#7a4a00">non-prod instance &rarr; Q-MOM-4</text>
+
+      <!-- emit/load arrow factory -> momentum -->
+      <path d="M740,365 C770,365 778,166 798,166" fill="none" stroke="#0b7261" stroke-width="1.5" marker-end="url(#ahg)"/>
+      <text x="772" y="290" text-anchor="middle" font-size="10" fill="#0b7261">emit &middot; load</text>
+      <!-- post-load recon return arrow momentum -> factory -->
+      <path d="M798,206 C772,206 768,411 742,411" fill="none" stroke="#7a4a00" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#ahm)"/>
+      <text x="772" y="332" text-anchor="middle" font-size="9.5" fill="#7a4a00">post-load recon (S7)</text>
+
+      <!-- feedback boxes -->
+      <rect x="300" y="500" width="210" height="58" rx="9" fill="#fff4e0" stroke="#f1d49a"/>
+      <text x="316" y="522" font-size="12" font-weight="700" fill="#7a4a00">Reject / SME queue</text>
+      <text x="316" y="540" font-size="10.5" fill="#7a4a00">typed rejects &rarr; expert-in-the-loop</text>
+      <path d="M405,478 L405,499" fill="none" stroke="#7a4a00" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#ahm)"/>
+
+      <rect x="530" y="500" width="210" height="58" rx="9" fill="#e7f2ef" stroke="#0b7261"/>
+      <text x="546" y="522" font-size="12" font-weight="700" fill="#0b7261">Knowledge Fabric</text>
+      <text x="546" y="540" font-size="10.5" fill="#1a1a1a">taxonomy + crosswalks &rarr; next wave faster</text>
+      <path d="M635,499 L635,478" fill="none" stroke="#0b7261" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#ahg)"/>
+
+      <!-- A0-A8 -> S0-S7 mapping band -->
+      <rect x="20" y="580" width="1000" height="56" rx="10" fill="#e9eef7" stroke="#c7d2ec"/>
+      <text x="40" y="606" font-size="13" font-weight="700" fill="#1e3a8a">Their A0&ndash;A8 multi-agent mesh</text>
+      <text x="320" y="606" font-size="14" font-weight="700" fill="#1e3a8a">&rarr;</text>
+      <text x="345" y="606" font-size="13" font-weight="700" fill="#1e3a8a">our S0&ndash;S7 single pass + horizontal fan-out across 110+ interfaces</text>
+      <text x="40" y="624" font-size="10.5" fill="#1e3a8a">the eight stages are a checklist within one Devin session, not eight separate hand-off agents &mdash; parallelism lives across interfaces, where the volume is</text>
+    </svg>
+    </div>
+    <p class="narrative" style="margin-top:18px;font-size:14px;color:var(--muted)">
+      Dashed paths are control loops: rejects route to the SME queue (expert-in-the-loop),
+      the post-load round trip reconciles Momentum back against the source, and every run
+      feeds the Knowledge Fabric so the next interface in the wave is faster. Each external
+      assumption &mdash; transport, encoding, the Momentum ICD &mdash; maps to a tagged
+      question in <em>What we need from you</em>.
+    </p>
+  </div>
+</section>
+
 <!-- INTERACTIVE PIPELINE -->
 <section>
   <div class="wrap">
@@ -264,7 +452,7 @@
     <p class="narrative">
       Every interface flows through the same pipeline, run as a single pass (not a relay
       between eight separate agents). Select a stage to see what it does and where it lives
-      in the runnable GL slice.
+      in the runnable reference slice.
     </p>
     <div class="pipe" id="pipe"></div>
     <div class="stage-detail" id="stage-detail"></div>
@@ -283,6 +471,39 @@
       the build-out.
     </p>
     <div class="board" id="board"></div>
+  </div>
+</section>
+
+<!-- SCALING TO 110+ -->
+<section>
+  <div class="wrap">
+    <h2>Scaling &middot; 110+ interfaces</h2>
+    <h3>Can we really build all 110+? Yes &mdash; and here is the mechanism</h3>
+    <p class="narrative">
+      The reference slices prove one thing precisely: a single interface, converted
+      end-to-end and gated by reconciliation evidence, is a <strong>repeatable unit</strong>.
+      Scaling is not &ldquo;a bigger model&rdquo; &mdash; it is running that proven unit
+      many times in parallel, with each run made faster by the last.
+    </p>
+    <div class="metrics">
+      <div class="metric"><div class="n">1</div><div class="l">proven unit = one interface, S0&ndash;S7, reconciled</div></div>
+      <div class="metric"><div class="n">N</div><div class="l">child sessions per wave &mdash; one per interface, in parallel</div></div>
+      <div class="metric"><div class="n">W</div><div class="l">waves, grouped low-risk &rarr; high-stakes</div></div>
+      <div class="metric good"><div class="n">110+</div><div class="l">interfaces = &Sigma; across waves, each evidence-gated</div></div>
+    </div>
+    <ul class="clean" style="margin-top:22px">
+      <li><span class="num">1</span><div><div class="t">Horizontal fan-out, not a deeper agent mesh</div><div class="d">The orchestrator launches one Devin child session per interface (<code>prompts/orchestrator-intake.md</code> &rarr; <code>prompts/interface-conversion-child.md</code>). Parallelism is across the 110+ interfaces &mdash; where the volume is &mdash; never across the 8 steps within one.</div></div></li>
+      <li><span class="num">2</span><div><div class="t">The same gate every time</div><div class="d">Each child must pass identical reconciliation evidence &mdash; row accounting, key integrity, control totals, zero silent drops &mdash; before its interface is declared load-ready. One uniform definition of &ldquo;done&rdquo; across all 110+.</div></div></li>
+      <li><span class="num">3</span><div><div class="t">The Knowledge Fabric compounds</div><div class="d">Each interface adds to a shared reject taxonomy, crosswalks, and layout patterns (<code>factory/knowledge/</code>). Wave 3 is faster than wave 1 because the domain knowledge already exists &mdash; later interfaces reuse earlier mappings.</div></div></li>
+      <li><span class="num">4</span><div><div class="t">Waves de-risk the cutover</div><div class="d">Interfaces are grouped into waves from low-risk to high-stakes. Each wave delivers a reconciliation evidence pack for sign-off before the next begins &mdash; so 110+ is staged, auditable progress, not a big-bang.</div></div></li>
+    </ul>
+    <div class="callout" style="margin-top:22px">
+      <strong>Why it is credible, not a claim:</strong> the unit already runs twice in this
+      repo &mdash; once on the customer&rsquo;s <em>real</em> LABD20 interface, once on a GL
+      financial interface &mdash; both gated by the same engine. Scaling multiplies a proven
+      unit; it does not invent a new capability. The interface inventory and wave schedule
+      are the one input we need from you (Q-INT-1).
+    </div>
   </div>
 </section>
 
@@ -333,24 +554,26 @@
     <h2>Proof, not slideware</h2>
     <h3>The reference slice, reconciled</h3>
     <p class="narrative">
-      The GL/journal slice runs end-to-end on synthetic data. A clean batch balances and is
-      load-ready; an intentionally unbalanced journal trips the gate and exits non-zero — the
-      whole point of keeping a deliberately-failing fixture in the suite.
+      The headline run is the <strong>real JV-comment slice</strong> on the actual repo
+      fixture (<code>migration/test-data/synthetic_comments.dat</code>), reusing the
+      Phase-1 LABD20 parser/validator/dedup: 21 rows in &rarr; 7 loaded, 2 duplicates
+      held, 12 typed rejects, row accounting closed, load-ready. The GL slice then shows
+      the same engine trip the gate when a journal&rsquo;s debits and credits don&rsquo;t
+      agree &mdash; the point of keeping a deliberately-failing fixture in the suite.
     </p>
-    <pre class="term"><span class="dim">$ python -m pytest -q</span>
-.................. <span class="ok">18 passed</span> in 0.04s
+    <pre class="term"><span class="dim">&rsaquo; python -m pytest -q          # all three suites: parity + GL + real JV-comment</span>
+151 passed &middot; 18 passed &middot; <span class="ok">12 passed</span>
 
-<span class="dim">$ python convert.py ../data/gl_extract_clean.dat</span>
-  "lines_in": 6, "lines_loaded": 6, "lines_rejected": 0,
-  "legacy_control_total": "400000.00", "target_control_total": "400000.00",
-  "control_total_ok": true, "all_journals_balanced": true,
-  "mapping_coverage": 1.0, <span class="ok">"load_ready": true</span>
+<span class="dim">&rsaquo; python convert.py synthetic_comments.dat      # the REAL LABD20 fixture</span>
+  "rows_in": 21, "rows_loaded": 7, "rows_duplicate_held": 2, "rows_rejected": 12,
+  "row_accounting_ok": true, "key_integrity_ok": true,
+  "reject_reasons": { 9 typed LABD20 edits }, <span class="ok">"load_ready": true</span>
 LOAD_READY=True   <span class="dim"># exit 0</span>
 
-<span class="dim">$ python convert.py ../data/gl_extract_unbalanced.dat</span>
+<span class="dim">&rsaquo; python convert.py gl_extract_unbalanced.dat   # GL slice: debits &ne; credits</span>
   "all_journals_balanced": false,
   "unbalanced_journals": ["JV-2026-000300"], <span class="bad">"load_ready": false</span>
-LOAD_READY=False  <span class="dim"># exit 1 — gate trips, load blocked</span></pre>
+LOAD_READY=False  <span class="dim"># exit 1 &mdash; gate trips, load blocked</span></pre>
     <div class="synthetic" style="margin-top:16px">
       <strong>Synthetic &amp; non-production.</strong> The legacy layout, the Momentum target
       contract, the USSGL whitelist, and the fund crosswalk in this slice are plausible
@@ -419,18 +642,18 @@ LOAD_READY=False  <span class="dim"># exit 1 — gate trips, load blocked</span>
 
 <script>
   const STAGES = [
-    {id:"S0", name:"Intake &amp; profile", body:"Ingest the legacy artifact and its copybook/DDL; profile field types, volumes, value distributions, and fiscal-period coverage. No judgment here — parsing stays dumb and separable.", where:"gl_extract.py parsing + the copybook byte map"},
-    {id:"S1", name:"Canonical model", body:"Land the legacy record in a normalized, source-tagged intermediate form so every downstream record can be traced back to its origin byte-row.", where:"RawGlLine"},
-    {id:"S2", name:"Target contract bind", body:"Bind to the explicit, versioned Momentum target contract — the thing the tests assert against. We never transform to an implicit format.", where:"target/MOMENTUM-JOURNAL-IMPORT.md"},
-    {id:"S3", name:"Map &amp; transform", body:"All the judgment lives here: field mapping, fund/USSGL crosswalks, Decimal scaling, date conversion, derived debit/credit.", where:"mapper.py"},
-    {id:"S4", name:"Validate", body:"Apply contract rules; every failure becomes a typed reject reason — never a silent drop. The reject is traceable to a source byte-row.", where:"mapper.py reject reasons"},
-    {id:"S5", name:"Reconcile", body:"Row accounting, dollar control totals to the cent, per-document debit==credit balance, and a mapping-coverage metric. This is the product.", where:"reconciliation.py"},
+    {id:"S0", name:"Intake &amp; profile", body:"Ingest the legacy artifact and its copybook/DDL; profile field types, volumes, value distributions, and period coverage. No judgment here — parsing stays dumb and separable.", where:"extract.py (reuses labd20_loader) + LABD20.pco:43-55 byte map"},
+    {id:"S1", name:"Canonical model", body:"Land the legacy record in a normalized, source-tagged intermediate form so every downstream record can be traced back to its origin byte-row.", where:"extract.py &middot; SourceRow provenance wrapper"},
+    {id:"S2", name:"Target contract bind", body:"Bind to the explicit, versioned Momentum target contract — the thing the tests assert against. We never transform to an implicit format.", where:"target/MOMENTUM-JV-COMMENT-IMPORT.md"},
+    {id:"S3", name:"Map &amp; transform", body:"All the judgment lives here: field mapping, the 26-byte natural key, ISO date reformat, document-ref derivation. The GL slice adds fund/USSGL crosswalks and Decimal scaling.", where:"mapper.py &middot; map_to_momentum"},
+    {id:"S4", name:"Validate", body:"Apply the real LABD20 edits; every failure becomes a typed reject code — never a silent drop. The reject is traceable to a source byte-row.", where:"mapper.py &middot; reuses determine_disposition (9 edits)"},
+    {id:"S5", name:"Reconcile", body:"Row accounting (in == loaded + held + rejected), 26-byte key integrity, the duplicate ledger, and load-coverage. The GL slice adds control totals to the cent and per-journal debit==credit balance. This is the product.", where:"reconciliation.py"},
     {id:"S6", name:"Emit", body:"Produce the loadable target artifact in Momentum's import wire format. Emit is deterministic, so a golden-file diff stays clean across re-runs.", where:"convert.py &middot; _to_wire"},
-    {id:"S7", name:"Load-simulate", body:"Re-read the emitted artifact as an opaque inbound interface (as Momentum would) and re-assert journal balance — a load rehearsal and post-load transaction test.", where:"convert.py &middot; simulate_momentum_import"}
+    {id:"S7", name:"Load-simulate", body:"Re-read the emitted artifact as an opaque inbound interface (as Momentum would) and re-assert natural-key uniqueness — an idempotent-load rehearsal and post-load round-trip.", where:"convert.py &middot; simulate_momentum_import"}
   ];
   const SESSIONS = [
     {role:"Planning session", status:"done", st:"done", title:"Factory architecture + plan", body:"Reframed the repo into upstream-given vs net-new factory and produced the design the customer approved.", url:"https://app.devin.ai/sessions/924104d6f877401cb0f5f7e739938383", link:"View session"},
-    {role:"Build session", status:"done", st:"done", title:"This deliverable", body:"Built the runnable GL slice (18 tests), the four design docs, the playbooks/knowledge/skill/prompts, and this report.", url:"https://app.devin.ai/sessions/a8d8b7531dbf41668a12f6d8049e222e", link:"View session"},
+    {role:"Build session", status:"done", st:"done", title:"This deliverable", body:"Built the real JV-comment slice on the LABD20 code + the GL slice (181 tests total), the four design docs, the architecture, the knowledge fabric, the playbooks/skill/prompts, and this report.", url:"https://app.devin.ai/sessions/a8d8b7531dbf41668a12f6d8049e222e", link:"View session"},
     {role:"Orchestrator (on approval)", status:"future", st:"plan", title:"Wave intake + fan-out", body:"Builds the interface inventory, plans a wave, and launches one child session per interface.", url:"prompts/orchestrator-intake.md", link:"Prompt"},
     {role:"Child &times; N (per interface)", status:"future", st:"future", title:"Interface conversion", body:"Each child runs the full S0–S7 pipeline for one interface and reports its reconciliation result back.", url:"prompts/interface-conversion-child.md", link:"Prompt"}
   ];
@@ -441,7 +664,7 @@ LOAD_READY=False  <span class="dim"># exit 1 — gate trips, load blocked</span>
     ["Idempotent restart / exactly-once","Prove a re-run of a half-loaded batch neither double-posts nor drops. Cutovers get interrupted."],
     ["Mapping coverage as a gate","Coverage % is a release gate that can only go up; a regression means the source changed."],
     ["Reject-reason taxonomy &amp; trend","Every reject typed and counted per run so SMEs triage categories, not lines."],
-    ["Boundary &amp; fiscal-calendar cases","Period 13/14 adjustments, leap-year ordinal dates, year-end JV-number reset, $0/negative/overflow."],
+    ["Boundary &amp; fiscal-calendar cases","Period 13/14 adjustments, leap-year ordinal dates, year-end JV-number reset, zero / negative / overflow amounts."],
     ["Referential integrity vs Momentum master data","Validate fund/TAFS/object-class/vendor against the target's reference data, not just format."],
     ["Duplicate / replay detection","Detect the same posting arriving in two extracts — reusing the dedup pattern proven in the LABD20 port."],
     ["Confidence scoring on every mapping","Deterministic crosswalk = high; inferred = low. Low-confidence maps route to SME review."],
@@ -464,7 +687,7 @@ LOAD_READY=False  <span class="dim"># exit 1 — gate trips, load blocked</span>
     [...pipe.children].forEach((b,j)=>b.classList.toggle('active', j===i));
     const s = STAGES[i];
     detail.innerHTML = `<h4>${s.id} &middot; ${s.name}</h4><div>${s.body}</div>`+
-      `<div class="where">In the GL reference slice: <code>${s.where}</code></div>`;
+      `<div class="where">In the runnable reference slice: <code>${s.where}</code></div>`;
   }
   STAGES.forEach((s,i)=>{
     const b=document.createElement('button'); b.className='stage-btn';

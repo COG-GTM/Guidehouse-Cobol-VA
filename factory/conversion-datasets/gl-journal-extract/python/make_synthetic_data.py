@@ -67,9 +67,13 @@ def rec(
     return record
 
 
-def cents(dollars: float) -> str:
-    """Dollars -> 15-char zero-padded implied-2-decimal field."""
-    return str(int(round(dollars * 100))).zfill(15)
+def cents(dollars: int) -> str:
+    """Whole dollars -> 15-char zero-padded implied-2-decimal field.
+
+    Money is integer cents end-to-end; never float (factory hard rule:
+    use Decimal/int for money, never floats).
+    """
+    return str(dollars * 100).zfill(15)
 
 
 def clean_lines() -> list[str]:
