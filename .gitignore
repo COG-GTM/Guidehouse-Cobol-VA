@@ -21,3 +21,7 @@ migration/test-results/cobol-driver-output.txt
 
 # demo_app.py serve runtime output (regenerated on every invocation)
 migration/test-results/demo-serve/
+
+# Java migration build + demo runtime output
+migration/converted-code/java/target/
+migration/test-results/demo-run-java/
