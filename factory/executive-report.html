@@ -136,6 +136,25 @@
   pre.term { background: #0d0d0d; color: #e6e6e6; padding: 18px; border-radius: 10px; overflow-x: auto; font-size: 12.5px; line-height: 1.5; }
   pre.term .ok { color: #6ee7b7; } pre.term .bad { color: #fca5a5; } pre.term .dim { color: #9ca3af; }
 
+  /* live CLI player */
+  .cli { border:1px solid var(--rule); border-radius:12px; overflow:hidden; background:#0d0d0d; }
+  .cli-bar { display:flex; align-items:center; gap:10px; padding:10px 14px; background:#161616; border-bottom:1px solid #262626; flex-wrap:wrap; }
+  .cli-dots { display:flex; gap:6px; }
+  .cli-dots i { width:11px; height:11px; border-radius:50%; display:block; }
+  .cli-dots i:nth-child(1){ background:#ff5f56; } .cli-dots i:nth-child(2){ background:#ffbd2e; } .cli-dots i:nth-child(3){ background:#27c93f; }
+  .cli-title { color:#9ca3af; font-size:12px; }
+  .cli-runs { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
+  .cli-runs button { font-family:'JetBrains Mono',ui-monospace,monospace; font-size:11.5px; color:#e6e6e6; background:#222; border:1px solid #333; border-radius:7px; padding:5px 10px; cursor:pointer; transition:all .12s ease; }
+  .cli-runs button:hover { border-color:var(--gh); }
+  .cli-runs button.active { background:var(--gh); border-color:var(--gh); color:#fff; }
+  .cli-runs button.replay { background:#111; }
+  .cli-body { margin:0; padding:16px 18px; height:340px; overflow-y:auto; color:#e6e6e6; font-family:'JetBrains Mono','IBM Plex Mono',ui-monospace,monospace; font-size:12.5px; line-height:1.55; white-space:pre-wrap; word-break:break-word; }
+  .cli-body .prompt { color:#27c93f; } .cli-body .ok { color:#6ee7b7; } .cli-body .bad { color:#fca5a5; } .cli-body .key { color:#93c5fd; } .cli-body .dim { color:#9ca3af; }
+  .cli-cursor { display:inline-block; width:8px; height:14px; background:#27c93f; vertical-align:-2px; animation:blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  .cli-status { padding:11px 16px; font-size:13px; font-weight:600; border-top:1px solid #262626; color:#9ca3af; background:#161616; }
+  .cli-status.ok { color:#6ee7b7; } .cli-status.bad { color:#fca5a5; }
+
   .callout { border: 1px solid #c7d2ec; background: var(--info-bg); border-radius: 10px; padding: 16px 18px; font-size: 14px; color: var(--info-ink); }
   .synthetic { border: 1px solid #f1d49a; background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 14px 18px; font-size: 13.5px; }
 
@@ -561,19 +580,15 @@
       the same engine trip the gate when a journal&rsquo;s debits and credits don&rsquo;t
       agree &mdash; the point of keeping a deliberately-failing fixture in the suite.
     </p>
-    <pre class="term"><span class="dim">&rsaquo; python -m pytest -q          # all three suites: parity + GL + real JV-comment</span>
-151 passed &middot; 18 passed &middot; <span class="ok">12 passed</span>
-
-<span class="dim">&rsaquo; python convert.py synthetic_comments.dat      # the REAL LABD20 fixture</span>
-  "rows_in": 21, "rows_loaded": 7, "rows_duplicate_held": 2, "rows_rejected": 12,
-  "row_accounting_ok": true, "key_integrity_ok": true,
-  "reject_reasons": { 9 typed LABD20 edits }, <span class="ok">"load_ready": true</span>
-LOAD_READY=True   <span class="dim"># exit 0</span>
-
-<span class="dim">&rsaquo; python convert.py gl_extract_unbalanced.dat   # GL slice: debits &ne; credits</span>
-  "all_journals_balanced": false,
-  "unbalanced_journals": ["JV-2026-000300"], <span class="bad">"load_ready": false</span>
-LOAD_READY=False  <span class="dim"># exit 1 &mdash; gate trips, load blocked</span></pre>
+    <div class="cli" id="cli">
+      <div class="cli-bar">
+        <span class="cli-dots"><i></i><i></i><i></i></span>
+        <span class="cli-title mono">bash &mdash; Conversion Factory CLI</span>
+        <span class="cli-runs" id="cli-runs"></span>
+      </div>
+      <pre class="cli-body" id="cli-body"></pre>
+      <div class="cli-status" id="cli-status">Pick a run above &mdash; the real <code style="color:#9ca3af">convert.py</code> output streams live (exact terminal output, reproducible from the repo).</div>
+    </div>
     <div class="synthetic" style="margin-top:16px">
       <strong>Synthetic &amp; non-production.</strong> The legacy layout, the Momentum target
       contract, the USSGL whitelist, and the fund crosswalk in this slice are plausible
@@ -726,6 +741,167 @@ LOAD_READY=False  <span class="dim"># exit 1 &mdash; gate trips, load blocked</s
   ANGLES.forEach((a,i)=>{ const li=document.createElement('li'); li.innerHTML=`<span class="num">${i+1}</span><div><div class="t">${a[0]}</div><div class="d">${a[1]}</div></div>`; angles.appendChild(li); });
   const crit=document.getElementById('critiques');
   CRITIQUES.forEach((c,i)=>{ const li=document.createElement('li'); li.innerHTML=`<span class="num warn">${i+1}</span><div><div class="t">${c[0]}</div><div class="d">${c[1]}</div></div>`; crit.appendChild(li); });
+
+  // ---- live CLI player (replays the REAL convert.py output, verbatim) ----
+  const RUNS = [
+    { key:'jv', label:'Real LABD20 JV', dir:'factory/conversion-datasets/jv-comment-load/python',
+      cmd:'python convert.py ../../../../migration/test-data/synthetic_comments.dat',
+      exit:0, statusClass:'ok',
+      status:'LOAD-READY  \u00b7  21 read = 7 loaded + 2 held + 12 rejected  \u00b7  row accounting closed, no silent drops  \u00b7  exit 0',
+      out:`{
+  "rows_in": 21,
+  "rows_loaded": 7,
+  "rows_duplicate_held": 2,
+  "rows_rejected": 12,
+  "row_accounting_ok": true,
+  "key_integrity_ok": true,
+  "load_coverage": 0.3333,
+  "reject_reasons": {
+    "BAD_DATE": 2,
+    "BAD_JV_NUMBER": 2,
+    "BLANK_APPROVER": 1,
+    "BLANK_COMMENT": 1,
+    "BLANK_RECORD": 1,
+    "BLANK_REQUESTOR": 1,
+    "NON_NUMERIC_DATE": 1,
+    "NON_NUMERIC_LOAN": 1,
+    "NON_NUMERIC_SECTION": 2
+  },
+  "duplicate_keys": {
+    "20251231000300119000000020": 2,
+    "20260101000100019000000001": 2
+  },
+  "rejects": [
+    { "line_index": 3, "reason": "NON_NUMERIC_SECTION", "detail": "section id is non-numeric" },
+    { "line_index": 5, "reason": "BLANK_RECORD", "detail": "blank record; comment date is non-numeric; JV number is non-numeric or zero; section id is non-numeric; loan number is non-numeric; comment text is blank; requestor is blank; approver is blank" },
+    { "line_index": 6, "reason": "NON_NUMERIC_DATE", "detail": "comment date is non-numeric" },
+    { "line_index": 7, "reason": "BAD_DATE", "detail": "comment date is not a valid YYYYMMDD calendar date" },
+    { "line_index": 8, "reason": "BAD_JV_NUMBER", "detail": "JV number is non-numeric or zero" },
+    { "line_index": 9, "reason": "BAD_JV_NUMBER", "detail": "JV number is non-numeric or zero" },
+    { "line_index": 10, "reason": "NON_NUMERIC_SECTION", "detail": "section id is non-numeric" },
+    { "line_index": 11, "reason": "NON_NUMERIC_LOAN", "detail": "loan number is non-numeric" },
+    { "line_index": 12, "reason": "BLANK_COMMENT", "detail": "comment text is blank" },
+    { "line_index": 13, "reason": "BLANK_REQUESTOR", "detail": "requestor is blank" },
+    { "line_index": 14, "reason": "BLANK_APPROVER", "detail": "approver is blank" },
+    { "line_index": 17, "reason": "BAD_DATE", "detail": "comment date is not a valid YYYYMMDD calendar date" }
+  ],
+  "load_ready": true,
+  "momentum_import_simulation": {
+    "rows_loaded": 7,
+    "unique_keys_loaded": 7,
+    "key_collisions_after_load": [],
+    "post_load_ok": true
+  }
+}
+
+LOAD_READY=True` },
+    { key:'glc', label:'GL clean', dir:'factory/conversion-datasets/gl-journal-extract/python',
+      cmd:'python convert.py ../data/gl_extract_clean.dat',
+      exit:0, statusClass:'ok',
+      status:'GATE PASSED  \u00b7  2 journals, 6 lines, every debit = credit  \u00b7  exit 0',
+      out:`{
+  "lines_in": 6,
+  "lines_loaded": 6,
+  "lines_rejected": 0,
+  "row_accounting_ok": true,
+  "legacy_control_total": "400000.00",
+  "target_control_total": "400000.00",
+  "control_total_ok": true,
+  "all_journals_balanced": true,
+  "unbalanced_journals": [],
+  "mapping_coverage": 1.0,
+  "reject_reasons": {},
+  "rejects": [],
+  "load_ready": true,
+  "momentum_import_simulation": {
+    "journals_loaded": 2,
+    "lines_loaded": 6,
+    "unbalanced_after_load": [],
+    "post_load_ok": true
+  }
+}
+
+LOAD_READY=True` },
+    { key:'glu', label:'GL unbalanced', dir:'factory/conversion-datasets/gl-journal-extract/python',
+      cmd:'python convert.py ../data/gl_extract_unbalanced.dat',
+      exit:1, statusClass:'bad',
+      status:'GATE TRIPPED  \u00b7  JV-2026-000300 debits \u2260 credits  \u00b7  load blocked  \u00b7  exit 1',
+      out:`{
+  "lines_in": 2,
+  "lines_loaded": 2,
+  "lines_rejected": 0,
+  "row_accounting_ok": true,
+  "legacy_control_total": "190000.00",
+  "target_control_total": "190000.00",
+  "control_total_ok": true,
+  "all_journals_balanced": false,
+  "unbalanced_journals": [
+    "JV-2026-000300"
+  ],
+  "mapping_coverage": 1.0,
+  "reject_reasons": {},
+  "rejects": [],
+  "load_ready": false,
+  "momentum_import_simulation": {
+    "journals_loaded": 1,
+    "lines_loaded": 2,
+    "unbalanced_after_load": [
+      "JV-2026-000300"
+    ],
+    "post_load_ok": false
+  }
+}
+
+LOAD_READY=False` }
+  ];
+  const cliBody = document.getElementById('cli-body');
+  const cliStatus = document.getElementById('cli-status');
+  const cliRuns = document.getElementById('cli-runs');
+  let runToken = 0; let currentRun = RUNS[0];
+  const sleep = ms => new Promise(r=>setTimeout(r,ms));
+  function hl(line){
+    return line
+      .replace(/("(?:[A-Za-z_]+)")(\s*:)/g, '<span class="key">$1</span>$2')
+      .replace(/\b(true|True)\b/g, '<span class="ok">$1</span>')
+      .replace(/\b(false|False)\b/g, '<span class="bad">$1</span>');
+  }
+  async function typeLine(prefix, text, token){
+    const base = cliBody.innerHTML;
+    let line = '';
+    for(const ch of text){
+      if(token!==runToken) return;
+      line += ch;
+      cliBody.innerHTML = base + prefix + ' ' + line + '<span class="cli-cursor"></span>';
+      cliBody.scrollTop = cliBody.scrollHeight;
+      await sleep(13);
+    }
+    cliBody.innerHTML = base + prefix + ' ' + line + '\n';
+  }
+  async function play(run){
+    const token = ++runToken; currentRun = run;
+    cliBody.innerHTML = '';
+    cliStatus.className = 'cli-status'; cliStatus.textContent = 'running\u2026';
+    [...cliRuns.children].forEach(b=>b.classList.toggle('active', b.dataset.k===run.key));
+    const P = '<span class="prompt">$</span>';
+    await typeLine(P, 'cd ' + run.dir, token); if(token!==runToken) return; await sleep(110);
+    await typeLine(P, run.cmd, token); if(token!==runToken) return; await sleep(150);
+    for(const ln of run.out.split('\n')){
+      if(token!==runToken) return;
+      cliBody.innerHTML += hl(ln) + '\n';
+      cliBody.scrollTop = cliBody.scrollHeight;
+      await sleep(28);
+    }
+    await sleep(110);
+    await typeLine(P, 'echo $?', token); if(token!==runToken) return;
+    cliBody.innerHTML += '<span class="' + (run.exit===0?'ok':'bad') + '">' + run.exit + '</span>\n';
+    cliBody.scrollTop = cliBody.scrollHeight;
+    cliStatus.className = 'cli-status ' + run.statusClass; cliStatus.textContent = run.status;
+  }
+  RUNS.forEach(r=>{ const b=document.createElement('button'); b.textContent=r.label; b.dataset.k=r.key; b.onclick=()=>play(r); cliRuns.appendChild(b); });
+  const replayBtn=document.createElement('button'); replayBtn.className='replay'; replayBtn.innerHTML='&#9654; Replay'; replayBtn.onclick=()=>play(currentRun); cliRuns.appendChild(replayBtn);
+  let cliStarted=false;
+  const cliObs=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting && !cliStarted){ cliStarted=true; play(RUNS[0]); } }); }, {threshold:0.35});
+  cliObs.observe(document.getElementById('cli'));
 </script>
 </body>
 </html>
