@@ -582,6 +582,66 @@ LOAD_READY=False  <span class="dim"># exit 1 &mdash; gate trips, load blocked</s
   </div>
 </section>
 
+<!-- LIVE TERMINAL -->
+<section id="live-terminal">
+  <div class="wrap">
+    <h2>Run it yourself</h2>
+    <h3>Live terminal (real shell, sandboxed to this repo)</h3>
+    <p class="narrative">
+      The black panel above is a static recreation. The frame below is a <strong>real
+      shell</strong> running on your machine, scoped to this repository, bound to
+      <code>127.0.0.1</code>, with the demo virtualenv pre-loaded on <code>PATH</code>.
+      Type the commands shown in the panel above (or any others) and watch the same
+      reconciliation engine produce the same numbers, live. Data stays synthetic; no
+      network egress.
+    </p>
+    <div id="term-frame-wrap"
+         style="border:1px solid var(--rule); border-radius:12px; overflow:hidden;
+                background:#0e0e0e; min-height:480px; position:relative;">
+      <iframe id="term-frame"
+              src="http://localhost:7681/"
+              title="FMBT Factory live terminal"
+              style="display:block; width:100%; height:520px; border:0; background:#0e0e0e;"
+              allow="clipboard-read; clipboard-write"></iframe>
+      <div id="term-fallback"
+           style="display:none; position:absolute; inset:0; padding:28px 32px;
+                  color:#e8e8e8; font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;
+                  font-size:13px; line-height:1.55; background:#0e0e0e;">
+        <div style="color:#fbbf24; font-weight:600; margin-bottom:10px;">
+          Live terminal not detected on <code>localhost:7681</code>.
+        </div>
+        Start it with one command from the repo root:
+        <pre style="margin-top:10px; padding:12px 14px; background:#1a1a1a;
+                    border:1px solid #2a2a2a; border-radius:8px; color:#e8e8e8;
+                    white-space:pre-wrap;">factory/scripts/serve-live-demo.sh</pre>
+        Then reload this page. Requires <code>ttyd</code>
+        (<code>brew install ttyd</code>) and <code>python3</code>. The launcher also
+        creates <code>.venv-demo/</code> on first run for <code>pytest</code>.
+      </div>
+    </div>
+    <p class="narrative" style="margin-top:14px; font-size:13.5px; color:var(--muted);">
+      Launcher: <code>factory/scripts/serve-live-demo.sh</code> &nbsp;&middot;&nbsp;
+      Backend: <code>ttyd</code> (writable, <code>-i 127.0.0.1</code>) &nbsp;&middot;&nbsp;
+      Stop with <code>Ctrl-C</code> in the launcher terminal.
+    </p>
+  </div>
+  <script>
+    (function () {
+      var frame = document.getElementById('term-frame');
+      var fb = document.getElementById('term-fallback');
+      // Probe ttyd with a no-cors fetch: any HTTP response resolves the promise
+      // (even 404); only a network-level failure (server down) rejects it. ttyd
+      // does not set CORS headers, so we cannot inspect the response body here --
+      // reachability is all we need to decide between iframe and fallback panel.
+      fetch('http://localhost:7681/', { mode: 'no-cors', cache: 'no-store' })
+        .catch(function () {
+          frame.style.display = 'none';
+          fb.style.display = 'block';
+        });
+    })();
+  </script>
+</section>
+
 <!-- OPEN QUESTIONS -->
 <section>
   <div class="wrap">

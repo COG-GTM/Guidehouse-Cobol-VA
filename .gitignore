@@ -13,6 +13,10 @@
 __pycache__/
 .pytest_cache/
 .venv/
+.venv-demo/
+
+# Live-terminal launcher scratch
+factory/scripts/_welcome.sh
 
 # Parity-engine and GnuCOBOL harness scratch artifacts
 migration/test-results/parity/

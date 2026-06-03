@@ -94,6 +94,24 @@ That slice ([`conversion-datasets/gl-journal-extract/`](./conversion-datasets/gl
 is the concrete instantiation of everything above — the design is grounded in
 something that actually runs and balances, not slideware.
 
+### 6a. One-liner: executive report with embedded live terminal
+
+For demos, the static [`factory/executive-report.html`](./executive-report.html)
+embeds a real shell (via [`ttyd`](https://github.com/tsl0922/ttyd)) so the
+commands above can be typed live, in the page, against this repo:
+
+```bash
+brew install ttyd          # one-time prereq
+factory/scripts/serve-live-demo.sh
+```
+
+The launcher starts a static HTTP server on `:8787`, a writable `ttyd` on
+`:7681` (bound to `127.0.0.1`), bootstraps `.venv-demo/` with `pytest` on
+first run, and opens the report in your browser. The page's "Run it
+yourself" section iframes the terminal; if `ttyd` isn't running, the
+section auto-detects and shows the one-liner above as a fallback.
+Stop with `Ctrl-C`.
+
 ## 7. Directory map
 
 | Path | What it is |
