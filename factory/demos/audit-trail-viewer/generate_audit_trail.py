@@ -324,7 +324,10 @@ def build_trail(slice_key: str, fixture_key: str) -> dict:
 
 
 def _byte_row(text: str, line_index: int) -> str:
-    rows = [ln for ln in text.splitlines() if ln.strip() != ""]
+    # `line_index` is the 1-based *physical* line position assigned by
+    # parse_extract (blank lines are counted, not filtered), so index the
+    # unfiltered splitlines to keep the two in lockstep.
+    rows = text.splitlines()
     if 1 <= line_index <= len(rows):
         return rows[line_index - 1]
     return ""
