@@ -1,0 +1,18 @@
+{
+  "_comment": "Seed (pre-learning) reference data for the S8 learning-agent demo. This is deliberately INCOMPLETE: it is missing fund 8180 (General Post Fund) and USSGL 490200 (Delivered Orders - Obligations, Paid), both of which appear in the learning fixture. The demo starts from this seed every run so the demonstration is idempotent. The learned-reference-data.json the demo writes is this seed plus the SME-confirmed corrections.",
+  "ussgl_whitelist": [
+    "101000",
+    "131000",
+    "211000",
+    "310000",
+    "480100",
+    "490100",
+    "610000"
+  ],
+  "fund_crosswalk": {
+    "0160": "0160-OPS",
+    "0162": "0162-MEDSVC",
+    "4537": "4537-SCF",
+    "0152": "0152-CONST"
+  }
+}
