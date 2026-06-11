@@ -80,6 +80,13 @@ idempotent restart, referential integrity, duplicate/replay, confidence scoring,
 provenance trail, …) are in
 [`design/TESTING-AS-THE-PRODUCT.md`](./design/TESTING-AS-THE-PRODUCT.md).
 
+A single `pytest -q` at the repo root runs everything: the factory suites plus
+each conversion-dataset slice suite in an isolated subprocess (the slices share
+flat module names by design — see the root `conftest.py`). CI
+(`.github/workflows/ci.yml`) runs the same, plus `ruff` and a drift gate that
+regenerates `portfolio.data.js`, `executive-report.data.js`, and the ICD and
+fails if the committed artifacts disagree with the code.
+
 ## 6. See it run (the GL/journal reference slice)
 
 ```bash
