@@ -119,6 +119,7 @@ Stop with `Ctrl-C`.
 | `design/FACTORY-DESIGN.md` | Architecture: the eight stages, the orchestration model, the three-lane split. |
 | `design/TESTING-AS-THE-PRODUCT.md` | Control layers + 11 test angles. |
 | `design/AIE-CRITIQUE.md` | Objective critique of the customer's A0–A8 / AIE design. |
+| `../docs/reference/AIE-iFAMS-Modernization-Slicksheet.md` | Customer-provided Guidehouse AIE slicksheet (verbatim + factory crosswalk). |
 | `design/INTERFACE-WAVE-MODEL.md` | Interface inventory schema + wave fan-out. |
 | `conversion-datasets/gl-journal-extract/` | The runnable reference slice (code, synthetic data, 19 tests, contract). |
 | `playbooks/` | The 3 repeatable procedures (convert one interface / build the test harness / orchestrate a wave). |
