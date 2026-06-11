@@ -7,6 +7,7 @@ deliberately — they are control totals, not incidental numbers.
 """
 
 import sys
+import warnings
 from pathlib import Path
 
 import pytest
@@ -79,3 +80,16 @@ def test_wave_one_prioritizes_dual_managed(systems):
 def test_assign_waves_rejects_bad_size(systems):
     with pytest.raises(ValueError):
         assign_waves(systems, wave_size=0)
+
+
+def test_contradictory_flags_emit_warnings():
+    """load_inventory() warns when positive and negative flags contradict."""
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        load_inventory()
+    contradictory = [w for w in caught if "Contradictory flags" in str(w.message)]
+    # The customer CSV has 6 rows with contradictory flags.
+    assert len(contradictory) == 6
+    # Spot-check one known system.
+    messages = [str(w.message) for w in contradictory]
+    assert any("Budget Tracking Tool" in m for m in messages)

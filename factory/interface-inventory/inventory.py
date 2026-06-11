@@ -23,6 +23,7 @@ Pure stdlib; no network, no database.
 from __future__ import annotations
 
 import csv
+import warnings
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -100,7 +101,24 @@ def load_inventory(csv_path: Path = INVENTORY_CSV) -> list[InventorySystem]:
             )
     if not systems:
         raise ValueError(f"empty inventory: {csv_path}")
+    _warn_contradictory_flags(systems)
     return systems
+
+
+def _warn_contradictory_flags(systems: list[InventorySystem]) -> None:
+    """Emit a warning for rows where positive and negative flags contradict."""
+    for s in systems:
+        issues: list[str] = []
+        if s.managed_by_fms and s.not_managed_by_fms:
+            issues.append("managed_by_fms=Y contradicts not_managed_by_fms=Y")
+        if s.managed_by_ifams and s.not_managed_by_ifams:
+            issues.append("managed_by_ifams=Y contradicts not_managed_by_ifams=Y")
+        if issues:
+            warnings.warn(
+                f"Contradictory flags on {s.system_name!r}: {'; '.join(issues)}. "
+                f"Disposition uses positive flags only.",
+                stacklevel=3,
+            )
 
 
 def summarize(systems: list[InventorySystem]) -> dict[str, int]:
