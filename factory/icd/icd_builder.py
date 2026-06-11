@@ -17,6 +17,7 @@ surfaced in section 11 (Open Items) so nothing silently ships as fact.
 from __future__ import annotations
 
 import dataclasses
+import re
 import sys
 from datetime import date
 from pathlib import Path
@@ -61,19 +62,20 @@ _FIELD_NOTES: dict[str, tuple[str, int, str]] = {
     "source_system": ("Originating legacy system tag", 8, "CHAR"),
 }
 
-# The slice's live reject taxonomy (mapper.py reason codes).
-_REJECT_CODES = [
-    "BAD_DATE",
-    "BAD_FUND",
-    "BAD_PERIOD",
-    "BAD_POP",
-    "BAD_TXN_TYPE",
-    "BAD_USSGL",
-    "MISSING_OBLIGATION_NO",
-    "MISSING_VENDOR",
-    "NON_NUMERIC",
-    "ZERO_AMOUNT",
-]
+# The slice's live reject taxonomy, extracted from the RejectedLine(...) call
+# sites in mapper.py so new reject reasons cannot be silently omitted here.
+def _extract_reject_codes(mapper_path: Path = _SLICE_PY / "mapper.py") -> list[str]:
+    codes = set(
+        re.findall(
+            r'RejectedLine\(\s*[\w.]+,\s*"([A-Z_]+)"', mapper_path.read_text(), re.S
+        )
+    )
+    if not codes:
+        raise ValueError(f"no reject codes found in {mapper_path}")
+    return sorted(codes)
+
+
+_REJECT_CODES = _extract_reject_codes()
 
 
 def _file_mapping() -> list[dict]:

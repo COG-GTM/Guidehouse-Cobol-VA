@@ -45,12 +45,28 @@ def test_file_mapping_generated_from_contract_dataclass(icd):
 
 
 def test_error_codes_match_live_reject_taxonomy(icd):
+    import re
+
     import mapper as mapper_mod
 
     source = Path(mapper_mod.__file__).read_text()
+    live_codes = set(re.findall(r'RejectedLine\(\s*[\w.]+,\s*"([A-Z_]+)"', source, re.S))
     system_row = next(r for r in icd["error_handling_matrix"] if r["platform"] == "SYSTEM")
-    for code in system_row["common_error_codes"]:
-        assert f'"{code}"' in source, f"ICD error code {code} not found in mapper.py"
+    # Bidirectional: ICD lists every live reject code, and nothing else.
+    assert sorted(system_row["common_error_codes"]) == sorted(live_codes)
+    # Control total: the slice currently defines exactly these 10 codes.
+    assert live_codes == {
+        "BAD_DATE",
+        "BAD_FUND",
+        "BAD_PERIOD",
+        "BAD_POP",
+        "BAD_TXN_TYPE",
+        "BAD_USSGL",
+        "MISSING_OBLIGATION_NO",
+        "MISSING_VENDOR",
+        "NON_NUMERIC",
+        "ZERO_AMOUNT",
+    }
 
 
 def _broken(icd, mutate):
