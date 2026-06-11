@@ -520,10 +520,10 @@
       artifacts.
     </p>
     <div class="metrics">
-      <div class="metric"><div class="n">125</div><div class="l">systems in the customer inventory</div></div>
-      <div class="metric good"><div class="n">62</div><div class="l">in factory conversion scope (FMS-managed)</div></div>
-      <div class="metric"><div class="n">7</div><div class="l">orchestration waves planned</div></div>
-      <div class="metric"><div class="n">0</div><div class="l">spec violations in the generated ICD</div></div>
+      <div class="metric"><div class="n" id="m-systems-total">125</div><div class="l">systems in the customer inventory</div></div>
+      <div class="metric good"><div class="n" id="m-factory-scope">62</div><div class="l">in factory conversion scope (FMS-managed)</div></div>
+      <div class="metric"><div class="n" id="m-waves">7</div><div class="l">orchestration waves planned</div></div>
+      <div class="metric"><div class="n" id="m-icd-violations">0</div><div class="l">spec violations in the generated ICD</div></div>
     </div>
     <ul class="clean" style="margin-top:22px">
       <li><span class="num">1</span><div><div class="t">Interface portfolio &amp; wave plan</div><div class="d">Every system classified (migrate / dual-managed / already on iFAMS / out of scope) with control-total tests, grouped into waves for the child-session fan-out. <a href="demos/interface-portfolio/portfolio.html">Open the portfolio dashboard &rarr;</a></div></div></li>
@@ -812,6 +812,26 @@ LOAD_READY=False  <span class="dim"># exit 1 &mdash; gate trips, load blocked</s
   ANGLES.forEach((a,i)=>{ const li=document.createElement('li'); li.innerHTML=`<span class="num">${i+1}</span><div><div class="t">${a[0]}</div><div class="d">${a[1]}</div></div>`; angles.appendChild(li); });
   const crit=document.getElementById('critiques');
   CRITIQUES.forEach((c,i)=>{ const li=document.createElement('li'); li.innerHTML=`<span class="num warn">${i+1}</span><div><div class="t">${c[0]}</div><div class="d">${c[1]}</div></div>`; crit.appendChild(li); });
+</script>
+<script src="executive-report.data.js"></script>
+<script>
+  // Populate the customer-artifact tiles from the generated sidecar so the
+  // report always shows the live model's numbers; the static values above are
+  // the no-JS fallback and are kept in sync by factory/tests/test_report_data.py.
+  (function () {
+    if (!window.REPORT_DATA) return;
+    var map = {
+      "m-systems-total": "systems_total",
+      "m-factory-scope": "factory_scope",
+      "m-waves": "waves",
+      "m-icd-violations": "icd_violations"
+    };
+    Object.keys(map).forEach(function (id) {
+      var el = document.getElementById(id);
+      var val = window.REPORT_DATA[map[id]];
+      if (el && val !== undefined) el.textContent = String(val);
+    });
+  })();
 </script>
 </body>
 </html>

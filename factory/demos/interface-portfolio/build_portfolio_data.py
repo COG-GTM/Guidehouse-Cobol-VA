@@ -1,9 +1,11 @@
-"""Build the data sidecar for the interface-portfolio dashboard.
+"""Build the data sidecars for the interface-portfolio dashboard and the
+executive report.
 
 Reads the customer inventory through factory/interface-inventory/inventory.py
-(so the dashboard can never disagree with the tested model) and emits
-``portfolio.data.js`` next to ``portfolio.html`` for file:// viewing — the same
-sidecar pattern the audit-trail viewer uses.
+and the ICD through factory/icd (so neither page can disagree with the tested
+model) and emits ``portfolio.data.js`` next to ``portfolio.html`` plus
+``executive-report.data.js`` next to ``executive-report.html`` for file://
+viewing — the same sidecar pattern the audit-trail viewer uses.
 
 Usage:
     python build_portfolio_data.py
@@ -17,9 +19,25 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 _HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(_HERE.parent.parent / "interface-inventory"))
+_FACTORY = _HERE.parent.parent
+sys.path.insert(0, str(_FACTORY / "interface-inventory"))
+sys.path.insert(0, str(_FACTORY / "icd"))
 
+from icd_builder import build_obligation_disbursement_icd  # noqa: E402
 from inventory import assign_waves, load_inventory, summarize  # noqa: E402
+from validate import validate_icd  # noqa: E402
+
+
+def report_metrics() -> dict[str, int]:
+    """The executive-report headline tiles, derived from the live model."""
+    systems = load_inventory()
+    summary = summarize(systems)
+    return {
+        "systems_total": summary["total_systems"],
+        "factory_scope": summary["factory_scope"],
+        "waves": len(assign_waves(systems)),
+        "icd_violations": len(validate_icd(build_obligation_disbursement_icd())),
+    }
 
 
 def main() -> None:
@@ -46,6 +64,11 @@ def main() -> None:
     out = _HERE / "portfolio.data.js"
     out.write_text("window.PORTFOLIO_DATA = " + json.dumps(payload, indent=2) + ";\n")
     print(f"[build_portfolio_data] wrote {out} ({len(systems)} systems, {len(waves)} waves)")
+
+    metrics = report_metrics()
+    report_out = _FACTORY / "executive-report.data.js"
+    report_out.write_text("window.REPORT_DATA = " + json.dumps(metrics, indent=2) + ";\n")
+    print(f"[build_portfolio_data] wrote {report_out} {metrics}")
 
 
 if __name__ == "__main__":
