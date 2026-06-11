@@ -1,0 +1,126 @@
+system_name,system_category,managed_by_fms,managed_by_ifams,not_managed_by_fms,not_managed_by_ifams
+Administrative Data Repository,,,,Y,
+Analytics and Business Intelligence LAN,,Y,Y,,
+Automated Allocation Control System,,,,Y,
+Beneficiary Travel Self-Service System,,,,Y,
+Bill for Collection Portal,,,,Y,
+Budget Tracking Tool,,Y,Y,,Y
+Burial Operations Support System - Enterprise,,,,,Y
+Business Information Office Business Intelligence Solution,,Y,,,
+Capital Asset Management System,,Y,Y,,
+Caregiver Record Management Application,,,,Y,
+Central Fee System,,,,Y,
+Centralized Administrative Accounting Transaction System,,,Y,Y,
+CGE Concur,,Y,,,
+"Chapter 1606 - Montgomery GI Bill Selected Reserve - Benefits Payment System [Enterprise Management of Payments, Workload, and Reporting]",,Y,,,
+Chapter 1607 - Reserve Education Assistance Program,,Y,,,
+"Chapter 30 - Montgomery GI Bill Active Duty Benefits [Enterprise Management of Payments, Workload, and Reporting]",,Y,,,
+Chapter 32 - Veterans Education Assistance Program,,Y,,,
+"Chapter 33 Payments [Enterprise Management of Payments, Workload, and Reporting]",,Y,,,
+"Chapter 35 - Dependents Education Assistance [Enterprise Management of Payments, Workload, and Reporting]",,Y,,,
+Charge Card System  [OM FSC LAN Applications],,Y,,,Y
+Child Care Records Management System,,,,,Y
+Claims Processing & Eligibility System,,Y,,,
+Common Security Services [Benefits Enterprise Platform],,,,Y,
+Community Care File Transfers,,,,Y,
+Community Care Reimbursement System,,,,Y,
+ConcurGov,,,Y,,
+Consolidated Copayment Processing Center System,,Y,,,
+Corporate Data Warehouse,,Y,,Y,
+CPAC Revenue Workflow Tools,,,,Y,
+Corporate WINRS,,Y,,,
+Data Access Services,,,,Y,
+Data Management Interface,,,,Y,
+Decision Support System,,,,Y,Y
+Defense Civilian Pay System (DCPS) Data Exchange,,,,Y,Y
+Defense Medical Logistics Standard Support,,Y,,,
+Department of Agriculture System,,Y,,,
+Department of Health and Human Services (HHS) Payment Management System (PMS),,Y,,,
+Digital Business Services,,,,Y,
+Digital Veterans Platform,,,,Y,
+Document Management System,,,,Y,
+DTC Integration Platform,,,,Y,
+EHRM SFTP Server*,,Y,,,
+Electronic Contract Management System/Acquisition Enterprise Systems,,,Y,Y,Y
+Electronic Data Interchange,,Y,Y,,
+Electronic Funds Transfers Rejects Robotic Process Automation [OM FSC LAN Applications],,Y,,,
+"Enterprise Management of Payments, Workload, and Reporting",,Y,,,
+Enterprise Service Bus [OM FSC LAN Applications],,,Y,,
+ETS2-CGE,,Y,,,
+eVendor Portal [eCMS/AES],,,Y,,
+Federal Procurement Data System - Next Generation,,Y,,,
+Federal Reserve Wire Network,,Y,,,
+File to Falling Waters Server,,Y,,,
+Financial Accounting Service Payment and Collection System,,,,Y,
+Financial Content Management,,Y,,Y,
+Financial Data and Masking ETL - Informatica,,,,Y,
+Financial Management System,,,Y,,
+Financial Reporting Data Warehouse [Management Information Exchange System],,,,,Y
+Financial Technology Group,,,,Y,Y
+FMBT Data Estate,,,,,Y
+FMS Automated Veteran Input System [Financial Support Application Enclave],,Y,,,
+FMSAccountingResource [OM FSC LAN Applications],,Y,,,
+Frontier Fiserv Reconciliation,,,Y,,Y
+FSC Customer Relationship Management,,,,Y,Y
+Funding Fee Payment System [LGY],,,,,Y
+General Ledger System,,Y,,,
+Grants.gov,,Y,,,
+GSA Advantage,,Y,,,
+Human Resources - Payroll Application Services,,,Y,Y,Y
+Integrated Financial and Acquisition Management System,,,,Y,
+Invoice Payment Processing System,,,,Y,Y
+IRS 1099,,,Y,,
+IRS System,,Y,,,
+Loan Guaranty,,,,,Y
+Managed File Transfer Automation,,,,Y,
+Management Information Exchange System,,Y,Y,,
+MAXIMO Enterprise Asset and Work Management,,Y,,,
+mLINQS Hosting Service,,,Y,,
+Non-Community Care Network,,,,Y,
+Other Government Agencies Medical Claims Processing - eCAMS,,,,Y,Y
+Office of Inspector General ePayroll,,Y,,,
+OPENLink*,,Y,,,
+OTCnet,,Y,,,
+Pay.gov,,Y,,,
+Permanent Change of Station,,Y,Y,,
+Prior Year Recovery Automation [Financial Support Application Enclave],,Y,,,
+Readiness and Employment System,,,,Y,Y
+Research Management System,,,,Y,
+Remote Order Entry System,,Y,Y,,
+SAM.GOV,,Y,,,
+Subsistence Prime Vendor,,Y,,,
+System for Award Management,,Y,,,
+Treasury Centralized Accounting Reporting System,,Y,,,
+Treasury Centralized Receivables System,,,Y,,
+Treasury Collections Information Repository,,Y,,,
+Treasury Government-wide Financial Report System,,Y,,,
+Treasury Government-wide Treasury Account System,,Y,,,
+Treasury Offset Program,,Y,,,
+Treasury Payments Application Modernization,,Y,,,
+Treasury Secure Payment System,,Y,,,
+Treasury System,,Y,,,
+USASpending.gov,,Y,,,
+VA Loan Electronic Reporting Interface Redesign,,,,,Y
+VA Logistics Integration Platform,,,,Y,Y
+VA Patient Account Resource System,,,,Y,
+VBA Corporate Database,,Y,,,
+Vendor Check,,,,Y,
+Veteran Co-Payment Lockbox,,,,Y,
+Veteran Account Management System,,,,,Y
+Veterans Data Integration and Federation Enterprise Platform,,Y,,,
+Veteran Online Debt Access [VA.Gov],,,,Y,Y
+Veterans Canteen Service Automated Information System,,,,Y,Y
+Veterans Equitable Resource Allocation,,,,Y,
+Veterans Health Information Systems and Technology Architecture,,,,Y,
+Veterans Service Network,,,,Y,
+VistA - Accounts Receivable,,Y,,,
+VistA - Admission Discharge Transfer,,Y,,,
+VistA - Automated Engineering Management System/Medical Equipment Reporting System,,,Y,Y,
+VistA - Fee Basis,,,,Y,
+VistA - Generic Code Sheet,,Y,,,
+VistA - Integrated Billing,,Y,,,
+"VistA - Integrated Funds Distribution, Control Point Activity, Accounting and Procurement",,Y,,,
+VLTrader [OM FSC LAN Applications],,,Y,,
+Web Loan Guaranty [LGY],,,,,Y
+External (non-VA) Systems,,,,,
+System Component [VA System],,,,,

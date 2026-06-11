@@ -122,12 +122,22 @@ Stop with `Ctrl-C`.
 | `../docs/reference/AIE-iFAMS-Modernization-Slicksheet.md` | Customer-provided Guidehouse AIE slicksheet (verbatim + factory crosswalk). |
 | `design/INTERFACE-WAVE-MODEL.md` | Interface inventory schema + wave fan-out. |
 | `conversion-datasets/gl-journal-extract/` | The runnable reference slice (code, synthetic data, 19 tests, contract). |
+| `reference/customer-artifacts/` | **Customer-provided inputs (received 2026-06-11):** the real 125-system FMS/iFAMS interface inventory (CSV) + the ICD automation spec as a machine-readable schema. |
+| `interface-inventory/` | Tested portfolio model over the customer inventory: disposition classification, control totals, wave assignment (the orchestrator's input). |
+| `icd/` | Spec-validated ICD generation: builds a complete ICD from a slice's live artifacts and gates it against the customer's schema (`generate_icd.py`, exit 1 on violations). |
+| `demos/interface-portfolio/` | Portfolio & wave-plan dashboard (filterable 125-system table, wave cards, generated-ICD panel). |
 | `playbooks/` | The 3 repeatable procedures (convert one interface / build the test harness / orchestrate a wave). |
 | `knowledge/` | The Knowledge Fabric (USSGL/TAFS/funds, COBOL patterns, reject taxonomy, Momentum contracts). |
 | `prompts/` | Cloud-Devin prompts for the orchestrator and per-interface child sessions. |
 
 ## 8. What we need to go from reference to production
 
-Real Momentum ICDs, the authoritative USSGL chart and fund crosswalk, the legacy
-extract layouts, and the interface inventory — all enumerated as answerable
-questions in [`../docs/va-fmbt-open-questions.md`](../docs/va-fmbt-open-questions.md).
+Real Momentum ICDs, the authoritative USSGL chart and fund crosswalk, and the
+legacy extract layouts — all enumerated as answerable questions in
+[`../docs/va-fmbt-open-questions.md`](../docs/va-fmbt-open-questions.md).
+
+**Update (2026-06-11):** the customer delivered the interface inventory and the
+ICD automation spec; both are ingested under
+[`reference/customer-artifacts/`](./reference/customer-artifacts/) and now drive
+the wave plan and ICD generation. Remaining gaps (volumes/frequency, WSDLs,
+Agility links, named POCs/runbooks) are listed in that directory's README.

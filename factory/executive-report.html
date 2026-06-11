@@ -501,9 +501,35 @@
       <strong>Why it is credible, not a claim:</strong> the unit already runs twice in this
       repo &mdash; once on the customer&rsquo;s <em>real</em> LABD20 interface, once on a GL
       financial interface &mdash; both gated by the same engine. Scaling multiplies a proven
-      unit; it does not invent a new capability. The interface inventory and wave schedule
-      are the one input we need from you (Q-INT-1).
+      unit; it does not invent a new capability. <em>Update:</em> the interface inventory
+      (Q-INT-1) has now been received &mdash; see the portfolio &amp; wave plan below.
     </div>
+  </div>
+</section>
+
+<!-- CUSTOMER ARTIFACTS RECEIVED -->
+<section>
+  <div class="wrap">
+    <h2>Customer artifacts &middot; received</h2>
+    <h3>The real inventory and the real ICD spec are now wired in</h3>
+    <p class="narrative">
+      Two authoritative customer artifacts arrived and are integrated as <strong>working
+      inputs</strong>, not attachments: the full FMS/iFAMS interface inventory (125 systems)
+      now drives the wave plan, and the ICD automation spec now drives spec-validated ICD
+      generation straight from each converted slice&rsquo;s live code and reconciliation
+      artifacts.
+    </p>
+    <div class="metrics">
+      <div class="metric"><div class="n">125</div><div class="l">systems in the customer inventory</div></div>
+      <div class="metric good"><div class="n">62</div><div class="l">in factory conversion scope (FMS-managed)</div></div>
+      <div class="metric"><div class="n">7</div><div class="l">orchestration waves planned</div></div>
+      <div class="metric"><div class="n">0</div><div class="l">spec violations in the generated ICD</div></div>
+    </div>
+    <ul class="clean" style="margin-top:22px">
+      <li><span class="num">1</span><div><div class="t">Interface portfolio &amp; wave plan</div><div class="d">Every system classified (migrate / dual-managed / already on iFAMS / out of scope) with control-total tests, grouped into waves for the child-session fan-out. <a href="demos/interface-portfolio/portfolio.html">Open the portfolio dashboard &rarr;</a></div></div></li>
+      <li><span class="num">2</span><div><div class="t">Spec-conformant ICD, generated not typed</div><div class="d">The obligation/disbursement slice now emits a complete ICD &mdash; 17-field file mapping from the contract dataclass, live reject taxonomy, recon strategy, IN-x.y controls &mdash; validated against the customer&rsquo;s schema with a CI-style gate (<code>factory/icd/generate_icd.py</code>, exit&nbsp;1 on violations). <a href="icd/generated/ICD-OBL-DISBURSEMENT.md">Read the generated ICD &rarr;</a></div></div></li>
+      <li><span class="num">3</span><div><div class="t">Honest gaps, explicitly marked</div><div class="d">Volumes/frequency, named POCs, runbook schedules, WSDL mappings, and Agility links are not in the artifacts &mdash; the generator emits <code>TBD-SME</code>/<code>TBD-CUSTOMER</code> markers and tracks them in ICD &sect;11 instead of inventing values.</div></div></li>
+    </ul>
   </div>
 </section>
 

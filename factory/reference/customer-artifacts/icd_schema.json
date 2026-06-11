@@ -1,0 +1,391 @@
+{
+  "$schema_note": "Machine-readable rendering of the customer-provided 'FMBT_ICD-AEI-Sample.docx' (VA FMBT ICD automation spec). Each section lists the inputs the spec requires, whether they are required, and any enumerations/validation rules the spec states. The ICD generator (factory/icd/generate_icd.py) validates generated ICDs against this schema.",
+  "source_document": "FMBT_ICD-AEI-Sample.docx (customer-provided, 2026-06-11)",
+  "classification_banner_default": "Controlled Unclassified Information, Pre-Decisional, Internal VA Use Only - Working DRAFT",
+  "sections": {
+    "front_matter": {
+      "title_page": {
+        "fields": {
+          "interface_name": {"type": "string", "required": true},
+          "document_date": {"type": "date", "required": true, "format": "YYYY-MM-DD"},
+          "classification_banner": {"type": "enum", "required": true, "default": "Controlled Unclassified Information, Pre-Decisional, Internal VA Use Only - Working DRAFT"}
+        }
+      },
+      "version_tracker": {
+        "array": "versions",
+        "min_items": 1,
+        "item_fields": {
+          "sequence_number": {"type": "string", "required": true, "unique": true},
+          "status": {"type": "enum", "required": true, "values": ["Draft", "Updated Draft", "Updated Final"]},
+          "author": {"type": "string", "required": true},
+          "date": {"type": "date", "required": true},
+          "change_summary": {"type": "string", "required": true, "non_empty": true}
+        },
+        "source": "Document custodian (ID&C)"
+      },
+      "executive_summary": {
+        "fields": {
+          "business_context": {"type": "paragraph", "required": true, "max_words": 300},
+          "integration_objective": {"type": "paragraph", "required": true, "max_words": 300},
+          "stakeholder_summary": {"type": "paragraph", "required": true, "max_words": 300}
+        },
+        "source": "Program team leads (Finance/OIT)"
+      }
+    },
+    "1_introduction": {
+      "1.1_document_organization": {"auto_generated": true},
+      "1.2_purpose": {"fields": {"purpose_statement": {"type": "string", "required": true, "guidance": "1-3 sentences"}}, "source": "ID&C + Interface Partner"},
+      "1.3_scope": {
+        "fields": {
+          "in_scope_items": {"type": "list", "required": true, "min_items": 1},
+          "out_of_scope_items": {"type": "list", "required": false}
+        },
+        "source": "ID&C"
+      },
+      "1.4_assumptions": {"fields": {"assumptions": {"type": "list", "required": true, "min_items": 1}}, "source": "ID&C + SI"},
+      "1.5_constraints": {"fields": {"constraints": {"type": "list", "required": true, "min_items": 1}}, "source": "SI + Interface Partner"},
+      "1.6_acknowledgements": {
+        "array": "acknowledgements",
+        "item_fields": {
+          "item": {"type": "string", "required": true},
+          "proposed_resolution": {"type": "string", "required": true}
+        },
+        "source": "ID&C + Program Mgmt"
+      },
+      "1.7_points_of_contact": {
+        "array": "pocs",
+        "item_fields": {
+          "name": {"type": "string", "required": true},
+          "email": {"type": "email", "required": true, "validation": "email format"},
+          "position": {"type": "string", "required": true},
+          "organization": {"type": "string", "required": true}
+        },
+        "source": "Interface Partner + ID&C"
+      },
+      "1.8_wave_specific_items": {
+        "fields": {
+          "wave_label": {"type": "string", "required": true, "example": "Wave LGY FY2025"},
+          "wave_specific_additions": {"type": "list", "required": false, "item_fields": {"addition": "string", "location": "string"}}
+        },
+        "source": "Program team"
+      },
+      "1.9_terminology": {
+        "array": "terms",
+        "item_fields": {"term": {"type": "string", "required": true}, "definition": {"type": "string", "required": true}},
+        "defaults": ["CSV", "Data Element", "ESB", "iFAMS", "SFTP"],
+        "source": "ID&C"
+      },
+      "1.10_operational_agreement": {"fields": {"operational_agreement_text": {"type": "paragraph", "required": true}}, "source": "Finance + ID&C"},
+      "1.11_reference_documentation": {
+        "array": "references",
+        "item_fields": {
+          "title": {"type": "string", "required": true},
+          "relevance": {"type": "string", "required": true},
+          "link": {"type": "url", "required": false, "validation": "must be URL if present"}
+        },
+        "source": "ID&C"
+      }
+    },
+    "2_system_identification": {
+      "2.1_va_system": {
+        "fields": {
+          "system_name": {"type": "string", "required": true},
+          "system_function_summary": {"type": "paragraph", "required": true},
+          "technical_platform_summary": {"type": "paragraph", "required": true}
+        },
+        "source": "Interface Partner + SI"
+      },
+      "2.2_ifams_systems": {
+        "fields": {
+          "ifams_functions_summary": {"type": "paragraph", "required": true},
+          "esb_functions": {"type": "list", "required": true, "examples": ["Proxy submission", "logging", "SFTP handling", "transformation rules"]}
+        },
+        "source": "SI + ID&C"
+      }
+    },
+    "3_interface_definition": {
+      "3.1_legacy_integration": {
+        "fields": {
+          "legacy_diagram": {"type": "image_ref", "required": false, "recommended": true},
+          "legacy_process_description": {"type": "paragraph", "required": true}
+        },
+        "source": "Interface Partner"
+      },
+      "3.2_future_integration": {
+        "fields": {
+          "future_diagram": {"type": "image_ref", "required": false, "recommended": true},
+          "future_process_description": {"type": "paragraph", "required": true}
+        },
+        "source": "ID&C + SI + Interface Partner"
+      },
+      "3.3_interface_overview": {
+        "3.3.1_operations": {
+          "array": "operations",
+          "item_fields": {
+            "id": {"type": "string", "required": true},
+            "name": {"type": "string", "required": true},
+            "purpose": {"type": "string", "required": true},
+            "trigger": {"type": "enum", "required": true, "values": ["time", "event", "manual"]},
+            "direction": {"type": "enum", "required": true, "values": ["inbound", "outbound"]},
+            "interfaces_impacted": {"type": "list", "required": false}
+          }
+        },
+        "3.3.2_data_transfer": {
+          "array": "transfer_mechanisms",
+          "item_fields": {
+            "protocol": {"type": "enum", "required": true, "values": ["SFTP", "REST", "SOAP"]},
+            "routing": {"type": "string", "required": true},
+            "packaging": {"type": "enum", "required": true, "values": ["CSV", "XML", "JSON", "fixed-width", "pipe-delimited"]},
+            "connectivity_diagram_ref": {"type": "string", "required": false}
+          }
+        },
+        "3.3.3_transaction_types": {
+          "array": "transaction_types",
+          "item_fields": {
+            "name": {"type": "string", "required": true},
+            "usage": {"type": "string", "required": true},
+            "frequency": {"type": "string", "required": true},
+            "volume_estimate": {"type": "string", "required": true}
+          }
+        },
+        "3.3.4_data_exchanges": {
+          "array": "data_exchanges",
+          "item_fields": {
+            "producer": {"type": "string", "required": true},
+            "consumer": {"type": "string", "required": true},
+            "format": {"type": "string", "required": true},
+            "schedule": {"type": "string", "required": true},
+            "acknowledgement": {"type": "enum", "required": true, "values": ["yes", "no"]}
+          }
+        },
+        "3.3.5_data_compliance": {
+          "fields": {
+            "compliance_strategy": {"type": "paragraph", "required": true},
+            "uses_ifams_codes": {"type": "boolean", "required": true},
+            "noncompliance_justification": {"type": "string", "required_if": "uses_ifams_codes == false"},
+            "compliance_timeline": {"type": "string", "required": false}
+          }
+        },
+        "3.3.6_precedence_and_criticality": {
+          "fields": {
+            "precedence_rules": {"type": "ordered_list", "required": true},
+            "criticality_levels": {"type": "list", "required": true, "guidance": "High/Medium/Low with rationale"}
+          }
+        },
+        "3.3.7_communication_methods": {"fields": {"comm_methods": {"type": "list", "required": true, "examples": ["SFTP", "SOAP/REST", "message queues"]}}},
+        "3.3.8_security_and_integrity": {
+          "array": "security_requirements",
+          "min_items_rule": "required for any external connectivity",
+          "item_fields": {
+            "id": {"type": "string", "required": true},
+            "requirement": {"type": "string", "required": true},
+            "implementation_detail": {"type": "string", "required": true},
+            "transmission_medium": {"type": "string", "required": true},
+            "data_protection": {"type": "string", "required": true},
+            "auditability": {"type": "string", "required": true}
+          }
+        },
+        "3.3.9_logging_and_audit": {
+          "array": "logging_by_platform",
+          "rule": "logging entries for all platforms used",
+          "item_fields": {
+            "platform": {"type": "enum", "required": true, "values": ["SYSTEM", "ESB", "iFAMS"]},
+            "logging_detail": {"type": "string", "required": true},
+            "audit_detail": {"type": "string", "required": true},
+            "poc": {"type": "string", "required": true},
+            "monitoring_instructions": {"type": "string", "required": true}
+          }
+        }
+      }
+    },
+    "4_operational_considerations": {
+      "4.1_data_volumes": {
+        "array": "volume_matrix",
+        "item_fields": {
+          "service_name": {"type": "string", "required": true},
+          "transaction_volume": {"type": "string", "required": true, "validation": "numeric or range"},
+          "line_counts": {"type": "string", "required": true},
+          "hours_of_operation": {"type": "string", "required": true, "validation": "hours in CT/ET indicated"},
+          "frequency": {"type": "string", "required": true}
+        },
+        "extra_fields": {"peak_periods": {"type": "list", "required": true, "guidance": "month-end, year-end with multipliers, e.g. x3 typical daily volume"}}
+      },
+      "4.2_data_contention": {"fields": {"contention_analysis": {"type": "paragraph", "required": true}, "mitigations": {"type": "list", "required": true}}},
+      "4.3_performance_requirements": {
+        "array": "performance_requirements",
+        "item_fields": {
+          "id": {"type": "string", "required": true},
+          "requirement_text": {"type": "string", "required": true},
+          "metric": {"type": "string", "required": true},
+          "threshold": {"type": "string", "required": true},
+          "measurement_method": {"type": "string", "required": true}
+        }
+      },
+      "4.4_priorities_and_dependencies": {"fields": {"priorities": {"type": "list", "required": true}, "dependencies": {"type": "list", "required": true}}},
+      "4.5_service_availability": {
+        "array": "availability_matrix",
+        "item_fields": {
+          "system": {"type": "string", "required": true},
+          "availability": {"type": "string", "required": true},
+          "maintenance_window": {"type": "string", "required": true},
+          "scheduled_outage_process": {"type": "string", "required": true}
+        }
+      },
+      "4.6_scheduling_and_operations": {
+        "array": "runbook_entries",
+        "item_fields": {
+          "job_name": {"type": "string", "required": true},
+          "schedule": {"type": "string", "required": true},
+          "preconditions": {"type": "string", "required": true},
+          "file_locations": {"type": "string", "required": true},
+          "expected_counts": {"type": "string", "required": true},
+          "escalation_steps": {"type": "string", "required": true},
+          "holiday_exceptions": {"type": "string", "required": false}
+        }
+      },
+      "4.7_upgrades_and_future_waves": {
+        "array": "upgrade_topics",
+        "item_fields": {"area": {"type": "string", "required": true}, "impact": {"type": "string", "required": true}, "action_required": {"type": "string", "required": true}}
+      }
+    },
+    "5_error_handling_and_reconciliation": {
+      "5.1_error_handling": {
+        "array": "error_handling_matrix",
+        "item_fields": {
+          "service_name": {"type": "string", "required": true},
+          "platform": {"type": "enum", "required": true, "values": ["SYSTEM", "ESB", "iFAMS"]},
+          "detection_method": {"type": "string", "required": true},
+          "common_error_codes": {"type": "list", "required": true},
+          "correction_process": {"type": "string", "required": true},
+          "resubmission_method": {"type": "string", "required": true},
+          "responsible_team": {"type": "string", "required": true}
+        },
+        "policy_hint": "Prefer correction in source system and resubmit."
+      },
+      "5.2_reconciliation": {
+        "array": "recon_strategies",
+        "item_fields": {
+          "scope": {"type": "enum", "required": true, "values": ["file-level", "transaction-level"]},
+          "control_totals_used": {"type": "string", "required": true},
+          "reports": {"type": "string", "required": true},
+          "frequency": {"type": "string", "required": true},
+          "owner": {"type": "string", "required": true}
+        },
+        "source": "Finance + Ops"
+      },
+      "5.3_troubleshooting": {
+        "array": "troubleshooting_entries",
+        "may_be_populated_later": true,
+        "item_fields": {
+          "symptom": {"type": "string", "required": true},
+          "probable_cause": {"type": "string", "required": true},
+          "steps_to_resolve": {"type": "string", "required": true},
+          "references": {"type": "list", "required": false},
+          "escalation_contact": {"type": "string", "required": true}
+        }
+      }
+    },
+    "6_interface_requirements": {
+      "6.1_message_exchanges": {
+        "array": "message_exchanges",
+        "item_fields": {
+          "id": {"type": "string", "required": true},
+          "name": {"type": "string", "required": true},
+          "direction": {"type": "enum", "required": true, "values": ["inbound", "outbound"]},
+          "format": {"type": "string", "required": true},
+          "trigger": {"type": "string", "required": true},
+          "acknowledgement": {"type": "string", "required": true},
+          "success_criteria": {"type": "string", "required": true}
+        }
+      },
+      "6.2_file_mapping": {
+        "applies_if": "file-based",
+        "array": "file_mapping",
+        "item_fields": {
+          "system_field_name": {"type": "string", "required": true},
+          "ifams_field_name": {"type": "string", "required": true},
+          "description": {"type": "string", "required": true},
+          "ifams_table_field": {"type": "string", "required": false},
+          "position": {"type": "int", "required": true, "validation": "unique positions"},
+          "max_length": {"type": "int", "required": true},
+          "format": {"type": "string", "required": true},
+          "notes": {"type": "string", "required": false}
+        }
+      },
+      "6.3_web_service_mapping": {
+        "applies_if": "web-service-based",
+        "fields": {
+          "wsdl_conventions": {"type": "string", "required": false, "note": "pre-fill from template"},
+          "ws_header_fields": {"type": "list", "required": false},
+          "ws_line_fields": {"type": "list", "required": false}
+        },
+        "item_fields_for_ws_fields": {
+          "ip_document_mapping": "string", "ifams_request_field_name": "string", "db_column": "string",
+          "max_length": "int", "requiredness": {"type": "enum", "values": ["R*", "R", "O"]},
+          "notes": "string", "reference_table_backed": "boolean", "wsdl_path": "string", "wsdl_data_type": "string"
+        },
+        "validation": "R* must be present; data types must match; reference-backed values must exist"
+      },
+      "6.4_service_requests": {"array": "service_requests", "item_fields": {"name": "string", "endpoint": "string", "auth": "string", "payload_schema": "string", "response_expectations": "string", "rate_limits": "string"}},
+      "6.5_service_responses": {"array": "service_responses", "item_fields": {"name": "string", "format": "string", "delivery_method": "string", "fields": "list", "timing": "string"}}
+    },
+    "7_interface_verification": {
+      "array": "verification_methods",
+      "allowed_methods": ["Unit", "Functional", "Load", "SIT", "IST", "End User Validation"],
+      "item_fields": {"method": {"type": "string", "required": true}, "success_criteria": {"type": "string", "required": true}}
+    },
+    "8_interface_controls": {
+      "array": "controls",
+      "keying": "keyed to the template's IN-x.y items",
+      "item_fields": {
+        "control_id": {"type": "string", "required": true, "pattern": "IN-\\d+\\.\\d+"},
+        "control_activity": {"type": "string", "required": true},
+        "control_technique": {"type": "string", "required": true},
+        "implementation_detail": {"type": "string", "required": true}
+      },
+      "source": "Audit/Compliance + ID&C"
+    },
+    "9_implementation_and_cutover": {
+      "9.1_conversion_considerations": {
+        "fields": {
+          "acs_link": {"type": "url", "required": false},
+          "conversion_notes": {"type": "paragraph", "required": true},
+          "converted_data_interactions": {"type": "string", "required": true, "guidance": "yes/no + description"}
+        }
+      },
+      "9.2_transition_approach": {
+        "fields": {
+          "transition_steps": {"type": "list", "required": true},
+          "temporary_procedures": {"type": "list", "required": false},
+          "rollback_plan": {"type": "string", "required": true}
+        }
+      }
+    },
+    "10_test_scripts": {
+      "fields": {"agility_link": {"type": "url", "required": false}},
+      "array": "test_scripts",
+      "item_fields": {"id": {"type": "string", "required": true}, "name": {"type": "string", "required": true}, "description": {"type": "string", "required": true}}
+    },
+    "11_open_items": {
+      "array": "open_items",
+      "item_fields": {
+        "number": {"type": "string", "required": true},
+        "status": {"type": "enum", "required": true, "values": ["Open", "Closed"]},
+        "description": {"type": "string", "required": true},
+        "resolution": {"type": "string", "required_if": "status == Closed"},
+        "impact": {"type": "string", "required": true}
+      }
+    },
+    "appendices": {
+      "A_rtm": {"array": "features", "item_fields": {"feature_id": "string", "description": "string", "acceptance_criteria": "list", "requirement_locations": "list", "team_impact": {"type": "enum", "values": ["ID&C", "Interface Partner", "Both", "N/A"]}, "implemented_by": "string"}},
+      "B_icd_metrics": {"array": "metrics", "fields_include": ["fmbt_system_acronym", "wave_interim_disposition", "ifams_integration_recommendation", "proposed_solution", "owners", "legacy_dev_required", "legacy_config_required"]},
+      "C_custom_procedures": {"array": "custom_procedures", "item_fields": {"title": "string", "steps": "list", "screenshots": "list"}, "may_be_populated_later": true},
+      "D_new_environment": {"array": "environment_connect_steps", "examples": ["FTP enable/disable", "cert exchange", "firewall rules"], "may_be_populated_later": true}
+    }
+  },
+  "global_guidance": {
+    "volumes": "Include peak/exception periods (month-end, year-end) and quantify (e.g., x3 typical daily volume).",
+    "reconciliation": "Specify control totals (record counts, dollar totals) and who reconciles + cadence (daily/weekly).",
+    "controls": "Map implementation to IN-1.x and IN-2.x activities in the template; populate implementation_detail on how tooling satisfies each control."
+  }
+}
