@@ -2,7 +2,7 @@
 interface inventory (factory/reference/customer-artifacts/).
 
 This is the wave-planning input for the orchestrator
-(factory/playbooks/03-interface-wave-fanout.md): it loads the 145-system
+(factory/playbooks/03-interface-wave-fanout.md): it loads the 125-system
 inventory, classifies each system's migration disposition, and groups the
 in-scope conversion workload into waves.
 
