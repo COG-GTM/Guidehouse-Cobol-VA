@@ -1,0 +1,26 @@
+%%{init: {'theme':'base','themeVariables':{'fontFamily':'Inter, Arial, sans-serif','fontSize':'14px','primaryColor':'#E2ECF6','primaryBorderColor':'#3969CA','primaryTextColor':'#173A73','lineColor':'#5687AD','clusterBkg':'#F4F7FA','clusterBorder':'#C7D3E0','edgeLabelBackground':'#FFFFFF'}, 'flowchart':{'curve':'basis','htmlLabels':true,'nodeSpacing':40,'rankSpacing':50,'padding':12}}%%
+flowchart TB
+  subgraph DEV["Flow 1 &nbsp;·&nbsp; Playbook creation (development)"]
+    direction LR
+    D1["Jira story<br/>(2-week sprint)"] --> D2["Devin builds<br/>vertical slice"] --> D3["Test harness<br/>+ reconciliation"] --> D4["Human reviews PR<br/>· runs tests"]
+    D4 -->|"gate fails &nbsp;·&nbsp; fail forward"| D2
+    D4 -->|"approve &amp; merge"| D5["Knowledge<br/>Fabric entry"]
+  end
+
+  subgraph EXEC["Flow 2 &nbsp;·&nbsp; Playbook execution (production conversion)"]
+    direction LR
+    X1["Orchestrator<br/>fans out a wave"] --> X2["Child session<br/>runs proven playbook"] --> X3{{"Reconciliation<br/>gate"}}
+    X3 -->|"accepted"| X4["Interface evidence<br/>pack"]
+    X3 -->|"exception"| X5["Log finding<br/>(no inline fix)"]
+    X4 --> X6["Wave sign-off:<br/>all accepted or deferred"]
+  end
+
+  D5 ==>|"proven playbook promoted to execution"| X1
+  X5 ==>|"new pattern loops back into a development sprint"| D1
+
+  classDef dev fill:#DCF0E7,stroke:#2F9E78,stroke-width:1.5px,color:#14543F;
+  classDef exec fill:#E2ECF6,stroke:#3969CA,stroke-width:1.5px,color:#173A73;
+  classDef gate fill:#3969CA,stroke:#2A50A0,stroke-width:1.5px,color:#FFFFFF;
+  class D1,D2,D3,D4,D5 dev;
+  class X1,X2,X4,X5,X6 exec;
+  class X3 gate;

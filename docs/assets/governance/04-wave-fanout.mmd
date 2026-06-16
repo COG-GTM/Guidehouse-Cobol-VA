@@ -1,0 +1,24 @@
+%%{init: {'theme':'base','themeVariables':{'fontFamily':'Inter, Arial, sans-serif','fontSize':'14px','primaryColor':'#E2ECF6','primaryBorderColor':'#3969CA','primaryTextColor':'#173A73','lineColor':'#5687AD','clusterBkg':'#F4F7FA','clusterBorder':'#C7D3E0','edgeLabelBackground':'#FFFFFF'}, 'flowchart':{'curve':'basis','htmlLabels':true,'nodeSpacing':36,'rankSpacing':52,'padding':12}}%%
+flowchart TB
+  ORCH["Orchestrator session<br/>one end-to-end workflow per wave"]:::orch
+  ORCH --> C1["Child &nbsp;·&nbsp; Interface A"]:::child
+  ORCH --> C2["Child &nbsp;·&nbsp; Interface B"]:::child
+  ORCH --> C3["Child &nbsp;·&nbsp; Interface C"]:::child
+  ORCH --> Cn["Child &nbsp;·&nbsp; Interface N<br/>(50&ndash;100 per wave)"]:::child
+
+  C1 --> EV["Per-interface<br/>reconciliation evidence"]:::evid
+  C2 --> EV
+  C3 --> EV
+  Cn --> EV
+
+  EV --> WAVE{{"Wave sign-off<br/>every interface accepted<br/>or consciously deferred"}}:::gate
+  WAVE --> PACK["Per-wave evidence pack<br/>the auditable deliverable"]:::evid
+
+  C2 -.->|"new pattern or gap"| FIND["Finding logged<br/>(not fixed inline)"]:::human
+  FIND -.->|"loops back to a development sprint"| ORCH
+
+  classDef orch fill:#DCF0E7,stroke:#2F9E78,stroke-width:1.5px,color:#14543F;
+  classDef child fill:#E2ECF6,stroke:#3969CA,stroke-width:1.5px,color:#173A73;
+  classDef evid fill:#EBEEF2,stroke:#5E7488,stroke-width:1.5px,color:#2B3A47;
+  classDef gate fill:#3969CA,stroke:#2A50A0,stroke-width:1.5px,color:#FFFFFF;
+  classDef human fill:#F3E7CF,stroke:#C79A3E,stroke-width:1.5px,color:#6b5114;

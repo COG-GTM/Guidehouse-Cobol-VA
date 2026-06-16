@@ -34,6 +34,12 @@ splits across three parties, and this repo embodies that split:
 > **Engagement posture:** the factory is **designed & documented** here and run
 > after the plan is approved. The executive summary of the proposal is
 > [`migration/executive-report.html`](migration/executive-report.html).
+>
+> **Governance & human control:** the governance and human-control framework for
+> the factory — the five human control points, the development-vs-execution
+> process flows, the auditability layer, and the A-123/audit framing — is
+> documented in [`docs/governance-whitepaper.md`](docs/governance-whitepaper.md)
+> (the governance companion to [`factory/executive-report.html`](factory/executive-report.html)).
 
 ---
 

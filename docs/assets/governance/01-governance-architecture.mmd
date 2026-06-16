@@ -1,0 +1,41 @@
+%%{init: {'theme':'base','themeVariables':{'fontFamily':'Inter, Arial, sans-serif','fontSize':'15px','primaryColor':'#E2ECF6','primaryBorderColor':'#3969CA','primaryTextColor':'#173A73','lineColor':'#5687AD','clusterBkg':'#F4F7FA','clusterBorder':'#C7D3E0','edgeLabelBackground':'#FFFFFF'}, 'flowchart':{'curve':'basis','htmlLabels':true,'nodeSpacing':40,'rankSpacing':60,'padding':12}}%%
+flowchart TB
+  subgraph HUMAN["Human control plane &nbsp;·&nbsp; expert-in-the-loop"]
+    direction LR
+    H1["1 &nbsp;Trigger &amp;<br/>approve the plan"]
+    H2["2 &nbsp;Review &amp;<br/>merge every PR"]
+    H3["3 &nbsp;Momentum<br/>output sign-off"]
+    H4["4 &nbsp;Checksum<br/>validation"]
+    H5["5 &nbsp;SME exception<br/>adjudication"]
+    H1 ~~~ H2 ~~~ H3 ~~~ H4 ~~~ H5
+  end
+  subgraph FACTORY["AI-governed conversion factory"]
+    direction LR
+    F1["Devin session<br/>intake &rarr; map &rarr; transform"]
+    GATE{{"Reconciliation gate<br/>non-zero exit if not load-ready"}}
+    EMIT["Momentum Form Import<br/>load-ready artifact"]
+    F1 --> GATE
+    GATE -->|"pass"| EMIT
+    GATE -->|"fail &nbsp;·&nbsp; fail forward, come back fast"| F1
+  end
+  subgraph EVID["Evidence &amp; audit layer"]
+    direction LR
+    E1["Session logs<br/>+ git history"]
+    E2["Reconciliation<br/>evidence pack"]
+    E3["Reject taxonomy<br/>+ coverage"]
+    E4["Provenance trail<br/>per record"]
+    E1 ~~~ E2 ~~~ E3 ~~~ E4
+  end
+
+  HUMAN ==>|"govern &amp; approve"| FACTORY
+  FACTORY ==>|"emit evidence"| EVID
+  HUMAN -.->|"every gate reads the evidence layer"| EVID
+
+  classDef human fill:#DCF0E7,stroke:#2F9E78,stroke-width:1.5px,color:#14543F;
+  classDef factory fill:#E2ECF6,stroke:#3969CA,stroke-width:1.5px,color:#173A73;
+  classDef gate fill:#3969CA,stroke:#2A50A0,stroke-width:1.5px,color:#FFFFFF;
+  classDef evid fill:#EBEEF2,stroke:#5E7488,stroke-width:1.5px,color:#2B3A47;
+  class H1,H2,H3,H4,H5 human;
+  class F1,EMIT factory;
+  class GATE gate;
+  class E1,E2,E3,E4 evid;
