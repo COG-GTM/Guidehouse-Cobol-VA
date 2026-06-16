@@ -1,12 +1,15 @@
-# Customer-provided artifacts (received 2026-06-11)
+# Customer-provided artifacts (received 2026-06-11; PWS added 2026-06-15)
 
-Two real customer artifacts arrived from the FMBT program and are ingested
-here in machine-readable form. They replace two of the biggest "synthetic
-stand-in" assumptions in the factory (see
-[`../../../docs/va-fmbt-open-questions.md`](../../../docs/va-fmbt-open-questions.md)).
+Real customer artifacts arrived from the FMBT program and are ingested
+here. The CSV and JSON are machine-readable renderings that replace two of the
+biggest "synthetic stand-in" assumptions in the factory (see
+[`../../../docs/va-fmbt-open-questions.md`](../../../docs/va-fmbt-open-questions.md));
+the PWS is the official solicitation document, held here verbatim as the
+authoritative scope source.
 
 | File | What it is | Source document |
 | --- | --- | --- |
+| [`PWS-Interface-and-Data-Conversion-Draft-VA-26-00061414.docx`](./PWS-Interface-and-Data-Conversion-Draft-VA-26-00061414.docx) | The official **VA FMBT Performance Work Statement** (VA-26-00061414, v1.0, dated April 23, 2026) — "Interface and Data Conversion Development." The authoritative scope document for this bid; its facts are folded into the meeting notes, open questions, and white paper under [`../../../docs/`](../../../docs/). | (original `.docx`, held verbatim) |
 | [`fms_ifams_interface_inventory.csv`](./fms_ifams_interface_inventory.csv) | The real **125-system FMS/iFAMS interface inventory** — every VA system/component with flags for whether its interface is managed by FMS, by iFAMS, by both, or by neither. | `VA FMBT - FMS and iFAMS Interface Systems.xlsx` |
 | [`icd_schema.json`](./icd_schema.json) | A machine-readable rendering of the customer's **ICD automation spec** — every section (front matter, 1–11, appendices A–D), the inputs each section requires, required/optional flags, enumerations, and validation rules. | `FMBT_ICD-AEI-Sample.docx` |
 
@@ -32,8 +35,12 @@ stand-in" assumptions in the factory (see
   transfer `protocol`), it is encoded as an enum; where it states a rule
   (unique file-mapping positions, email format, closed open-items need a
   resolution), it is encoded as a validation rule.
-- Both documents are **inputs from the customer**, not Cognition/Guidehouse
+- All three documents are **inputs from the customer**, not Cognition/Guidehouse
   work product. Do not edit them to make tooling pass; fix the tooling.
+- The PWS `.docx` is held verbatim (unmodified). Where the PWS and the working
+  meeting notes disagree (e.g., FMS age, transition window), the PWS is treated
+  as authoritative and the discrepancy is flagged as an open question rather
+  than silently reconciled.
 
 ## Gaps these artifacts do NOT close (still open with the customer)
 
