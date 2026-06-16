@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  factory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pytest ruff
+
+      - name: Run all test suites
+        run: pytest -q
+
+      - name: Lint
+        run: ruff check factory/icd factory/interface-inventory factory/demos factory/tests
+
+      - name: Drift gate — regenerate committed artifacts and diff
+        run: |
+          DOC_DATE=$(python -c "import json;print(json.load(open('factory/icd/generated/ICD-OBL-DISBURSEMENT.json'))['title_page']['document_date'])")
+          python factory/demos/interface-portfolio/build_portfolio_data.py
+          (cd factory/icd && python generate_icd.py --date "$DOC_DATE")
+          git diff --exit-code -I'"generated_at"' \
+            factory/demos/interface-portfolio/portfolio.data.js \
+            factory/executive-report.data.js \
+            factory/icd/generated/

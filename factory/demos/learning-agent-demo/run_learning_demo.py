@@ -232,7 +232,7 @@ def render(seed: dict, learned: dict, p1: dict, p2: dict, learned_rows: int) -> 
         "",
         "  Artifacts written:",
         f"    - {LEARNED_REFERENCE.relative_to(REPO_ROOT)}",
-        f"    - factory/knowledge/reject-taxonomy.md  (LEARNED block)",
+        "    - factory/knowledge/reject-taxonomy.md  (LEARNED block)",
         "=" * 70,
     ]
     return "\n".join(lines)
