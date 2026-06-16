@@ -34,12 +34,13 @@ complementary efforts (see the [root README](../README.md)):
 | [`reference/AIE-iFAMS-Modernization-Slicksheet-2026-02-12.pdf`](./reference/AIE-iFAMS-Modernization-Slicksheet-2026-02-12.pdf) | The original slicksheet PDF (2026-02-12). |
 | [`../factory/reference/customer-artifacts/fms_ifams_interface_inventory.csv`](../factory/reference/customer-artifacts/fms_ifams_interface_inventory.csv) | Customer-provided FMS↔iFAMS interface inventory (managed-by flags per system). Drives the orchestrator inventory and wave fan-out. |
 | [`../factory/reference/customer-artifacts/icd_schema.json`](../factory/reference/customer-artifacts/icd_schema.json) | Machine-readable rendering of the customer ICD sample (`FMBT_ICD-AEI-Sample.docx`). |
+| [`../factory/reference/customer-artifacts/PWS-Interface-and-Data-Conversion-Draft-VA-26-00061414.docx`](../factory/reference/customer-artifacts/PWS-Interface-and-Data-Conversion-Draft-VA-26-00061414.docx) | The official VA FMBT Performance Work Statement (VA-26-00061414, v1.0, April 23, 2026) — held verbatim as the authoritative scope document. |
 
 > The official PWS **VA-26-00061414** ("Interface and Data Conversion
 > Development," v1.0, April 23, 2026) is the authoritative scope document. Its
-> facts are folded into the meeting notes, open questions, and white paper above;
-> the source `.docx` itself is held with the customer-supplied inputs and is not
-> committed to the repo.
+> facts are folded into the meeting notes, open questions, and white paper above,
+> and the source `.docx` is held verbatim with the customer-provided artifacts at
+> [`../factory/reference/customer-artifacts/`](../factory/reference/customer-artifacts/PWS-Interface-and-Data-Conversion-Draft-VA-26-00061414.docx).
 
 ## COBOL modernization demo (the upstream given)
 
