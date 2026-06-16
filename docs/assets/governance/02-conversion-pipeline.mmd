@@ -1,0 +1,28 @@
+%%{init: {'theme':'base','themeVariables':{'fontFamily':'Inter, Arial, sans-serif','fontSize':'14px','primaryColor':'#E2ECF6','primaryBorderColor':'#3969CA','primaryTextColor':'#173A73','lineColor':'#5687AD','clusterBkg':'#F4F7FA','clusterBorder':'#C7D3E0','edgeLabelBackground':'#FFFFFF'}, 'flowchart':{'curve':'basis','htmlLabels':true,'nodeSpacing':38,'rankSpacing':46,'padding':10}}%%
+flowchart LR
+  subgraph PIPE["One continuous conversion pass &nbsp;·&nbsp; stages S0&ndash;S8"]
+    direction LR
+    S0["S0<br/>Intake<br/>&amp; profile"] --> S1["S1<br/>Canonical<br/>model"] --> S2["S2<br/>Target<br/>contract bind"] --> S3["S3<br/>Map &amp;<br/>transform"] --> S4["S4<br/>Validate"]
+    S4 --> GATE{{"S5 &nbsp;Reconcile gate<br/>rows · dollars · balance"}}
+    GATE -->|"pass"| S6["S6<br/>Emit<br/>Form Import"] --> S7["S7<br/>Load-simulate<br/>&amp; post-load test"] --> S8["S8<br/>Learn"]
+  end
+
+  GATE -->|"fail &nbsp;·&nbsp; fail forward"| S3
+  S8 -.->|"Knowledge Fabric: versioned crosswalks &amp; patterns"| S1
+
+  H4A["Human checksum A<br/>control totals vs legacy reports"]:::human
+  H4B["Human checksum B<br/>Momentum load vs emitted"]:::human
+  H5["SME adjudication<br/>low-confidence &amp; typed rejects"]:::human
+  H3["Human load-ready<br/>sign-off"]:::human
+
+  S4 -.->|"checksum"| H4A
+  S7 -.->|"checksum"| H4B
+  GATE -.->|"typed rejects"| H5
+  H5 -.->|"corrections feed S8"| S8
+  S7 --> H3
+
+  classDef stage fill:#E2ECF6,stroke:#3969CA,stroke-width:1.5px,color:#173A73;
+  classDef gate fill:#3969CA,stroke:#2A50A0,stroke-width:1.5px,color:#FFFFFF;
+  classDef human fill:#DCF0E7,stroke:#2F9E78,stroke-width:1.5px,color:#14543F;
+  class S0,S1,S2,S3,S4,S6,S7,S8 stage;
+  class GATE gate;
